@@ -85,7 +85,7 @@ api.interceptors.response.use(
 );
 
 // Auth API calls
-// Auth API calls - make sure these endpoints exist
+
 export const authApi = {
   phoneLogin: (idToken, deviceId) => 
     api.post('/auth/phone/login', { idToken }, {
