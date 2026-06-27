@@ -10,10 +10,13 @@ import {
   CheckCircle2,
   Loader2,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function RoleSelectionPage() {
   const [selectedRole, setSelectedRole] = useState("shopkeeper");
   const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   // CONTAINER ENTRY ANIMATION
   const containerVariants = {
@@ -355,7 +358,7 @@ export default function RoleSelectionPage() {
                   </>
                 ) : (
                   <>
-                    <span>Continue to Workspace</span>
+                    <span  onClick={(()=> navigate("/language"))}>Continue to Workspace</span>
                     <motion.div
                       animate={{ x: [0, 3, 0] }}
                       transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}

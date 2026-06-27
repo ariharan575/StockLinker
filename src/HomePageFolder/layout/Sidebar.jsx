@@ -1,12 +1,19 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate, useLocation } from "react-router-dom";
+
 import { NAV_ITEMS } from '../data';
 import { FONT_BODY } from '../common/constants';
 
 export default function Sidebar({ open, setOpen, active, setActive }) {
+
+    const navigate = useNavigate();
+    const location = useLocation();
+  
   return (
     <>
       {/* OVERLAY FOR MOBILE */}
+
       <AnimatePresence>
         {open && (
           <motion.div
@@ -30,7 +37,7 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
       >
         {/* NAV */}
         <nav className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto">
-          {NAV_ITEMS.map(({ id, label, Icon, badge }) => {
+          {NAV_ITEMS.map(({ id, label, Icon, badge, path }) => {
             const isActive = active === id;
 
             return (
@@ -39,6 +46,7 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
                 onClick={() => {
                   setActive(id);
                   if (window.innerWidth < 1024) setOpen(false);
+                  navigate(path);
                 }}
                 whileTap={{ scale: 0.98 }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium relative group transition-all duration-200

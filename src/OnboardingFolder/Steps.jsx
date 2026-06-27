@@ -13,9 +13,13 @@ import {
 import SectionTitle from "./SectionTitle";
 import Input from "./Input";
 import { STORE_TYPES, DELIVERY_OPTIONS } from "./constants";
+import { useNavigate } from "react-router-dom";
 
 // Business Step Component
 export function BusinessStep({ formData, updateField }) {
+
+  const navigate = useNavigate();
+
   return (
     <div>
       <SectionTitle
@@ -369,6 +373,9 @@ export function MarketplaceStep({
 
 // Success Screen Component
 export function SuccessScreen() {
+
+  const navigate = useNavigate();
+  
   return (
     <div className="min-h-[520px] flex flex-col items-center justify-center text-center relative overflow-hidden">
       <motion.div
@@ -458,12 +465,10 @@ export function SuccessScreen() {
         transition={{
           delay: 0.4,
         }}
-        onClick={() => {
-          window.location.href = "/dashboard";
-        }}
         className="mt-10 h-16 px-15 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 text-white font-black text-lg shadow-[0_20px_60px_rgba(236,72,153,0.35)]"
+          
       >
-        Launch Dashboard →
+       <span onClick={(()=> navigate("/dash"))}> Launch Dashboard →</span>
       </motion.button>
     </div>
   );

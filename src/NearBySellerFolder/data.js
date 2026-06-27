@@ -1,0 +1,46 @@
+export const CURRENT_LOCATION = [13.0827, 80.2707]; // Chennai
+
+export const SELLERS_DATA = [
+  {
+    id: 1,
+    name: "Apex Electronics Wholesale",
+    category: "Electronics Distributor",
+    rating: 4.8,
+    reviews: 124,
+    distance: "2.3 km",
+    location: [13.0900, 80.2800],
+    verified: true,
+    inStock: true,
+    minOrder: "$500",
+    delivery: "1-2 Days",
+    image: "https://ui-avatars.com/api/?name=Apex+Electronics&background=F43F5E&color=fff",
+  },
+  {
+    id: 2,
+    name: "Global Textiles Ltd",
+    category: "Apparel Manufacturer",
+    rating: 4.9,
+    reviews: 89,
+    distance: "4.1 km",
+    location: [13.0700, 80.2600],
+    verified: true,
+    inStock: true,
+    minOrder: "$1,000",
+    delivery: "3-5 Days",
+    image: "https://ui-avatars.com/api/?name=Global+Textiles&background=0F172A&color=fff",
+  },
+  {
+    id: 3,
+    name: "Metro Industrial Supplies",
+    category: "Hardware Wholesale",
+    rating: 4.5,
+    reviews: 210,
+    distance: "5.8 km",
+    location: [13.0600, 80.2500],
+    verified: true,
+    inStock: false,
+    minOrder: "$250",
+    delivery: "Same Day",
+    image: "https://ui-avatars.com/api/?name=Metro+Industrial&background=10B981&color=fff",
+  }
+];

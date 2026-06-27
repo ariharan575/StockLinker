@@ -9,10 +9,13 @@ import {
   Sparkles,
   Building2,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function PremiumLanguageSelector() {
   const [selected, setSelected] = useState("en");
   const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -451,7 +454,7 @@ export default function PremiumLanguageSelector() {
                   <div className="absolute inset-0 bg-white/10 opacity-0 transition duration-300 group-hover:opacity-100" />
 
                   <div className="relative flex items-center justify-center gap-2.5">
-                    <span className="text-sm font-semibold tracking-wide">
+                    <span className="text-sm font-semibold tracking-wide" onClick={(()=> navigate("/onboarding"))}>
                       Continue
                     </span>
 

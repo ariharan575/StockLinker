@@ -544,7 +544,7 @@ export default function SettingsPage() {
     useState("account");
 
   const [darkMode, setDarkMode] =
-    useState(true);
+    useState(false);
 
   const [mobileOpen, setMobileOpen] =
     useState(false);

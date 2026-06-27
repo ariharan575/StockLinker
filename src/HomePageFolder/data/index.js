@@ -9,16 +9,25 @@ import { C } from '../common/constants';
 
 // ─── NAVIGATION ITEMS ────────────────────────────────────────────────
 export const NAV_ITEMS = [
-  { id: 'home',     label: 'Home',              Icon: Home },
-  { id: 'cat',      label: 'Product Categories', Icon: LayoutGrid },
-  { id: 'compare',  label: 'Compare Price',      Icon: BarChart2 },
-  { id: 'nearby',   label: 'Nearby Sellers',     Icon: MapPin },
-  { id: 'orders',   label: 'My Orders',          Icon: ShoppingCart },
-  { id: 'invoice',  label: 'Invoice',            Icon: FileText },
-  { id: 'msg',      label: 'Messages',           Icon: MessageSquare, badge: 3 },
-  { id: 'saved',    label: 'Saved Suppliers',    Icon: Bookmark },
-  { id: 'settings', label: 'Settings',           Icon: Settings },
-  { id: 'help',     label: 'Help & Support',     Icon: HelpCircle },
+  { id: 'home', label: 'Home', Icon: Home, path: '/dash' },
+
+  { id: 'cat', label: 'Product Categories', Icon: LayoutGrid, path: '/category' },
+
+  { id: 'compare', label: 'Compare Price', Icon: BarChart2, path: '/compare' },
+
+  { id: 'nearby', label: 'Nearby Sellers', Icon: MapPin, path: '/nearby' },
+
+  { id: 'orders', label: 'My Orders', Icon: ShoppingCart, path: '/orders' },
+
+  { id: 'invoice', label: 'Invoice', Icon: FileText, path: '/invoice' },
+
+  { id: 'msg', label: 'Messages', Icon: MessageSquare, badge: 3, path: '/message' },
+
+  { id: 'saved', label: 'Saved Suppliers', Icon: Bookmark, path: '/saved' },
+
+  { id: 'settings', label: 'Settings', Icon: Settings, path: '/settings' },
+
+  { id: 'help', label: 'Help & Support', Icon: HelpCircle, path: '/help' },
 ];
 
 // ─── QUICK ACTIONS ────────────────────────────────────────────────────

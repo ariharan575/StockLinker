@@ -11,12 +11,12 @@ import RoleSelectionPage from './AuthFolder/pages/RoleSelection';
 
 import PremiumLanguageSelector from './Components/PremiumLanguageSelector';
 
-import StockLinkerSettingsPage from './Convert/Settings/StockLinkerSettingsPage';
-import ExampleProfile from './Convert/Settings/ExampleProfile';
-import NewProfile from './Convert/Settings/NewProfile';
+import StockLinkerSettingsPage from './SettingsFolder/StockLinkerSettingsPage';
+import ExampleProfile from './SettingsFolder/ExampleProfile';
+import NewProfile from './SettingsFolder/NewProfile';
 
 import ProfilePage from './ProfileFolder/ProfilePage';
-import EnterpriseNavbar from './Convert/MainComponent/EnterpriseNavbar';
+import EnterpriseNavbar from './Components/EnterpriseNavbar';
 
 import StockLinkerLanding from './ProfileFolder/StockLinkerLanding';
 import StockLinkerLandingPage from './ProfileFolder/StockLinkerLandingPage';
@@ -25,20 +25,13 @@ import { LandingPage } from './LandingPageFolder/Pages/LandingPage';
 
 import StockLinkerEnterpriseOnboarding from './OnboardingFolder/StockLinkerEnterpriseOnboarding';
 
-import { Loading } from './Convert/MainComponent/Loading';
-
-import StockLinker from './DashboardFolder/StockLinker';
-
-// import StockLinkerHomepage from './DashboardFolder/components/StockLinkerHomepage';
-import Page from './DashboardFolder/Page';
 import ComparePage from './ComparePageFolder/ComparePage';
 
 import StockLinkerHomepage from './HomePageFolder/pages/StockLinkerHomepage';
+import  NearbySellers  from './NearBySellerFolder/NearbySeller';
+import NearbySellerPage from './NearBySellerFolder/NearbySellerPage';
 
-import Example from './Example'
-import Sample from './Sample'
-import Compare from './Compare'
-
+import Message from './MessageFolder/Message'
 
 
 
@@ -132,7 +125,7 @@ function App() {
           />
 
           <Route
-            path="/new"
+            path="/settings"
             element={
          //     <PrivateRoute>
                 <NewProfile />
@@ -168,7 +161,7 @@ function App() {
           />
 
           <Route
-            path="/onbo"
+            path="/onboarding"
             element={
               // <PrivateRoute>
                 <StockLinkerEnterpriseOnboarding />
@@ -176,22 +169,10 @@ function App() {
             }
           />
 
-          {/* <Route
-            path="/dash"
-            element={
-              <PrivateRoute>
-                <StockLinker />
-              </PrivateRoute>
-            }
-          /> */}
-
-          <Route path='/da' element={<StockLinker/>}/>
           <Route path='/dash' element={<StockLinkerHomepage/>}/>
-          <Route path='/ho' element={<Page/>}/> 
           <Route path='/Compare' element={<ComparePage/>}/> 
-          <Route path='/ex' element={<Example/>}/> 
-          <Route path='/sa' element={<Sample/>}/> 
-          <Route path='/ma' element={<Compare/>}/> 
+          <Route path='/nearby' element={<NearbySellers/>}/>
+          <Route path='/message' element={<Message/>}/>
           
 
           {/* ========================================================= */}
