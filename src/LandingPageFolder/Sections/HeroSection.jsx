@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 import Shopkeeper from "../../assets/retailer.png";
-import Wholesaler from "../../assets/Wholesaler.png";
+import Wholesaler from "../../assets/wholesaler.png";
 
 import FeatureCard from './FeatuesCard';
 import { useNavigate } from 'react-router-dom';
