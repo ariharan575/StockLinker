@@ -1,0 +1,93 @@
+.sl-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-5);
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: var(--sl-space-6) var(--sl-space-6) var(--sl-space-12);
+}
+
+.sl-page__search {
+  width: 100%;
+}
+
+.sl-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-4);
+}
+
+/*
+ * Scroll-safe wrapper: on narrow layouts (e.g. behind a fixed sidebar),
+ * this container scrolls horizontally instead of clipping the Actions
+ * column. On typical desktop widths, nothing overflows and no scrollbar
+ * appears.
+ */
+.sl-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.sl-table-scroll .sl-list-head,
+.sl-table-scroll .sl-list {
+  min-width: 1010px;
+}
+
+/* ---- Column header row (desktop) ---- */
+.sl-list-head {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.6fr) 92px 108px 64px 92px 84px 104px 84px 72px;
+  gap: var(--sl-space-3);
+  padding: 0 var(--sl-space-4) var(--sl-space-2);
+}
+
+.sl-list-head__cell {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sl-slate-400);
+}
+
+.sl-list-head__stock {
+  text-align: center;
+}
+
+.sl-list-head__actions {
+  text-align: right;
+}
+
+.sl-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-3);
+}
+
+@media (max-width: 1024px) {
+  .sl-page {
+    padding: var(--sl-space-5) var(--sl-space-5) var(--sl-space-10);
+    gap: var(--sl-space-4);
+  }
+}
+
+@media (max-width: 860px) {
+  .sl-list-head {
+    display: none;
+  }
+  .sl-table-scroll {
+    overflow-x: visible;
+  }
+  .sl-table-scroll .sl-list {
+    min-width: 0;
+  }
+  .sl-page {
+    padding: var(--sl-space-4) var(--sl-space-4) var(--sl-space-10);
+  }
+}
+
+@media (max-width: 480px) {
+  .sl-page {
+    padding: var(--sl-space-3) var(--sl-space-3) var(--sl-space-8);
+  }
+}

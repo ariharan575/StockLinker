@@ -1,37 +1,40 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-import { AuthProvider } from './AuthFolder/context/AuthContext';
-import { PrivateRoute, PublicRoute } from './AuthFolder/routes/PrivateRoute';
+import { AuthProvider } from './Authentication/context/AuthContext';
+import { PrivateRoute, PublicRoute } from './Authentication/routes/PrivateRoute';
 
-import SaaSAuthUI from './AuthFolder/pages/Loginx';
-import Dashboard from './AuthFolder/pages/Dashboard';
-import OAuthSuccess from './AuthFolder/pages/OAuthSuccess';
-import RoleSelectionPage from './AuthFolder/pages/RoleSelection';
+import SaaSAuthUI from './Authentication/pages/Loginx';
+import Dashboard from './Authentication/pages/Dashboard';
+import OAuthSuccess from './Authentication/pages/OAuthSuccess';
+import RoleSelectionPage from './Authentication/pages/RoleSelection';
 
 import PremiumLanguageSelector from './Components/PremiumLanguageSelector';
 
-import StockLinkerSettingsPage from './SettingsFolder/StockLinkerSettingsPage';
-import ExampleProfile from './SettingsFolder/ExampleProfile';
-import NewProfile from './SettingsFolder/NewProfile';
-
-import ProfilePage from './ProfileFolder/ProfilePage';
+import ProfilePage from './Profile/ProfilePage';
 import EnterpriseNavbar from './Components/EnterpriseNavbar';
 
-import StockLinkerLanding from './ProfileFolder/StockLinkerLanding';
-import StockLinkerLandingPage from './ProfileFolder/StockLinkerLandingPage';
+import StockLinkerLanding from './Profile/StockLinkerLanding';
+import StockLinkerLandingPage from './Profile/StockLinkerLandingPage';
 
-import { LandingPage } from './LandingPageFolder/Pages/LandingPage';
+import { LandingPage } from './LandingPage/Pages/LandingPage';
 
-import StockLinkerEnterpriseOnboarding from './OnboardingFolder/StockLinkerEnterpriseOnboarding';
+import StockLinkerEnterpriseOnboarding from './Onboarding/StockLinkerEnterpriseOnboarding';
 
-import ComparePage from './ComparePageFolder/ComparePage';
+import ComparePageWrapper from './ComparePage/ComparePageWrapper';
 
-import StockLinkerHomepage from './HomePageFolder/pages/StockLinkerHomepage';
-import  NearbySellers  from './NearBySellerFolder/NearbySeller';
-import NearbySellerPage from './NearBySellerFolder/NearbySellerPage';
+import StockLinkerHomepage from './HomePage/pages/StockLinkerHomepage';
 
-import Message from './MessageFolder/Message'
+import { AccountSection } from './settings/sections/AccountSection';
+import SettingsRoute from './settings/SettingsRoute';
+import ConnectedSupplierWrapper from './Saved Supplier/ConnectedSupplierWrapper';
+import ProductCategoryWrapper from './ProductCatagories/ProductCategoryWrapper';
+import OrdersWrapper from './Order/OrdersWrapper';
+import MessagePageWrapper from './Message/MessagePageWrapper';
+import NearbySellerWrapper from './NearBySeller/NearbySellerWrapper';
+import DashboardHome from './WholeSaler/pages/DashboardHome'
+import ProductListPage from './src/components/ProductListPage';
+
 
 
 
@@ -107,33 +110,6 @@ function App() {
           />
 
           <Route
-            path="/set"
-            element={
-          //    <PrivateRoute>
-                <StockLinkerSettingsPage />
-          //    </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/sete"
-            element={
-         //     <PrivateRoute>
-                <ExampleProfile />
-         //     </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="/settings"
-            element={
-         //     <PrivateRoute>
-                <NewProfile />
-         //     </PrivateRoute>
-            }
-          />
-
-          <Route
             path="/pro"
             element={
           //    <PrivateRoute>
@@ -170,10 +146,19 @@ function App() {
           />
 
           <Route path='/dash' element={<StockLinkerHomepage/>}/>
-          <Route path='/Compare' element={<ComparePage/>}/> 
-          <Route path='/nearby' element={<NearbySellers/>}/>
-          <Route path='/message' element={<Message/>}/>
-          
+          <Route path='/Compare' element={<ComparePageWrapper/>}/> 
+          <Route path='/nearby' element={<NearbySellerWrapper/>}/>
+          <Route path='/message' element={<MessagePageWrapper/>}/>
+          <Route path='/category' element={<ProductCategoryWrapper/>}/>
+          <Route path='/orders' element={<OrdersWrapper/>}/>
+          <Route path='/saved' element={<ConnectedSupplierWrapper/>}/>
+        <Route path="/settings/:section" element={<SettingsRoute />} />
+        <Route path="/ex" element={<DashboardHome />} />
+        <Route path="/product" element={<ProductListPage />} />
+        {/* <Route path='/productlist' element={<ProductListPage/>}/> */}
+        
+
+
 
           {/* ========================================================= */}
           {/* ✅ UNKNOWN ROUTE */}

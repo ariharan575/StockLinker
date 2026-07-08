@@ -1,0 +1,49 @@
+.sl-stock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 108px;
+}
+
+.sl-stock__row {
+  display: flex;
+  align-items: baseline;
+}
+
+.sl-stock__value {
+  font-size: var(--sl-fs-sm);
+  font-weight: 600;
+  color: var(--sl-slate-700);
+}
+
+.sl-stock__unit {
+  font-weight: 500;
+  color: var(--sl-slate-500);
+  font-size: var(--sl-fs-xs);
+}
+
+.sl-stock__track {
+  width: 100%;
+  height: 6px;
+  background: var(--sl-slate-100);
+  border-radius: var(--sl-radius-full);
+  overflow: hidden;
+}
+
+.sl-stock__fill {
+  height: 100%;
+  border-radius: var(--sl-radius-full);
+  transition: width var(--sl-duration-base) var(--sl-ease);
+}
+
+.sl-stock__fill--green {
+  background: linear-gradient(to right, var(--sl-green-500), var(--sl-green-600));
+}
+
+.sl-stock__fill--orange {
+  background: linear-gradient(to right, var(--sl-amber-500), var(--sl-amber-600));
+}
+
+.sl-stock__fill--red {
+  background: linear-gradient(to right, var(--sl-red-500), var(--sl-red-600));
+}

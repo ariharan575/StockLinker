@@ -1,0 +1,138 @@
+/* ==========================================================
+   StockLinker — Design Tokens
+   Enterprise SaaS visual system
+   ========================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ---------- Brand / Neutrals ---------- */
+  --sl-ink: #0F1626;
+  --sl-slate-900: #101828;
+  --sl-slate-700: #344054;
+  --sl-slate-600: #475467;
+  --sl-slate-500: #667085;
+  --sl-slate-400: #98A2B3;
+  --sl-slate-300: #D0D5DD;
+  --sl-slate-200: #E4E7EC;
+  --sl-slate-100: #F2F4F7;
+  --sl-slate-50:  #F9FAFB;
+  --sl-white: #FFFFFF;
+
+  /* ---------- Success (green) ---------- */
+  --sl-green-700: #067647;
+  --sl-green-600: #079455;
+  --sl-green-500: #17B26A;
+  --sl-green-100: #DCFAE6;
+  --sl-green-50:  #ECFDF3;
+
+  /* ---------- Warning (amber) ---------- */
+  --sl-amber-700: #B54708;
+  --sl-amber-600: #DC6803;
+  --sl-amber-500: #F79009;
+  --sl-amber-100: #FEF0C7;
+  --sl-amber-50:  #FFFAEB;
+
+  /* ---------- Danger (red) ---------- */
+  --sl-red-700: #B42318;
+  --sl-red-600: #D92D20;
+  --sl-red-500: #F04438;
+  --sl-red-100: #FEE4E2;
+  --sl-red-50:  #FEF3F2;
+
+  /* ---------- Info (blue, used for Edit) ---------- */
+  --sl-blue-700: #175CD3;
+  --sl-blue-600: #1570EF;
+  --sl-blue-500: #2E90FA;
+  --sl-blue-100: #D1E9FF;
+  --sl-blue-50:  #EFF8FF;
+
+  /* ---------- Accent gradient — CTA ONLY ---------- */
+  --sl-cta-gradient: linear-gradient(to right, #EC4899, #F43F5E, #F97316);
+  --sl-cta-gradient-soft: linear-gradient(to right, rgba(236,72,153,0.10), rgba(244,63,94,0.10), rgba(249,115,22,0.10));
+
+  /* ---------- Typography ---------- */
+  --sl-font-display: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --sl-font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --sl-fs-xs: 12px;
+  --sl-fs-sm: 13px;
+  --sl-fs-base: 14px;
+  --sl-fs-md: 15px;
+  --sl-fs-lg: 18px;
+  --sl-fs-xl: 22px;
+  --sl-fs-2xl: 32px;
+
+  /* ---------- Radius ---------- */
+  --sl-radius-sm: 8px;
+  --sl-radius-md: 12px;
+  --sl-radius-lg: 16px;
+  --sl-radius-xl: 20px;
+  --sl-radius-full: 999px;
+
+  /* ---------- Shadow ---------- */
+  --sl-shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --sl-shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.04);
+  --sl-shadow-md: 0 4px 12px rgba(16, 24, 40, 0.06), 0 2px 4px rgba(16, 24, 40, 0.04);
+  --sl-shadow-lg: 0 12px 24px -6px rgba(16, 24, 40, 0.10), 0 4px 8px rgba(16, 24, 40, 0.04);
+  --sl-shadow-focus: 0 0 0 4px rgba(21, 112, 239, 0.14);
+
+  /* ---------- Spacing scale ---------- */
+  --sl-space-1: 4px;
+  --sl-space-2: 8px;
+  --sl-space-3: 12px;
+  --sl-space-4: 16px;
+  --sl-space-5: 20px;
+  --sl-space-6: 24px;
+  --sl-space-8: 32px;
+  --sl-space-10: 40px;
+  --sl-space-12: 48px;
+
+  /* ---------- Motion ---------- */
+  --sl-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --sl-duration-fast: 140ms;
+  --sl-duration-base: 220ms;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/*
+ * Force light mode everywhere.
+ * Vite/CRA boilerplate CSS (and some browsers) ship `color-scheme: light dark`
+ * plus a dark body background by default — that silently overrides every
+ * color in this file unless we pin color-scheme to light explicitly here.
+ */
+html,
+body,
+#root {
+  background: var(--sl-slate-50);
+  color: var(--sl-ink);
+  color-scheme: light only;
+  min-height: 100%;
+  margin: 0;
+}
+
+.stocklinker-root {
+  font-family: var(--sl-font-body);
+  color: var(--sl-ink);
+  background: var(--sl-slate-50);
+  color-scheme: light only;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.stocklinker-root :focus-visible {
+  outline: none;
+  box-shadow: var(--sl-shadow-focus);
+  border-radius: var(--sl-radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stocklinker-root * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,30 @@
+.sl-stockval {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-family: var(--sl-font-body);
+  white-space: nowrap;
+}
+
+.sl-stockval__number {
+  font-size: var(--sl-fs-md);
+  font-weight: 700;
+}
+
+.sl-stockval__unit {
+  font-size: var(--sl-fs-xs);
+  font-weight: 500;
+  color: var(--sl-slate-500);
+}
+
+.sl-stockval--available .sl-stockval__number {
+  color: var(--sl-green-700);
+}
+
+.sl-stockval--low .sl-stockval__number {
+  color: var(--sl-amber-700);
+}
+
+.sl-stockval--out .sl-stockval__number {
+  color: var(--sl-red-700);
+}
