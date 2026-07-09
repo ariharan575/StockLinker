@@ -34,6 +34,7 @@ import MessagePageWrapper from './Message/MessagePageWrapper';
 import NearbySellerWrapper from './NearBySeller/NearbySellerWrapper';
 import DashboardHome from './WholeSaler/pages/DashboardHome'
 import ProductListPage from './src/components/ProductListPage';
+import NewLanding from './Profile/NewLanding'
 
 
 
@@ -155,6 +156,7 @@ function App() {
         <Route path="/settings/:section" element={<SettingsRoute />} />
         <Route path="/ex" element={<DashboardHome />} />
         <Route path="/product" element={<ProductListPage />} />
+        <Route path="/landing" element={<NewLanding />} />
         {/* <Route path='/productlist' element={<ProductListPage/>}/> */}
         
 

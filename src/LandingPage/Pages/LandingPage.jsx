@@ -6,16 +6,20 @@ import ShopkeeperFlow from '../Sections/ShopkeeperFlow'
 import ProductShowcase from '../Sections/ProductShowcase'
 import WholesaleCommerceCTA from '../Sections/WholesaleCommerceCTA'
 import HeroSection from '../Sections/HeroSection'
+import FeaturesSection from '../Sections/FeaturesSection'
 
 export const LandingPage = () => {
   return (
     <>
+    
       <Navbar />
-        <main>
+        <main className=''>
         <HeroSection/>
-        <ShopkeeperFlow/>
+        <FeaturesSection/>
+        {/* <FeatureCard/> */}
+        {/* <ShopkeeperFlow/> */}
         <ProductShowcase/>
-        <WholesalerWorkFlow/>
+        {/* <WholesalerWorkFlow/> */}
         <WholesaleCommerceCTA/>
         <Footer />
       </main>

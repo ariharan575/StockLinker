@@ -9,8 +9,13 @@ import {
   useTransform,
 } from "framer-motion";
 
+import Shopkeeper from "../assets/retailer.png";
+import Wholesaler from "../assets/wholesaler.png";
+
 import {
   ArrowRight,
+  Globe2 ,
+  Radio ,
   Moon,
   Sun,
   Sparkles,
@@ -83,7 +88,6 @@ import {
 } from "lucide-react";
 
 import { FaFacebook,FaInstagram, FaTwitter, FaLinkedin } from "react-icons/fa";
-import HeroSection from "../LandingPage/Sections/HeroSection";
 
 const translations = {
   en: {
@@ -94,7 +98,7 @@ const translations = {
     solutions: "Solutions",
     pricing: "Pricing",
     resources: "Resources",
-    heroBadge: "Connect ->  Compare -> Grow ",
+    heroBadge: "AI Powered Wholesale Commerce Platform",
     heroTitle1: "The Intelligent",
     heroTitle2: "Wholesale Network",
     heroTitle3: "For Modern Retail",
@@ -159,6 +163,31 @@ const companyNames = [
   "BlueSupply",
   "FastChain",
 ];
+
+const metrics = [
+  {
+    title: "Orders Processed",
+    value: "2.4M+",
+    icon: PackageCheck,
+  },
+  {
+    title: "Delivery Accuracy",
+    value: "98.9%",
+    icon: Route,
+  },
+  {
+    title: "Retailers Connected",
+    value: "12K+",
+    icon: Store,
+  },
+  {
+    title: "Monthly GMV",
+    value: "₹82Cr",
+    icon: CircleDollarSign,
+  },
+];
+
+  const infrastructureEase = [0.25, 1, 0.5, 1];
 
 
 const features = [
@@ -489,6 +518,12 @@ export default function StockLinkerLanding() {
             : "border-black/10 bg-white/50"
         } backdrop-blur-2xl`}
       >
+        {/* <div className="mx-auto flex max-w-7xl items-center justify-center gap-3 text-center text-xs font-semibold tracking-[0.15em] sm:text-sm">
+          <Flame className="h-4 w-4 text-orange-400" />
+          <span className={dark ? "text-white/80" : "text-zinc-700"}>
+            {t.banner}
+          </span>
+        </div> */}
       </motion.div>
 
       <motion.nav
@@ -498,7 +533,7 @@ export default function StockLinkerLanding() {
         className="sticky top-0 z-50 px-4 py-5 sm:px-8"
       >
         <div
-          className={`mx-auto flex max-w-7xl items-center justify-between rounded-[28px] border px-5 py-3 shadow-2xl backdrop-blur-2xl lg:px-8 ${
+          className={`mx-auto flex max-w-7xl items-center justify-between rounded-[28px] border px-5 py-1 shadow-2xl backdrop-blur-2xl lg:px-8 ${
             dark
               ? "border-white/10 bg-black/30 shadow-black/20"
               : "border-black/10 bg-white/70 shadow-black/5"
@@ -521,7 +556,7 @@ export default function StockLinkerLanding() {
                 className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-400 via-blue-500 to-fuchsia-500 blur-md"
               />
 
-              <div className="relative flex h-10 w-12 items-center justify-center rounded-2xl bg-black text-white">
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-2xl bg-black text-white">
                 <Layers3 className="h-6 w-6" />
               </div>
             </div>
@@ -530,13 +565,6 @@ export default function StockLinkerLanding() {
               <h1 className="text-lg font-black tracking-tight">
                 StockLinker
               </h1>
-              {/* <p
-                className={`text-xs ${
-                  dark ? "text-white/50" : "text-zinc-500"
-                }`}
-              >
-                Intelligent Wholesale Network
-              </p> */}
             </div>
           </motion.div>
 
@@ -569,7 +597,7 @@ export default function StockLinkerLanding() {
               onClick={() =>
                 setTheme(dark ? "light" : "dark")
               }
-              className={`rounded-2xl border p-3 ${
+              className={`rounded-2xl border p-2 ${
                 dark
                   ? "border-white/10 bg-white/5"
                   : "border-black/10 bg-black/[0.03]"
@@ -587,7 +615,7 @@ export default function StockLinkerLanding() {
               onClick={() =>
                 setLanguage(language === "en" ? "ta" : "en")
               }
-              className={`flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold ${
+              className={`flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold ${
                 dark
                   ? "border-white/10 bg-white/5"
                   : "border-black/10 bg-black/[0.03]"
@@ -677,375 +705,506 @@ export default function StockLinkerLanding() {
         </AnimatePresence>
       </motion.nav>
 
-      <section className="relative px-4 pb-24 pt-10 sm:px-8 lg:pb-32 lg:pt-16">
-        <div className="mx-auto grid max-w-7xl items-center gap-20 lg:grid-cols-2">
+<section className="relative w-full overflow-hidden text-slate-900 font-sans antialiased select-none">
+
+      {/* BACKGROUND WRAPPER WITH FADE OUT MASK TO BLEND SEAMLESSLY INTO NEXT SECTION */}
+      <div 
+        className="absolute inset-0 w-full h-full pointer-events-none z-0"
+        style={{
+          WebkitMaskImage: "linear-gradient(to bottom, white 75%, transparent 100%)",
+          maskImage: "linear-gradient(to bottom, white 75%, transparent 100%)"
+        }}
+      >
+        {/* BACKGROUND INFRASTRUCTURE */}
+        <div className="absolute inset-0 w-full h-full mix-blend-multiply opacity-60">
+          {/* GRID */}
+          {/* <div className="absolute inset-0 bg-[linear-gradient(to_right,#E2E8F0_1px,transparent_1px),linear-gradient(to_bottom,#E2E8F0_1px,transparent_1px)] bg-[size:48px_48px]" /> */}
+
+          {/* NETWORK PATHS */}
+          <svg
+            className="absolute inset-0 w-full h-full"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1440 1800"
+            preserveAspectRatio="none"
+          >
+            <motion.path
+              d="M 250 450 Q 450 250, 720 450 T 1190 450"
+              fill="none"
+              stroke="#CBD5E1"
+              strokeWidth="1.5"
+            />
+
+            <motion.path
+              d="M 250 450 Q 450 250, 720 450 T 1190 450"
+              fill="none"
+              stroke="#EC4899"
+              strokeWidth="2"
+              strokeDasharray="40 180"
+              initial={{ strokeDashoffset: 0 }}
+              animate={{ strokeDashoffset: -440 }}
+              transition={{
+                duration: 12,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
+
+            <motion.path
+              d="M 250 480 C 450 650, 950 250, 1190 480"
+              fill="none"
+              stroke="#94A3B8"
+              strokeWidth="1"
+              strokeDasharray="4 6"
+            />
+
+            <motion.path
+              d="M 250 480 C 450 650, 950 250, 1190 480"
+              fill="none"
+              stroke="#475569"
+              strokeWidth="1.5"
+              strokeDasharray="20 300"
+              initial={{ strokeDashoffset: 0 }}
+              animate={{ strokeDashoffset: 320 }}
+              transition={{
+                duration: 8,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            />
+          </svg>
+        </div>
+
+        {/* PREMIUM GLOW */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-[14%] left-1/2 -translate-x-1/2 w-[760px] h-[760px] bg-pink-400/10 blur-[140px] rounded-full" />
+          <div className="absolute top-[22%] right-[8%] w-[340px] h-[340px] bg-sky-400/10 blur-[120px] rounded-full" />
+          <div className="absolute bottom-[8%] left-[5%] w-[340px] h-[340px] bg-violet-400/10 blur-[120px] rounded-full" />
+        </div>
+      </div>
+
+      {/* FLOATING METRICS */}
+      {/* <motion.div
+        animate={{ y: [0, -10, 0] }}
+        transition={{
+          duration: 5,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        className="hidden 2xl:flex absolute top-28 left-14 z-30 bg-white/90 backdrop-blur-xl border border-white rounded-2xl px-5 py-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
+      >
+        <div className="flex items-center gap-4">
+
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center border border-white">
+            <Activity className="w-5 h-5 text-emerald-600" />
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-sm font-black text-slate-900">
+              1,240+ Orders
+            </span>
+
+            <span className="text-xs text-slate-500 font-medium">
+              processed today
+            </span>
+          </div>
+
+        </div>
+      </motion.div> */}
+{/* <motion.div
+        animate={{ y: [0, 12, 0] }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        className="hidden 2xl:flex absolute bottom-40 right-16 z-30 bg-white/90 backdrop-blur-xl border border-white rounded-2xl px-5 py-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
+      >
+        <div className="flex items-center gap-4">
+
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-100 to-sky-50 flex items-center justify-center border border-white">
+            <Globe2 className="w-5 h-5 text-sky-600" />
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-sm font-black text-slate-900">
+              Live Supplier Network
+            </span>
+
+            <span className="text-xs text-slate-500 font-medium">
+              connected across regions
+            </span>
+          </div>
+
+        </div>
+      </motion.div> */}
+
+      {/* HERO CORE */}
+      <div
+        className="
+        relative z-10 w-full max-w-[1390px] mx-auto
+        px-6 sm:px-15
+        pt-24 pb-14
+        lg:pt-40 lg:pb-10
+        xl:py-0
+        min-h-[65vh] 
+        flex flex-col lg:flex-row
+        items-center justify-center lg:justify-between
+        gap-8 lg:gap-5
+      "
+        style={{ perspective: 1600 }}
+      >
+
+        {/* LEFT CARD */}
+        <motion.div
+          className="hidden lg:block relative w-[280px] xl:w-[320px] h-[480px] origin-left z-20"
+          initial={{
+            opacity: 0,
+            x: -80,
+            rotateY: 25,
+            filter: "blur(10px)"
+          }}
+          animate={{
+            opacity: 1,
+            x: 0,
+            rotateY: 14,
+            filter: "blur(0px)",
+            y: [0, -10, 0]
+          }}
+          transition={{
+            opacity: {
+              duration: 1.4,
+              ease: infrastructureEase
+            },
+            x: {
+              duration: 1.4,
+              ease: infrastructureEase
+            },
+            rotateY: {
+              duration: 1.4,
+              ease: infrastructureEase
+            },
+            filter: {
+              duration: 1.2
+            },
+            y: {
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }
+          }}
+        >
+          <div className="w-full h-full bg-white/85 p-2.5 rounded-[28px] shadow-[24px_40px_100px_-24px_rgba(15,23,42,0.12)] border border-white/70 relative overflow-hidden group backdrop-blur-2xl">
+
+            <div className="absolute inset-0 border border-slate-200/50 rounded-[26px] pointer-events-none z-30" />
+
+            <div className="w-full h-full rounded-[18px] overflow-hidden bg-slate-50 relative">
+
+              <img
+                src={Shopkeeper}
+                alt="Retailer Dashboard"
+                className="w-full h-full object-cover saturate-[1.15] contrast-[1.02] transition-all duration-700 group-hover:scale-105"
+              />
+
+              <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/10 to-transparent opacity-90" />
+            </div>
+
+            <div className="absolute bottom-6 left-6 right-6 z-20 flex flex-col gap-1 font-mono text-slate-800">
+
+              <span className="text-[10px] tracking-[0.24em] text-slate-400 uppercase">
+                Retailer Dashboard
+              </span>
+
+              <span className="text-xs font-bold tracking-wide text-slate-900">
+                SMART ORDER MANAGEMENT
+              </span>
+
+            </div>
+
+          </div>
+        </motion.div>
+
+        {/* CENTER CONTENT */}
+        <div className="flex flex-col items-center justify-center text-center flex-1 max-w-3xl mx-auto z-30 px-4 w-full">
+
+          {/* TOP LABEL */}
           <motion.div
             initial={{
               opacity: 0,
-              y: 80,
-              filter: "blur(18px)",
+              y: 20,
+              filter: "blur(8px)"
             }}
             animate={{
               opacity: 1,
               y: 0,
-              filter: "blur(0px)",
+              filter: "blur(0px)"
             }}
             transition={{
               duration: 1,
+              ease: infrastructureEase
             }}
-            className="relative z-10"
+            className="mb-8 flex items-center gap-2 font-mono text-[10px] tracking-[0.28em] text-slate-500 uppercase flex-wrap justify-center"
           >
-            <div
-              className={`mb-8 inline-flex items-center gap-3 rounded-full border px-5 py-3 text-sm font-semibold ${
-                dark
-                  ? "border-white/10 bg-white/[0.04] text-white/80"
-                  : "border-black/10 bg-white text-zinc-700"
-              }`}
-            >
-              <Sparkles className="h-4 w-4 text-cyan-400" />
-              {t.heroBadge}
-            </div>
+            <Radio size={12} className="text-pink-500 animate-pulse" />
 
-            <h1 className="max-w-4xl text-5xl font-black leading-[0.92] tracking-[-0.06em] sm:text-6xl lg:text-8xl">
-              <span
-                className={dark ? "text-white" : "text-zinc-950"}
-              >
-                {t.heroTitle1}
-              </span>
-
-              <br />
-
-              <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-fuchsia-500 bg-clip-text text-transparent">
-                {t.heroTitle2}
-              </span>
-
-              <br />
-
-              <span
-                className={dark ? "text-white" : "text-zinc-950"}
-              >
-                {t.heroTitle3}
-              </span>
-            </h1>
-
-            <p
-              className={`mt-8 max-w-2xl text-lg leading-9 sm:text-xl ${
-                dark ? "text-white/60" : "text-zinc-600"
-              }`}
-            >
-              {t.heroDesc}
-            </p>
-
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-              <MagneticButton primary>
-                {t.heroBtn1}
-                <ArrowRight className="h-4 w-4" />
-              </MagneticButton>
-
-              <MagneticButton>
-                <Play className="h-4 w-4" />
-                {t.heroBtn2}
-              </MagneticButton>
-            </div>
-
-            <div className="mt-12 flex flex-wrap items-center gap-6">
-              {[
-                "Realtime Inventory",
-                "Tamil AI Search",
-                "Route Intelligence",
-              ].map((item) => (
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  key={item}
-                  className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${
-                    dark
-                      ? "border-white/10 bg-white/[0.03]"
-                      : "border-black/10 bg-white"
-                  }`}
-                >
-                  <BadgeCheck className="h-5 w-5 text-emerald-400" />
-                  <span className="text-sm font-medium">
-                    {item}
-                  </span>
-                </motion.div>
-              ))}
-            </div>
+            <span className="flex items-center gap-1 font-semibold">
+              CONNECTED COMMERCE INFRASTRUCTURE
+            </span>
           </motion.div>
 
-          <motion.div
+          {/* TITLE */}
+          <motion.h1
             initial={{
               opacity: 0,
-              scale: 0.9,
-              rotate: -3,
+              y: 60,
+              scale: 0.96,
+              filter: "blur(12px)"
             }}
             animate={{
               opacity: 1,
+              y: 0,
               scale: 1,
-              rotate: 0,
+              filter: "blur(0px)"
             }}
             transition={{
               duration: 1.2,
+              ease: infrastructureEase,
+              delay: 0.1
             }}
-            className="relative"
+            className="text-[44px] sm:text-[56px] md:text-[68px] xl:text-[82px] font-black tracking-[-0.05em] text-zinc-900 leading-[0.98] uppercase"
           >
-            <motion.div
-              animate={{
-                y: [0, -12, 0],
-              }}
-              transition={{
-                duration: 6,
-                repeat: Infinity,
-              }}
-              className={`relative overflow-hidden rounded-[40px] border shadow-2xl backdrop-blur-2xl ${
-                dark
-                  ? "border-white/10 bg-white/[0.04]"
-                  : "border-black/10 bg-white"
-              }`}
-            >
-              <div
-                className={`flex items-center justify-between border-b px-6 py-5 ${
-                  dark
-                    ? "border-white/10"
-                    : "border-black/10"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-2">
-                    <div className="h-3 w-3 rounded-full bg-red-400" />
-                    <div className="h-3 w-3 rounded-full bg-yellow-400" />
-                    <div className="h-3 w-3 rounded-full bg-green-400" />
-                  </div>
+            Connect.
+            <br />
 
-                  <div
-                    className={`rounded-full px-4 py-2 text-xs font-semibold ${
-                      dark
-                        ? "bg-white/5 text-white/60"
-                        : "bg-zinc-100 text-zinc-700"
-                    }`}
-                  >
-                    stocklinker.ai/dashboard
-                  </div>
-                </div>
+            Compare.
+            <br />
 
-                <div className="flex items-center gap-3">
-                  <Bell className="h-5 w-5 text-cyan-400" />
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500" />
-                </div>
-              </div>
+            <span className="bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500 bg-clip-text text-transparent">
+              Scale Faster.
+            </span>
+          </motion.h1>
 
-              <div className="grid gap-6 p-6">
-                <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-                  <motion.div
-                    whileHover={{ y: -8 }}
-                    className={`rounded-[32px] border p-6 ${
-                      dark
-                        ? "border-white/10 bg-black/20"
-                        : "border-black/10 bg-zinc-50"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p
-                          className={`text-sm ${
-                            dark
-                              ? "text-white/50"
-                              : "text-zinc-500"
-                          }`}
-                        >
-                          Revenue Growth
-                        </p>
+          {/* SUBTITLE */}
+          <motion.p
+            initial={{
+              opacity: 0,
+              y: 30,
+              filter: "blur(8px)"
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              filter: "blur(0px)"
+            }}
+            transition={{
+              duration: 1.2,
+              ease: infrastructureEase,
+              delay: 0.2
+            }}
+            className="mt-8 text-sm md:text-base text-slate-600 max-w-[580px] leading-[1.8] font-medium tracking-tight"
+          >
+            StockLinker helps retailers discover nearby wholesalers,
+            compare live prices, manage orders, and track deliveries —
+            all from one intelligent commerce platform.
+          </motion.p>
 
-                        <h3 className="mt-2 text-4xl font-black">
-                          +248%
-                        </h3>
-                      </div>
+          {/* BUTTONS */}
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 25,
+              scale: 0.96
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1
+            }}
+            transition={{
+              duration: 1.2,
+              ease: infrastructureEase,
+              delay: 0.3
+            }}
+            className="mt-10 flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto"
+          >
 
-                      <div className="rounded-2xl bg-emerald-500/10 p-4">
-                        <TrendingUp className="h-7 w-7 text-emerald-400" />
-                      </div>
-                    </div>
+            <button className="group h-14 px-8 bg-black font-medium text-sm tracking-[0.1em] uppercase text-white rounded-2xl transition-all duration-300 shadow-[0_12px_40px_rgba(236,72,153,0.22)] flex items-center justify-center gap-3 w-full sm:w-auto hover:scale-[1.02] hover:-translate-y-[2px]">
 
-                    <div className="mt-8 flex h-40 items-end gap-3">
-                      {[40, 80, 55, 100, 130, 95, 150].map(
-                        (h, i) => (
-                          <motion.div
-                            key={i}
-                            initial={{ height: 0 }}
-                            animate={{ height: h }}
-                            transition={{
-                              delay: i * 0.08,
-                              duration: 1,
-                            }}
-                            className="flex-1 rounded-t-3xl bg-gradient-to-t from-cyan-500 to-blue-400"
-                          />
-                        )
-                      )}
-                    </div>
-                  </motion.div>
+              <Sparkles
+                size={14}
+                className="text-pink-300"
+              />
 
-                  <div className="grid gap-6">
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      className={`rounded-[32px] border p-6 ${
-                        dark
-                          ? "border-white/10 bg-black/20"
-                          : "border-black/10 bg-zinc-50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p
-                            className={`text-sm ${
-                              dark
-                                ? "text-white/50"
-                                : "text-zinc-500"
-                            }`}
-                          >
-                            Active Deliveries
-                          </p>
+              <span onClick={() => navigate('/login')}>
+                Get Started
+              </span>
 
-                          <h4 className="mt-2 text-3xl font-black">
-                            1,284
-                          </h4>
-                        </div>
+              <ArrowRight
+                size={14}
+                className="transition-transform duration-300 group-hover:translate-x-1"
+              />
 
-                        <Truck className="h-10 w-10 text-cyan-400" />
-                      </div>
+            </button>
 
-                      <div className="mt-5">
-                        <div className="mb-2 flex justify-between text-xs">
-                          <span>Route efficiency</span>
-                          <span>92%</span>
-                        </div>
+            <button className="h-14 px-8 bg-white/80 hover:bg-white text-sm font-medium tracking-[0.1em] uppercase text-slate-800 rounded-2xl transition-all duration-300 border border-white shadow-[0_10px_30px_rgba(15,23,42,0.04)] flex items-center justify-center gap-2 w-full sm:w-auto hover:-translate-y-[2px]">
 
-                        <div className="h-3 overflow-hidden rounded-full bg-white/10">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            whileInView={{ width: "92%" }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 1.5 }}
-                            className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"
-                          />
-                        </div>
-                      </div>
-                    </motion.div>
+              <Shield
+                size={13}
+                className="text-gray-500"
+              />
 
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      className={`rounded-[32px] border p-6 ${
-                        dark
-                          ? "border-white/10 bg-black/20"
-                          : "border-black/10 bg-zinc-50"
-                      }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="rounded-2xl bg-fuchsia-500/10 p-4">
-                          <Bot className="h-8 w-8 text-fuchsia-400" />
-                        </div>
+              <span>
+                See Platform
+              </span>
 
-                        <div>
-                          <h4 className="text-lg font-bold">
-                            AI Assistant
-                          </h4>
-                          <p
-                            className={`text-sm ${
-                              dark
-                                ? "text-white/50"
-                                : "text-zinc-500"
-                            }`}
-                          >
-                            Predicting low stock items
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-6 space-y-3">
-                        {[
-                          "Cooking Oil",
-                          "Basmati Rice",
-                          "Soft Drinks",
-                        ].map((item) => (
-                          <div
-                            key={item}
-                            className={`flex items-center justify-between rounded-2xl px-4 py-3 ${
-                              dark
-                                ? "bg-white/5"
-                                : "bg-white"
-                            }`}
-                          >
-                            <span className="text-sm font-medium">
-                              {item}
-                            </span>
-
-                            <span className="rounded-full bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-400">
-                              Low
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  </div>
-                </div>
-
-                {/* <div className="grid gap-6 lg:grid-cols-3">
-                  {metrics.map((metric, index) => {
-                    const Icon = metric.icon;
-
-                    return (
-                      <motion.div
-                        key={metric.title}
-                        initial={{
-                          opacity: 0,
-                          y: 40,
-                        }}
-                        animate={{
-                          opacity: 1,
-                          y: 0,
-                        }}
-                        transition={{
-                          delay: index * 0.1,
-                        }}
-                        whileHover={{
-                          y: -6,
-                        }}
-                        className={`rounded-[28px] border p-5 ${
-                          dark
-                            ? "border-white/10 bg-white/[0.03]"
-                            : "border-black/10 bg-zinc-50"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p
-                              className={`text-sm ${
-                                dark
-                                  ? "text-white/50"
-                                  : "text-zinc-500"
-                              }`}
-                            >
-                              {metric.title}
-                            </p>
-
-                            <h4 className="mt-3 text-3xl font-black">
-                              {metric.value}
-                            </h4>
-                          </div>
-
-                          <div className="rounded-2xl bg-cyan-500/10 p-4">
-                            <Icon className="h-6 w-6 text-cyan-400" />
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div> */}
-              </div>
-            </motion.div>
+            </button>
 
           </motion.div>
+
+          {/* MOBILE CARDS */}
+          <div className="w-full mt-12 lg:hidden">
+
+            <div className="grid grid-cols-2 gap-4 md:gap-6 max-w-2xl mx-auto">
+
+              {/* CARD 1 */}
+              <div className="bg-white/85 p-2 rounded-[20px] shadow-[0_20px_60px_rgba(15,23,42,0.08)] border border-white overflow-hidden group backdrop-blur-xl text-left">
+
+                <div className="rounded-[14px] overflow-hidden bg-slate-50 relative aspect-[4/5]">
+
+                  <img
+                    src={Shopkeeper}
+                    alt="Retailer Dashboard"
+                    className="w-full h-full object-cover saturate-[1.15] contrast-[1.02] transition-all duration-700 group-hover:scale-105"
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-transparent to-transparent" />
+                </div>
+
+                <div className="mt-3 px-1 flex flex-col font-mono text-slate-800">
+
+                  <span className="text-[8px] tracking-[0.22em] text-slate-400 uppercase">
+                    Retailer Dashboard
+                  </span>
+
+                  <span className="text-[10px] font-bold tracking-wide text-slate-900 truncate">
+                    SMART ORDER MANAGEMENT
+                  </span>
+
+                </div>
+
+              </div>
+
+              {/* CARD 2 */}
+              <div className="bg-white/85 p-2 rounded-[20px] shadow-[0_20px_60px_rgba(15,23,42,0.08)] border border-white overflow-hidden group backdrop-blur-xl text-left">
+
+                <div className="rounded-[14px] overflow-hidden bg-slate-50 relative aspect-[4/5]">
+
+                  <img
+                    src={Wholesaler}
+                    alt="Wholesaler Network"
+                    className="w-full h-full object-cover saturate-[1.15] contrast-[1.02] transition-all duration-700 group-hover:scale-105"
+                    style={{
+                      transform: "scaleX(-1)"
+                    }}
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-transparent to-transparent" />
+                </div>
+
+                <div className="mt-3 px-1 flex flex-col font-mono text-slate-800">
+
+                  <span className="text-[8px] tracking-[0.22em] text-slate-400 uppercase">
+                    Wholesaler Network
+                  </span>
+
+                  <span className="text-[10px] font-bold tracking-wide text-slate-900 truncate">
+                    LIVE SUPPLIER INVENTORY
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
         </div>
-      </section>
-      {/* <HeroSection/> */}
+
+        {/* RIGHT CARD */}
+        <motion.div
+          className="hidden lg:block relative w-[280px] xl:w-[320px] h-[480px] origin-right z-20"
+          initial={{
+            opacity: 0,
+            x: 80,
+            rotateY: -25,
+            filter: "blur(10px)"
+          }}
+          animate={{
+            opacity: 1,
+            x: 0,
+            rotateY: -14,
+            filter: "blur(0px)",
+            y: [0, 10, 0]
+          }}
+          transition={{
+            opacity: {
+              duration: 1.4,
+              ease: infrastructureEase
+            },
+            x: {
+              duration: 1.4,
+              ease: infrastructureEase
+            },
+            rotateY: {
+              duration: 1.4,
+              ease: infrastructureEase
+            },
+            filter: {
+              duration: 1.2
+            },
+            y: {
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }
+          }}
+        >
+          <div className="w-full h-full bg-white/85 p-2.5 rounded-[28px] shadow-[-24px_40px_100px_-24px_rgba(15,23,42,0.12)] border border-white/70 relative overflow-hidden group backdrop-blur-2xl">
+
+            <div className="absolute inset-0 border border-slate-200/50 rounded-[26px] pointer-events-none z-30" />
+
+            <div className="w-full h-full rounded-[18px] overflow-hidden bg-slate-50 relative">
+
+              <img
+                src={Wholesaler}
+                alt="Wholesaler Network"
+                className="w-full h-full object-cover saturate-[1.15] contrast-[1.02] transition-all duration-700 group-hover:scale-105"
+                style={{
+                  transform: "scaleX(-1)"
+                }}
+              />
+
+              <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/10 to-transparent opacity-90" />
+
+            </div>
+
+            <div className="absolute bottom-6 left-6 right-6 z-20 flex flex-col gap-1 font-mono text-slate-800">
+
+              <span className="text-[10px] tracking-[0.24em] text-slate-400 uppercase">
+                Wholesaler Network
+              </span>
+
+              <span className="text-xs font-bold tracking-wide text-slate-900">
+                LIVE SUPPLIER INVENTORY
+              </span>
+
+            </div>
+
+          </div>
+        </motion.div>
+
+      </div>
+
+    </section>
 
       <section className="relative px-4 py-16 sm:px-8">
         <div className="mx-auto max-w-7xl">
