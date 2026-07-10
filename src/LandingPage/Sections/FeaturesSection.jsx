@@ -84,10 +84,10 @@ export default function FeaturesSection() {
         <div className="xl:w-[80%] h-px " />
       </div>
       
-      <div className="relative z-20 w-full max-w-[1536px] mx-auto sm:px-10 lg:px-16">
+      <div className="relative z-20 w-full max-w-[1536px] mx-auto lg:px-16">
         
         {/* PREMIUM ENTERPRISE CONTAINER */}
-        <div className="w-full rounded-[32px] p-6 sm:p-12 lg:p-20 relative overflow-hidden">
+        <div className="w-full rounded-[32px] p-6 sm:p-12 lg:p-2 xl:p-16 relative overflow-hidden">
           
           {/* Internal Glow Details */}
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-pink-400/5 blur-[120px] rounded-full pointer-events-none" />
@@ -116,7 +116,7 @@ export default function FeaturesSection() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 relative z-10"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 lg:gap-8 relative z-10"
           >
             {TRUST_BAR_ITEMS.map((item) => (
               <motion.div key={item.id} variants={itemVariants} className="group relative">
@@ -141,7 +141,7 @@ export default function FeaturesSection() {
                       {item.description}
                     </p>
                     
-                    <div className="mt-8 flex items-center gap-2 text-sm font-semibold text-slate-900 opacity-0 -translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
+                    <div className="mt-8 flex items-center gap-2 text-sm font-semibold text-slate-900 opacity-100 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
                       Explore Capability
                       <ArrowRight size={16} className="text-pink-500" />
                     </div>

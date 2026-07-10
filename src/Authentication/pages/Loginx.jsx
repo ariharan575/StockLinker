@@ -493,12 +493,11 @@ export default function SaaSAuthUI() {
 
   return (
     <>
-      <div className="relative min-h-screen overflow-hidden flex items-center justify-center px-4 py-6 bg-gray-200">
+      <div className="relative min-h-screen overflow-hidden flex items-center justify-center px-2 md:px-4 md:py-3 bg-gray-100">
         {/* BG */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(236,72,153,0.12),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.12),transparent_35%)]" />
-
+        
         {/* GRID */}
-        <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] bg-[size:45px_45px]" />
+        <div className="absolute inset-0 opacity-[0.02] bg-[linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] bg-[size:45px_45px]" />
 
         {/* FLOAT */}
         <motion.div
@@ -563,7 +562,7 @@ export default function SaaSAuthUI() {
               </span>
             </div>
 
-            <div className="my-auto py-8">
+            <div className="my-auto py-4">
               {/* TITLE */}
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900">
                 {!showOtp ? (
@@ -584,7 +583,7 @@ export default function SaaSAuthUI() {
               </h1>
 
               {/* SUBTITLE */}
-              <p className="text-sm text-slate-500 max-w-sm mt-3 leading-relaxed">
+              <p className="hidden md:block text-sm text-slate-500 max-w-sm mt-3 leading-relaxed">
                 {!showOtp
                   ? "Access your premium wholesale platform securely with real-time inventory synchronizations."
                   : `Enter verification code sent to +91 ${phone}`}
@@ -593,7 +592,7 @@ export default function SaaSAuthUI() {
               {/* PHONE LOGIN */}
               {!showOtp ? (
                 <>
-                  <div className="mt-8 space-y-2">
+                  <div className="mt-5 space-y-2">
                     <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                       Phone Number
                     </label>
@@ -683,8 +682,8 @@ export default function SaaSAuthUI() {
                       justify-center
                       gap-3
                       rounded-xl
-                      py-4
-                      text-sm
+                      py-3
+                      text-md
                       font-bold
                       text-white
                       overflow-hidden

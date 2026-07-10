@@ -7,6 +7,8 @@ import ProductShowcase from '../Sections/ProductShowcase'
 import WholesaleCommerceCTA from '../Sections/WholesaleCommerceCTA'
 import HeroSection from '../Sections/HeroSection'
 import FeaturesSection from '../Sections/FeaturesSection'
+import HowStockLinkerWorks from '../Sections/HowStockLinkerWorks'
+import RoleExperienceSection from '../Sections/RoleExperienceSection'
 
 export const LandingPage = () => {
   return (
@@ -16,8 +18,10 @@ export const LandingPage = () => {
         <main className=''>
         <HeroSection/>
         <FeaturesSection/>
+        <HowStockLinkerWorks/>
         {/* <FeatureCard/> */}
         {/* <ShopkeeperFlow/> */}
+        <RoleExperienceSection/>
         <ProductShowcase/>
         {/* <WholesalerWorkFlow/> */}
         <WholesaleCommerceCTA/>

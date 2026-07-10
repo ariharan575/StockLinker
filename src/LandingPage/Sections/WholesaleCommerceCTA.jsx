@@ -6,7 +6,7 @@ import {
 } from "framer-motion";
 
 // ============================================================================
-// PREMIUM GLASS CARD
+// PREMIUM GLASS CARD (White Mode)
 // ============================================================================
 
 const GlassCard = React.forwardRef(
@@ -14,7 +14,7 @@ const GlassCard = React.forwardRef(
     return (
       <div
         ref={ref}
-        className={`relative overflow-hidden rounded-[34px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-2xl shadow-[0_30px_120px_rgba(0,0,0,0.60)] ${className}`}
+        className={`relative overflow-hidden rounded-[34px] border border-slate-200/60 bg-white/70 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] ${className}`}
         {...props}
       >
         {children}
@@ -64,13 +64,13 @@ const MagneticButton = React.forwardRef(
     };
 
     const baseStyles =
-      "inline-flex items-center gap-2.5 px-7 py-4 rounded-2xl text-sm font-semibold transition-all duration-300 cursor-pointer";
+      "inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl text-base font-semibold transition-all duration-300 cursor-pointer";
 
     const primaryStyles =
-      "bg-gradient-to-r from-cyan-400 via-sky-500 to-fuchsia-500 text-white shadow-[0_14px_45px_rgba(56,189,248,0.24)] hover:scale-[1.02]";
+      "bg-gradient-to-r from-cyan-500 via-sky-500 to-fuchsia-500 text-white shadow-sm hover:shadow-[0_8px_25px_rgba(14,165,233,0.25)] hover:scale-[1.02]";
 
     const secondaryStyles =
-      "bg-white/[0.04] border border-white/[0.08] text-white hover:bg-white/[0.07] hover:border-cyan-400/20";
+      "bg-white border border-slate-200 text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900";
 
     return (
       <motion.button
@@ -93,7 +93,7 @@ const MagneticButton = React.forwardRef(
 MagneticButton.displayName = "MagneticButton";
 
 // ============================================================================
-// FLOATING PARTICLE
+// FLOATING PARTICLE (Static Entry for White Mode)
 // ============================================================================
 
 const FloatingParticle = ({ delay = 0, size = 6, left = "50%" }) => {
@@ -104,12 +104,11 @@ const FloatingParticle = ({ delay = 0, size = 6, left = "50%" }) => {
         y: 40,
       }}
       animate={{
-        opacity: [0, 0.7, 0],
-        y: [-20, -120],
+        opacity: 0.4,
+        y: -20,
       }}
       transition={{
-        duration: 7,
-        repeat: Infinity,
+        duration: 2,
         delay,
         ease: "easeOut",
       }}
@@ -118,7 +117,7 @@ const FloatingParticle = ({ delay = 0, size = 6, left = "50%" }) => {
         width: size,
         height: size,
       }}
-      className="absolute bottom-0 rounded-full bg-cyan-400/30 blur-[2px]"
+      className="absolute bottom-10 rounded-full bg-cyan-500/20 blur-[1px]"
     />
   );
 };
@@ -158,9 +157,9 @@ export default function WholesaleCommerceCTA({
   const itemVariants = {
     hidden: {
       opacity: 0,
-      y: 50,
-      scale: 0.96,
-      filter: "blur(8px)",
+      y: 40,
+      scale: 0.98,
+      filter: "blur(4px)",
     },
     visible: {
       opacity: 1,
@@ -169,90 +168,20 @@ export default function WholesaleCommerceCTA({
       filter: "blur(0px)",
       transition: {
         type: "spring",
-        damping: 20,
-        stiffness: 120,
+        damping: 25,
+        stiffness: 100,
       },
     },
   };
 
   return (
-    <section
-      ref={containerRef}
-      className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#050816] px-4 py-24 sm:px-6 md:px-8"
-    >
-      {/* ================================================================= */}
-      {/* PREMIUM SAAS BACKGROUND */}
-      {/* ================================================================= */}
 
-      {/* Main Gradient */}
-      <motion.div
-        animate={{
-          scale: [1, 1.04, 1],
-        }}
-        transition={{
-          duration: 14,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_30%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.14),transparent_28%),radial-gradient(circle_at_bottom,rgba(236,72,153,0.10),transparent_28%)]"
-      />
-
-      {/* Grid */}
-      <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:90px_90px]" />
-
-      {/* Glow Orbs */}
-      <motion.div
-        animate={{
-          x: [-20, 20, -20],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        className="absolute -top-40 left-[-10%] h-[480px] w-[480px] rounded-full bg-cyan-500/20 blur-[140px]"
-      />
-
-      <motion.div
-        animate={{
-          x: [20, -20, 20],
-        }}
-        transition={{
-          duration: 12,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        className="absolute top-[20%] right-[-10%] h-[480px] w-[480px] rounded-full bg-fuchsia-500/18 blur-[150px]"
-      />
-
-      {/* Light Beam */}
-      <motion.div
-        animate={{
-          x: ["-20%", "120%"],
-        }}
-        transition={{
-          duration: 12,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-        className="absolute top-0 h-full w-[220px] rotate-12 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent blur-3xl"
-      />
-
-      {/* Floating Particles */}
-      <FloatingParticle delay={0} left="14%" size={5} />
-      <FloatingParticle delay={2} left="34%" size={7} />
-      <FloatingParticle delay={1} left="58%" size={6} />
-      <FloatingParticle delay={3} left="82%" size={5} />
-
-      {/* ================================================================= */}
-      {/* MAIN CARD */}
-      {/* ================================================================= */}
-
+    <>
       <motion.div
         initial={{
           opacity: 0,
-          y: 80,
-          scale: 0.94,
+          y: 60,
+          scale: 0.96,
         }}
         animate={{
           opacity: 1,
@@ -263,24 +192,24 @@ export default function WholesaleCommerceCTA({
           duration: 1,
           ease: [0.16, 1, 0.3, 1],
         }}
-        className="relative z-10 w-full max-w-7xl"
+        className="relative z-10 w-full mx-auto "
       >
-        <GlassCard className="p-7 sm:p-10 md:p-16 lg:p-20">
+        <GlassCard className="p-8 sm:p-10 md:p-16 lg:p-20 xl:m-25 ">
           {/* Border Glow */}
-          <div className="absolute inset-0 rounded-[34px] border border-white/[0.05]" />
+          <div className="absolute inset-0 rounded-[34px] border border-white/80" />
 
           {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/[0.05] via-transparent to-fuchsia-500/[0.07]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/[0.02] via-transparent to-fuchsia-500/[0.02]" />
 
           {/* Rings */}
           <motion.div
-            animate={{ rotate: [0, 360] }}
+            initial={{ opacity: 0, rotate: -45, scale: 0.8 }}
+            animate={{ opacity: 1, rotate: 0, scale: 1 }}
             transition={{
-              duration: 40,
-              repeat: Infinity,
-              ease: "linear",
+              duration: 2.5,
+              ease: "easeOut",
             }}
-            className="absolute -right-32 -top-32 hidden h-96 w-96 rounded-full border border-dashed border-white/[0.04] lg:block"
+            className="absolute -right-32 -top-32 hidden h-96 w-96 rounded-full border border-dashed border-slate-200/80 lg:block"
           />
 
           {/* ================================================================= */}
@@ -299,15 +228,15 @@ export default function WholesaleCommerceCTA({
               whileHover={{
                 scale: 1.04,
               }}
-              className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/[0.07] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-300 backdrop-blur-md"
+              className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50/80 px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-700 backdrop-blur-md"
             >
               <motion.svg
-                animate={{
-                  scale: [1, 1.2, 1],
-                }}
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
                 transition={{
-                  duration: 2,
-                  repeat: Infinity,
+                  duration: 0.6,
+                  ease: "backOut",
+                  delay: 0.5,
                 }}
                 className="h-3.5 w-3.5 fill-current"
                 viewBox="0 0 24 24"
@@ -321,9 +250,9 @@ export default function WholesaleCommerceCTA({
             {/* Title */}
             <motion.h2
               variants={itemVariants}
-              className="mt-8 max-w-5xl text-4xl font-black leading-[1.02] tracking-[-0.05em] text-white sm:text-5xl md:text-6xl lg:text-7xl"
+              className="mt-8 max-w-5xl text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl md:text-6xl lg:text-7xl"
             >
-              <span className="bg-gradient-to-r from-white via-cyan-100 to-fuchsia-100 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-slate-900 via-cyan-800 to-fuchsia-800 bg-clip-text text-transparent">
                 {titleText}
               </span>
             </motion.h2>
@@ -331,7 +260,7 @@ export default function WholesaleCommerceCTA({
             {/* Description */}
             <motion.p
               variants={itemVariants}
-              className="mx-auto mt-7 max-w-3xl text-sm leading-relaxed text-slate-400 sm:text-base md:text-lg md:leading-[1.9]"
+              className="mx-auto mt-7 max-w-3xl text-base leading-relaxed text-slate-600 sm:text-lg md:text-xl md:leading-[1.8]"
             >
               {descriptionText}
             </motion.p>
@@ -374,7 +303,7 @@ export default function WholesaleCommerceCTA({
             {/* Features */}
             <motion.div
               variants={itemVariants}
-              className="mt-16 flex w-full flex-wrap items-center justify-center gap-x-8 gap-y-5 border-t border-white/[0.06] pt-8"
+              className="mt-16 flex w-full flex-wrap items-center justify-center gap-x-8 gap-y-5 border-t border-slate-100 pt-8"
             >
               {features.map((item, index) => (
                 <motion.div
@@ -397,12 +326,10 @@ export default function WholesaleCommerceCTA({
                   className="group flex items-center gap-2.5"
                 >
                   <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
                   </span>
 
-                  <span className="text-xs font-medium tracking-wide text-slate-400 transition-colors duration-300 group-hover:text-white sm:text-sm">
+                  <span className="text-sm font-medium tracking-wide text-slate-500 transition-colors duration-300 group-hover:text-slate-900 sm:text-base">
                     {item}
                   </span>
                 </motion.div>
@@ -411,6 +338,6 @@ export default function WholesaleCommerceCTA({
           </motion.div>
         </GlassCard>
       </motion.div>
-    </section>
+      </>
   );
 }

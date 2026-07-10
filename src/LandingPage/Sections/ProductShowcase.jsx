@@ -1,7 +1,532 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
+// import React, { useState, useEffect, useRef } from 'react';
+// import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion';
 
-// --- Custom Viewport Intersection Observer Hook ---
+// // --- Custom Viewport Intersection Observer Hook ---
+// const useScrollReveal = (options = {}) => {
+//   const [isInView, setIsInView] = useState(false);
+//   const ref = useRef(null);
+
+//   useEffect(() => {
+//     const currentRef = ref.current;
+//     const observer = new IntersectionObserver(([entry]) => {
+//       if (entry.isIntersecting) {
+//         setIsInView(true);
+//         if (options.triggerOnce) observer.unobserve(entry.target);
+//       }
+//     }, { threshold: options.threshold || 0.1, ...options });
+
+//     if (currentRef) observer.observe(currentRef);
+
+//     return () => {
+//       if (currentRef) observer.unobserve(currentRef);
+//     };
+//   }, [options]);
+
+//   return { ref, isInView };
+// };
+
+// // --- Reusable SVG Icons (Enterprise Standard) ---
+// const VerifiedBadge = () => (
+//   <svg className="w-3 h-3 text-emerald-500" viewBox="0 0 24 24" fill="currentColor">
+//     <path d="M11.602 1.672a.818.818 0 0 1 .796 0l2.369 1.258a.818.818 0 0 0 .61.054l2.585-.826a.818.818 0 0 1 1.01.621l.666 2.62a.818.818 0 0 0 .422.545l2.42 1.157a.818.818 0 0 1 .374 1.127l-1.306 2.368a.818.818 0 0 0 0 .611l1.306 2.367a.818.818 0 0 1-.374 1.128l-2.42 1.156a.818.818 0 0 0-.422.546l-.666 2.619a.818.818 0 0 1-1.01.621l-2.585-.826a.818.818 0 0 0-.61.054l-2.37 1.258a.818.818 0 0 1-.795 0l-2.37-1.258a.818.818 0 0 0-.61-.054l-2.585.826a.818.818 0 0 1-1.01-.621l-.666-2.62a.818.818 0 0 0-.422-.545l-2.42-1.157a.818.818 0 0 1-.374-1.127l1.306-2.368a.818.818 0 0 0 0-.611L1.246 9.382a.818.818 0 0 1 .374-1.128l2.42-1.156a.818.818 0 0 0 .422-.546l.666-2.619a.818.818 0 0 1 1.01-.621l2.585.826a.818.818 0 0 0 .61-.054l2.37-1.258Z" opacity="0.2"/>
+//     <path d="M10.97 16.03a.75.75 0 0 1-.53-.22l-2.97-2.97a.75.75 0 1 1 1.06-1.06l2.44 2.44 5.97-5.97a.75.75 0 0 1 1.06 1.06l-6.5 6.5a.75.75 0 0 1-.53.22Z"/>
+//   </svg>
+// );
+
+// const LocationPin = () => (
+//   <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+//     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+//   </svg>
+// );
+
+// const StarIcon = () => (
+//   <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-500" viewBox="0 0 24 24" fill="currentColor">
+//     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+//   </svg>
+// );
+
+// export default function ProductShowcasePlaceholder() {
+//   const { ref, isInView } = useScrollReveal({ threshold: 0.05, triggerOnce: false });
+//   const [activeTab, setActiveTab] = useState('Dashboard');
+
+//   // Immersive Ergonomic 3D Parallax Tracking
+//   const mouseX = useMotionValue(0);
+//   const mouseY = useMotionValue(0);
+  
+//   const springConfig = { damping: 40, stiffness: 160, mass: 0.65 };
+//   const rotateX = useSpring(useTransform(mouseY, [-300, 300], [2.5, -2.5]), springConfig);
+//   const rotateY = useSpring(useTransform(mouseX, [-500, 500], [-3.5, 3.5]), springConfig);
+
+//   const handleMouseMove = (e) => {
+//     const rect = e.currentTarget.getBoundingClientRect();
+//     const height = rect.height;
+//     const centerX = e.clientX - rect.left - rect.width / 2;
+//     mouseX.set(centerX);
+//     mouseY.set(e.clientY - rect.top - height / 2);
+//   };
+
+//   const handleMouseLeave = () => {
+//     mouseX.set(0);
+//     mouseY.set(0);
+//   };
+
+//   const menuTabs = ['Dashboard', 'Search', 'Prices', 'Orders', 'Routes', 'Inventory', 'Messages'];
+
+//   const containerVariants = {
+//     hidden: { opacity: 0 },
+//     visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.05 } }
+//   };
+
+//   const itemVariants = {
+//     hidden: { y: 25, opacity: 0, filter: 'blur(6px)' },
+//     visible: { y: 0, opacity: 1, filter: 'blur(0px)', transition: { type: 'spring', stiffness: 95, damping: 15 } }
+//   };
+
+//   return (
+//     <section 
+//       ref={ref} 
+//       className="py-10 relative overflow-hidden bg-[#F8FAFC] text-slate-900 select-none z-20 border-y border-slate-200/60"
+//     >
+//       {/* Light Cinematic Background (Removed pulse/infinite animations) */}
+//       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-rose-400/20 to-transparent" />
+//       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] md:w-[1100px] h-[400px] md:h-[650px] bg-gradient-to-tr from-rose-300/10 via-pink-200/10 to-sky-200/10 rounded-full blur-[140px] pointer-events-none mix-blend-multiply" />
+//       <div className="absolute bottom-10 right-10 w-[450px] h-[450px] bg-sky-200/10 rounded-full blur-[150px] pointer-events-none" />
+      
+//       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
+        
+//         {/* Header */}
+//         <motion.div 
+//           variants={containerVariants}
+//           initial="hidden"
+//           animate={isInView ? "visible" : "hidden"}
+//           className="text-center mb-6 md:mb-14 max-w-4xl mx-auto"
+//         >
+//           <motion.h2 
+//             variants={itemVariants}
+//             className="text-2xl sm:text-4xl md:text-5xl lg:text-5xl font-black tracking-tighter mb-3 md:mb-4 text-slate-900 leading-[1.08] sm:leading-[1.05] antialiased"
+//             > Dashboard Preview
+//           </motion.h2>
+//              <span className='text-slate-500 font-medium tracking-tight'>
+//               A Powerful dashboard to manage your business
+//             </span>
+//         </motion.div>
+        
+//         {/* Navigation Switcher Tabs */}
+//         <div className="max-w-2xl mx-auto mb-6 md:mb-10 relative">
+//           <motion.div 
+//             initial={{ opacity: 0, y: 15 }}
+//             animate={isInView ? { opacity: 1, y: 0 } : {}}
+//             transition={{ duration: 0.6, delay: 0.2 }}
+//             className="flex flex-nowrap overflow-x-auto gap-1.5 p-1.5 pb-2 rounded-xl bg-slate-200/40 border border-slate-300/30 backdrop-blur-xl custom-scrollbar touch-pan-x snap-x snap-mandatory"
+//             style={{ WebkitOverflowScrolling: 'touch' }}
+//           >
+//             <style dangerouslySetInnerHTML={{__html: `
+//               .custom-scrollbar::-webkit-scrollbar { height: 1px; }
+//               .custom-scrollbar::-webkit-scrollbar-track { background: transparent; margin: 0 12px; }
+//               .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.3); border-radius: 99px; }
+//             `}} />
+
+//             {menuTabs.map(tab => (
+//               <button
+//                 key={tab}
+//                 onClick={() => setActiveTab(tab)}
+//                 className={`px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs font-bold tracking-wide transition-all duration-200 whitespace-nowrap relative flex-1 md:flex-initial snap-shrink-0 ${
+//                   activeTab === tab ? 'text-slate-900' : 'text-slate-500 hover:text-slate-800'
+//                 }`}
+//               >
+//                 {activeTab === tab && (
+//                   <motion.div 
+//                     layoutId="activeLightPlaceholderIndicator"
+//                     className="absolute inset-0 bg-white border border-slate-200/80 shadow-sm rounded-lg"
+//                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+//                   />
+//                 )}
+//                 <span className="relative z-10 flex items-center justify-center gap-1.5">
+//                   {tab}
+//                   {tab === 'Messages' && (
+//                     <span className="w-1.5 h-1.5 rounded-full bg-pink-500 shadow-[0_0_4px_#f43f5e]" />
+//                   )}
+//                 </span>
+//               </button>
+//             ))}
+//           </motion.div>
+//         </div>
+        
+//         {/* Chassis Canvas Mockup Display */}
+//         <motion.div 
+//           initial={{ opacity: 0, scale: 0.96, y: 30, filter: 'blur(6px)' }}
+//           animate={isInView ? { opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' } : {}}
+//           transition={{ type: 'spring', stiffness: 60, damping: 18, delay: 0.3 }}
+//           onMouseMove={handleMouseMove}
+//           onMouseLeave={handleMouseLeave}
+//           className="relative max-w-5xl mx-auto px-1 sm:px-4 group preserve-3d cursor-default"
+//         >
+//           <div className="absolute -inset-1 bg-gradient-to-tr from-pink-400/5 via-sky-400/5 to-transparent rounded-2xl blur-xl opacity-60 group-hover:opacity-90 transition-opacity duration-500 pointer-events-none" />
+
+//           {/* Core Platform Illusion Surface Container */}
+//           <motion.div
+//             style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
+//             className="w-full bg-white/95 rounded-2xl border border-slate-200 shadow-[0_30px_70px_-15px_rgba(15,23,42,0.06)] backdrop-blur-2xl relative overflow-hidden"
+//           >
+//             {/* Top Browser Ribbon Bar */}
+//             <div className="border-b border-slate-200/60 bg-slate-50 p-2 sm:p-2.5 flex items-center justify-between relative">
+//               <div className="flex gap-1.5 px-2">
+//                 <div className="w-2 h-2 rounded-full bg-slate-300 group-hover:bg-rose-400/70 transition-colors duration-300" />
+//                 <div className="w-2 h-2 rounded-full bg-slate-300 group-hover:bg-pink-400/70 transition-colors duration-300" />
+//                 <div className="w-2 h-2 rounded-full bg-slate-300 group-hover:bg-sky-400/70 transition-colors duration-300" />
+//               </div>
+//               <div className="bg-slate-200/40 border border-slate-300/20 text-[10px] text-slate-400 font-mono px-4 sm:px-12 py-0.5 rounded-md min-w-[120px] sm:min-w-[240px] text-center tracking-wide truncate max-w-[180px] sm:max-w-none">
+//                 app.stocklinker.com/dashboard
+//               </div>
+//               <div className="flex items-center gap-1.5 text-[9px] font-mono text-slate-400 pr-2">
+//                 <span className="w-1 h-1 rounded-full bg-emerald-400" />
+//                 <span className="hidden sm:inline tracking-wider">SYSTEM_ACTIVE</span>
+//               </div>
+//             </div>
+
+//             {/* Inner Navbar */}
+//             <div className="border-b border-slate-100 bg-white px-4 py-2 flex items-center justify-between text-[11px] font-medium text-slate-500">
+//               <div className="flex items-center gap-4">
+//                 <span className="text-slate-900 font-bold hidden sm:block">StockLinker</span>
+//                 <span className="w-px h-3 bg-slate-200 hidden sm:block" />
+//                 <span className="text-slate-500 flex items-center gap-1"><LocationPin /> Salem, Tamil Nadu</span>
+//               </div>
+//               <div className="flex items-center gap-3">
+//                 <div className="w-5 h-5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[8px] font-bold text-slate-600">AB</div>
+//               </div>
+//             </div>
+
+//             {/* Main Content Area - Keeping Exact Original Container Class Limits */}
+//             <div className="p-3 sm:p-6 min-h-[240px] sm:min-h-[340px] md:min-h-[420px] relative bg-slate-50/30">
+              
+//               <AnimatePresence mode="wait">
+//                 <motion.div
+//                   key={activeTab}
+//                   initial={{ opacity: 0, scale: 0.99, filter: 'blur(2px)' }}
+//                   animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+//                   exit={{ opacity: 0, scale: 0.99, filter: 'blur(2px)' }}
+//                   transition={{ duration: 0.18 }}
+//                   className="w-full h-full flex flex-col gap-3 sm:gap-5"
+//                 >
+                  
+//                   {/* TOP SECTION: 4 Small Cards (Nearby Buyers/Sellers) */}
+//                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
+                    
+//                     {/* Card 1 */}
+//                     <motion.div whileHover={{ y: -2 }} className="p-2 sm:p-3 rounded-xl bg-white border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-slate-300 transition-all duration-300 flex flex-col justify-between h-[85px] sm:h-[100px]">
+//                       <div className="flex justify-between items-start w-full">
+//                         <div className="flex items-center gap-1.5 sm:gap-2 overflow-hidden">
+//                           <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-md bg-blue-50 border border-blue-100 flex-shrink-0 flex items-center justify-center text-blue-600 font-bold text-[8px] sm:text-[10px]">KT</div>
+//                           <div className="min-w-0">
+//                             <div className="text-[8px] sm:text-[9px] text-slate-500 font-semibold tracking-wide uppercase leading-none">Nearby Seller</div>
+//                             <div className="text-[10px] sm:text-xs font-bold text-slate-900 truncate mt-0.5 flex items-center gap-1">
+//                               Kumar Traders <VerifiedBadge />
+//                             </div>
+//                           </div>
+//                         </div>
+//                         <div className="flex items-center gap-1 text-[8px] sm:text-[9px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded font-medium border border-emerald-100 flex-shrink-0">
+//                           <span className="w-1 h-1 rounded-full bg-emerald-500"/> Live
+//                         </div>
+//                       </div>
+//                       <div className="flex justify-between items-end mt-2">
+//                         <div className="flex flex-col gap-0.5">
+//                           <span className="text-[9px] sm:text-[10px] text-slate-500 flex items-center gap-0.5"><LocationPin /> 1.4 km</span>
+//                           <span className="text-[9px] sm:text-[10px] font-medium text-slate-700">425 Products</span>
+//                         </div>
+//                         <div className="text-[10px] sm:text-[11px] font-bold text-slate-800 flex items-center gap-0.5"><StarIcon /> 4.9</div>
+//                       </div>
+//                     </motion.div>
+
+//                     {/* Card 2 */}
+//                     <motion.div whileHover={{ y: -2 }} className="p-2 sm:p-3 rounded-xl bg-white border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-slate-300 transition-all duration-300 flex flex-col justify-between h-[85px] sm:h-[100px]">
+//                       <div className="flex justify-between items-start w-full">
+//                         <div className="flex items-center gap-1.5 sm:gap-2 overflow-hidden">
+//                           <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-md bg-emerald-50 border border-emerald-100 flex-shrink-0 flex items-center justify-center text-emerald-600 font-bold text-[8px] sm:text-[10px]">FW</div>
+//                           <div className="min-w-0">
+//                             <div className="text-[8px] sm:text-[9px] text-slate-500 font-semibold tracking-wide uppercase leading-none">Nearby Seller</div>
+//                             <div className="text-[10px] sm:text-xs font-bold text-slate-900 truncate mt-0.5 flex items-center gap-1">
+//                               Fresh Wholesale <VerifiedBadge />
+//                             </div>
+//                           </div>
+//                         </div>
+//                         <div className="flex items-center gap-1 text-[8px] sm:text-[9px] text-slate-600 bg-slate-50 px-1.5 py-0.5 rounded font-medium border border-slate-200 flex-shrink-0">
+//                           <span className="w-1 h-1 rounded-full bg-slate-400"/> Open
+//                         </div>
+//                       </div>
+//                       <div className="flex justify-between items-end mt-2">
+//                         <div className="flex flex-col gap-0.5">
+//                           <span className="text-[9px] sm:text-[10px] text-slate-500 flex items-center gap-0.5"><LocationPin /> 2.1 km</span>
+//                           <span className="text-[9px] sm:text-[10px] font-medium text-slate-700">612 Products</span>
+//                         </div>
+//                         <div className="text-[10px] sm:text-[11px] font-bold text-slate-800 flex items-center gap-0.5"><StarIcon /> 4.8</div>
+//                       </div>
+//                     </motion.div>
+
+//                     {/* Card 3 */}
+//                     <motion.div whileHover={{ y: -2 }} className="p-2 sm:p-3 rounded-xl bg-white border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-slate-300 transition-all duration-300 flex flex-col justify-between h-[85px] sm:h-[100px]">
+//                       <div className="flex justify-between items-start w-full">
+//                         <div className="flex items-center gap-1.5 sm:gap-2 overflow-hidden">
+//                           <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-md bg-purple-50 border border-purple-100 flex-shrink-0 flex items-center justify-center text-purple-600 font-bold text-[8px] sm:text-[10px]">RS</div>
+//                           <div className="min-w-0">
+//                             <div className="text-[8px] sm:text-[9px] text-purple-500 font-semibold tracking-wide uppercase leading-none">Nearby Buyer</div>
+//                             <div className="text-[10px] sm:text-xs font-bold text-slate-900 truncate mt-0.5">Royal Super Market</div>
+//                           </div>
+//                         </div>
+//                         <div className="text-[8px] sm:text-[9px] text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded font-bold border border-rose-100 flex-shrink-0">
+//                           Urgent
+//                         </div>
+//                       </div>
+//                       <div className="flex justify-between items-end mt-2">
+//                         <div className="flex flex-col gap-0.5">
+//                           <span className="text-[9px] sm:text-[10px] text-slate-500 flex items-center gap-0.5"><LocationPin /> 850 m</span>
+//                           <span className="text-[9px] sm:text-[10px] font-semibold text-slate-800">Need Rice</span>
+//                         </div>
+//                         <div className="text-[9px] sm:text-[10px] font-bold text-emerald-600 text-right leading-tight">
+//                           <span className="text-[8px] text-slate-400 block font-normal">Order Value</span>
+//                           ₹12,500
+//                         </div>
+//                       </div>
+//                     </motion.div>
+
+//                     {/* Card 4 */}
+//                     <motion.div whileHover={{ y: -2 }} className="p-2 sm:p-3 rounded-xl bg-white border border-slate-200/80 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-slate-300 transition-all duration-300 flex flex-col justify-between h-[85px] sm:h-[100px]">
+//                       <div className="flex justify-between items-start w-full">
+//                         <div className="flex items-center gap-1.5 sm:gap-2 overflow-hidden">
+//                           <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-md bg-amber-50 border border-amber-100 flex-shrink-0 flex items-center justify-center text-amber-600 font-bold text-[8px] sm:text-[10px]">AG</div>
+//                           <div className="min-w-0">
+//                             <div className="text-[8px] sm:text-[9px] text-purple-500 font-semibold tracking-wide uppercase leading-none">Nearby Buyer</div>
+//                             <div className="text-[10px] sm:text-xs font-bold text-slate-900 truncate mt-0.5 flex items-center gap-1">ABC Grocery <VerifiedBadge/></div>
+//                           </div>
+//                         </div>
+//                         <div className="text-[8px] sm:text-[9px] text-slate-600 bg-slate-50 px-1.5 py-0.5 rounded font-medium border border-slate-200 flex-shrink-0">
+//                           Bulk Order
+//                         </div>
+//                       </div>
+//                       <div className="flex justify-between items-end mt-2">
+//                         <div className="flex flex-col gap-0.5">
+//                           <span className="text-[9px] sm:text-[10px] text-slate-500 flex items-center gap-0.5"><LocationPin /> 1.9 km</span>
+//                           <span className="text-[9px] sm:text-[10px] font-semibold text-slate-800">Need Cooking Oil</span>
+//                         </div>
+//                         <div className="text-[10px] sm:text-[11px] font-medium text-slate-500">Verified</div>
+//                       </div>
+//                     </motion.div>
+
+//                   </div>
+
+//                   {/* CENTER SECTION: Compare Product Price (Replaces Analytics Node Graph) */}
+//                   <div className="flex-1 min-h-[110px] sm:min-h-[180px] md:min-h-[200px] bg-white border border-slate-200/80 rounded-xl p-2 sm:p-3 flex flex-col md:flex-row gap-2 sm:gap-4 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.04)] overflow-hidden">
+                    
+//                     {/* Left: Table Container */}
+//                     <div className="flex-1 flex flex-col overflow-hidden h-full">
+                      
+//                       {/* Header */}
+//                       <div className="flex justify-between items-center mb-1.5 sm:mb-2 px-1">
+//                         <div className="flex items-center gap-2">
+//                           <h3 className="text-[11px] sm:text-sm font-bold text-slate-900 leading-none">Compare Product Price</h3>
+//                         </div>
+//                         <div className="bg-slate-50 border border-slate-200 text-slate-600 text-[9px] sm:text-[10px] px-2 py-1 rounded-md font-medium flex items-center gap-1.5 shadow-sm">
+//                           <svg className="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+//                           Rice 25kg
+//                         </div>
+//                       </div>
+                      
+//                       {/* Responsive Table */}
+//                       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+//                         <table className="w-full text-left border-collapse">
+//                           <thead className="sticky top-0 bg-white shadow-[0_1px_0_0_#f1f5f9] z-10">
+//                             <tr className="text-[9px] sm:text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
+//                               <th className="py-1.5 px-2">Seller</th>
+//                               <th className="py-1.5 px-1 hidden sm:table-cell text-center">Distance</th>
+//                               <th className="py-1.5 px-2 text-right">Qty</th>
+//                               <th className="py-1.5 px-2 text-right text-slate-900">Unit Price</th>
+//                               <th className="py-1.5 px-1 hidden md:table-cell text-center">GST</th>
+//                               <th className="py-1.5 px-1 hidden lg:table-cell text-center">Delivery</th>
+//                               <th className="py-1.5 px-1 text-center">Rating</th>
+//                               <th className="py-1.5 px-2"></th>
+//                             </tr>
+//                           </thead>
+//                           <tbody className="text-[9px] sm:text-[11px]">
+//                             {[
+//                               { name: 'Kumar Traders', dist: '1.2 km', qty: '520 Bags', price: '₹948', gst: 'Included', del: 'Today', rtg: '5.0', best: true },
+//                               { name: 'Fresh Wholesale', dist: '2.1 km', qty: '610 Bags', price: '₹952', gst: 'Included', del: 'Today', rtg: '5.0' },
+//                               { name: 'Metro Suppliers', dist: '3.4 km', qty: '950 Bags', price: '₹955', gst: 'Included', del: 'Tomorrow', rtg: '5.0' },
+//                               { name: 'Anand Traders', dist: '1.8 km', qty: '430 Bags', price: '₹960', gst: 'Included', del: 'Today', rtg: '4.0' }
+//                             ].map((row, idx) => (
+//                               <tr key={idx} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/80 transition-colors group">
+//                                 <td className="py-1.5 sm:py-2 px-2 font-semibold text-slate-800 truncate max-w-[90px] sm:max-w-[140px] flex items-center gap-1">
+//                                   {row.name} {row.best && <VerifiedBadge />}
+//                                 </td>
+//                                 <td className="py-1.5 sm:py-2 px-1 hidden sm:table-cell text-slate-500 text-center">{row.dist}</td>
+//                                 <td className="py-1.5 sm:py-2 px-2 text-right font-medium text-slate-600">{row.qty}</td>
+//                                 <td className="py-1.5 sm:py-2 px-2 text-right font-bold text-slate-900">{row.price}</td>
+//                                 <td className="py-1.5 sm:py-2 px-1 hidden md:table-cell text-center text-slate-500">{row.gst}</td>
+//                                 <td className={`py-1.5 sm:py-2 px-1 hidden lg:table-cell text-center font-medium ${row.del === 'Today' ? 'text-emerald-600' : 'text-slate-500'}`}>{row.del}</td>
+//                                 <td className="py-1.5 sm:py-2 px-1 text-center font-bold text-slate-700 flex items-center justify-center gap-0.5"><StarIcon /> {row.rtg}</td>
+//                                 <td className="py-1.5 sm:py-2 px-2 text-right">
+//                                   <button className="text-[8px] sm:text-[9px] bg-slate-900 text-white px-2 sm:px-2.5 py-1 rounded transition-all active:scale-95 hover:bg-slate-800 font-medium whitespace-nowrap shadow-sm">
+//                                     Compare
+//                                   </button>
+//                                 </td>
+//                               </tr>
+//                             ))}
+//                           </tbody>
+//                         </table>
+//                       </div>
+//                     </div>
+
+//                     {/* Right: Best Seller Panel (Same Container Height) */}
+//                     <div className="hidden md:flex flex-col w-[170px] lg:w-[200px] border-l border-slate-100 pl-3 lg:pl-4 justify-between py-1">
+//                       <div>
+//                         <div className="bg-emerald-50 text-emerald-700 text-[9px] lg:text-[10px] font-bold px-2 py-1 rounded-md inline-flex items-center gap-1.5 mb-2.5 lg:mb-4 border border-emerald-200/50 uppercase tracking-wider">
+//                           <VerifiedBadge /> Best Choice
+//                         </div>
+//                         <div className="space-y-1.5 lg:space-y-2.5">
+//                           <div className="flex justify-between items-center text-[10px] lg:text-xs">
+//                             <span className="text-slate-500 font-medium">Lowest Price</span>
+//                             <span className="font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">₹948</span>
+//                           </div>
+//                           <div className="flex justify-between items-center text-[10px] lg:text-xs">
+//                             <span className="text-slate-500 font-medium">Delivery</span>
+//                             <span className="font-bold text-emerald-600">Fastest (Today)</span>
+//                           </div>
+//                           <div className="flex justify-between items-center text-[10px] lg:text-xs">
+//                             <span className="text-slate-500 font-medium">Highest Rating</span>
+//                             <span className="font-bold text-slate-900 flex items-center gap-1"><StarIcon /> 5.0</span>
+//                           </div>
+//                           <div className="flex justify-between items-center text-[10px] lg:text-xs">
+//                             <span className="text-slate-500 font-medium">Availability</span>
+//                             <span className="font-semibold text-slate-800">520 Bags</span>
+//                           </div>
+//                         </div>
+//                       </div>
+//                       <div className="pt-2 border-t border-slate-100 mt-2">
+//                         <div className="flex justify-between items-center text-[10px] lg:text-xs">
+//                           <span className="text-slate-500 font-medium">Est. Savings</span>
+//                           <span className="font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">1.2% / Bag</span>
+//                         </div>
+//                       </div>
+//                     </div>
+//                   </div>
+
+//                   {/* BOTTOM SECTION: 2 Small Cards (Orders & Details) */}
+//                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-4 h-[120px] sm:h-[130px]">
+                    
+//                     {/* Left Card: Today's Orders */}
+//                     <div className="p-3 sm:p-4 rounded-xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between group hover:border-slate-300 transition-colors">
+//                       <div className="flex justify-between items-center mb-1">
+//                         <h4 className="text-[11px] sm:text-xs font-bold text-slate-800 uppercase tracking-wider">Today's Orders</h4>
+//                         <span className="text-[9px] text-slate-400 font-medium border border-slate-200 px-1.5 rounded">Live</span>
+//                       </div>
+//                       <div className="flex items-end justify-between flex-1">
+//                         <div className="flex flex-col mb-1">
+//                           <span className="text-3xl sm:text-4xl font-black text-slate-900 leading-none tracking-tighter">142</span>
+//                           <span className="text-[9px] sm:text-[10px] text-emerald-600 font-medium mt-1.5 bg-emerald-50 px-1.5 py-0.5 rounded w-max">↑ +12% vs Yesterday</span>
+//                         </div>
+//                         <div className="w-[120px] sm:w-[150px] flex flex-col gap-1.5 sm:gap-2 mb-1">
+//                           {[
+//                             { label: 'Packed', val: 45, max: 142, color: 'bg-blue-500' },
+//                             { label: 'Processing', val: 32, max: 142, color: 'bg-amber-500' },
+//                             { label: 'Out', val: 15, max: 142, color: 'bg-rose-500' },
+//                             { label: 'Delivered', val: 50, max: 142, color: 'bg-emerald-500' }
+//                           ].map((stat, i) => (
+//                             <div key={i} className="flex items-center gap-2 text-[8px] sm:text-[9px]">
+//                               <span className="w-12 text-slate-500 text-right">{stat.label}</span>
+//                               <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+//                                 <motion.div 
+//                                   initial={{ width: 0 }}
+//                                   animate={isInView ? { width: `${(stat.val/stat.max)*100}%` } : {}}
+//                                   transition={{ duration: 1, delay: 0.2 + (i*0.1) }}
+//                                   className={`h-full rounded-full ${stat.color}`} 
+//                                 />
+//                               </div>
+//                               <span className="w-4 font-bold text-slate-700">{stat.val}</span>
+//                             </div>
+//                           ))}
+//                         </div>
+//                       </div>
+//                     </div>
+
+//                     {/* Right Card: Order Details */}
+//                     <div className="p-3 sm:p-4 rounded-xl bg-white border border-slate-200/80 shadow-sm flex flex-col h-full overflow-hidden group hover:border-slate-300 transition-colors">
+//                       <div className="flex justify-between items-center mb-2">
+//                         <h4 className="text-[11px] sm:text-xs font-bold text-slate-800 uppercase tracking-wider">Recent Orders</h4>
+//                         <button className="text-[9px] text-blue-600 font-semibold hover:underline">View All</button>
+//                       </div>
+//                       <div className="flex flex-col flex-1 justify-between gap-1 overflow-hidden">
+//                         {[
+//                           { id: '#901', name: 'Metro Mart', prod: 'Rice 25kg', qty: '10x', stat: 'Out', time: '10:30 AM', statColor: 'text-rose-600 bg-rose-50 border-rose-100' },
+//                           { id: '#902', name: 'City Store', prod: 'Sugar 50kg', qty: '5x', stat: 'Proc', time: '11:15 AM', statColor: 'text-amber-600 bg-amber-50 border-amber-100' },
+//                           { id: '#903', name: 'Royal Mkt', prod: 'Oil 15L', qty: '20x', stat: 'Pack', time: '12:00 PM', statColor: 'text-blue-600 bg-blue-50 border-blue-100' },
+//                           { id: '#904', name: 'Fresh Groc', prod: 'Wheat 10kg', qty: '15x', stat: 'Del', time: '09:00 AM', statColor: 'text-emerald-600 bg-emerald-50 border-emerald-100' }
+//                         ].map((o, i) => (
+//                           <div key={i} className="flex justify-between items-center bg-slate-50/50 rounded-md p-1.5 sm:p-2 border border-slate-100 hover:border-slate-200 transition-colors text-[9px] sm:text-[10px]">
+//                             <div className="flex gap-2 items-center w-[45%]">
+//                               <span className="font-mono text-slate-400 font-medium">{o.id}</span>
+//                               <span className="font-semibold text-slate-800 truncate">{o.name}</span>
+//                             </div>
+//                             <div className="w-[30%] truncate text-slate-500">
+//                               {o.prod} <span className="font-bold text-slate-700 ml-0.5">{o.qty}</span>
+//                             </div>
+//                             <div className="w-[25%] flex justify-end gap-1.5 items-center">
+//                               <span className="hidden lg:inline text-[8px] text-slate-400">{o.time}</span>
+//                               <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold border ${o.statColor}`}>{o.stat}</span>
+//                             </div>
+//                           </div>
+//                         ))}
+//                       </div>
+//                     </div>
+
+//                   </div>
+//                 </motion.div>
+//               </AnimatePresence>
+//             </div>
+
+//             {/* Glass Mirror Light Reflective Diagonal Sweep Veil */}
+//             <div className="absolute top-0 -inset-full h-full w-1/2 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-40 pointer-events-none" />
+//           </motion.div>
+          
+//           <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-20 sm:w-28 h-1 bg-slate-300 border-b border-x border-white rounded-b-xl shadow-md pointer-events-none" />
+//         </motion.div>
+//       </div>
+//     </section>
+//   );
+// }
+
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
+
+// --- Extracted Static Data (Prevents Re-creation on Render) ---
+const MENU_TABS = ['Dashboard', 'Search', 'Prices', 'Orders', 'Routes', 'Inventory', 'Messages'];
+
+const NEARBY_SELLERS = [
+  { id: 'kt', init: 'KT', type: 'Nearby Seller', typeColor: 'text-slate-500', name: 'Kumar Traders', verified: true, status: 'Live', statusDot: 'bg-emerald-500', dist: '1.4 km', info: '425 Products', rating: '4.9', avatarGrad: 'from-sky-500 to-blue-600', badgeColor: 'bg-white/90 ring-slate-100 text-slate-700' },
+  { id: 'fw', init: 'FW', type: 'Verified Seller', typeColor: 'text-slate-500', name: 'Fresh Wholesale', verified: true, status: 'Open', statusDot: 'bg-slate-400', dist: '2.1 km', info: '612 Products', rating: '4.8', avatarGrad: 'from-emerald-500 to-teal-600', badgeColor: 'bg-white/90 ring-slate-100 text-slate-700' },
+  { id: 'rs', init: 'RS', type: 'Nearby Buyer', typeColor: 'text-rose-500', name: 'Royal Super Market', verified: false, status: 'Urgent', statusDot: null, dist: '850 m', info: 'Need Rice', rating: '₹12,500', isValue: true, avatarGrad: 'from-rose-500 to-pink-600', badgeColor: 'bg-rose-50 ring-rose-100 text-rose-700' },
+  { id: 'ag', init: 'AG', type: 'Nearby Buyer', typeColor: 'text-rose-500', name: 'ABC Grocery', verified: true, status: 'Bulk Order', statusDot: null, dist: '1.9 km', info: 'Need Cooking Oil', rating: 'Verified', isText: true, avatarGrad: 'from-rose-500 to-pink-600', badgeColor: 'bg-slate-50 ring-slate-100 text-slate-700' }
+];
+
+const COMPARISON_DATA = [
+  { name: 'Kumar Traders', dist: '1.2 km', qty: '520 Bags', price: '₹948', gst: 'Included', del: 'Today', rtg: '5.0', best: true },
+  { name: 'Fresh Wholesale', dist: '2.1 km', qty: '610 Bags', price: '₹952', gst: 'Included', del: 'Today', rtg: '5.0' },
+  { name: 'Metro Suppliers', dist: '3.4 km', qty: '950 Bags', price: '₹955', gst: 'Included', del: 'Tomorrow', rtg: '5.0' },
+  { name: 'Anand Traders', dist: '1.8 km', qty: '430 Bags', price: '₹960', gst: 'Included', del: 'Today', rtg: '4.0' }
+];
+
+const ORDER_STATS = [
+  { label: 'Packed', val: 45, max: 142, color: 'bg-blue-500' },
+  { label: 'Processing', val: 32, max: 142, color: 'bg-amber-500' },
+  { label: 'Out', val: 15, max: 142, color: 'bg-rose-500' },
+  { label: 'Delivered', val: 50, max: 142, color: 'bg-emerald-500' }
+];
+
+const RECENT_ORDERS = [
+  { id: '#901', name: 'Metro Mart', prod: 'Rice 25kg', qty: '10x', stat: 'Out', time: '10:30 AM', statColor: 'text-rose-700 bg-rose-50 border-rose-200/60' },
+  { id: '#902', name: 'City Store', prod: 'Sugar 50kg', qty: '5x', stat: 'Proc', time: '11:15 AM', statColor: 'text-amber-700 bg-amber-50 border-amber-200/60' },
+  { id: '#903', name: 'Royal Mkt', prod: 'Oil 15L', qty: '20x', stat: 'Pack', time: '12:00 PM', statColor: 'text-blue-700 bg-blue-50 border-blue-200/60' },
+  { id: '#904', name: 'Fresh Groc', prod: 'Wheat 10kg', qty: '15x', stat: 'Del', time: '09:00 AM', statColor: 'text-emerald-700 bg-emerald-50 border-emerald-200/60' }
+];
+
+// --- Custom Viewport Intersection Observer Hook (Optimized for First-paint Only) ---
 const useScrollReveal = (options = {}) => {
   const [isInView, setIsInView] = useState(false);
   const ref = useRef(null);
@@ -20,16 +545,37 @@ const useScrollReveal = (options = {}) => {
     return () => {
       if (currentRef) observer.unobserve(currentRef);
     };
-  }, [options]);
+  }, [options.threshold, options.triggerOnce]);
 
   return { ref, isInView };
 };
 
-export default function ProductShowcasePlaceholder() {
-  const { ref, isInView } = useScrollReveal({ threshold: 0.05, triggerOnce: false });
-  const [activeTab, setActiveTab] = useState('Dashboard');
+// --- Reusable SVG Icons (Memoized for Stable Rendering) ---
+const VerifiedBadge = React.memo(({ className = "w-3 h-3 text-emerald-500" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M11.602 1.672a.818.818 0 0 1 .796 0l2.369 1.258a.818.818 0 0 0 .61.054l2.585-.826a.818.818 0 0 1 1.01.621l.666 2.62a.818.818 0 0 0 .422.545l2.42 1.157a.818.818 0 0 1 .374 1.127l-1.306 2.368a.818.818 0 0 0 0 .611l1.306 2.367a.818.818 0 0 1-.374 1.128l-2.42 1.156a.818.818 0 0 0-.422.546l-.666 2.619a.818.818 0 0 1-1.01.621l-2.585-.826a.818.818 0 0 0-.61.054l-2.37 1.258a.818.818 0 0 1-.795 0l-2.37-1.258a.818.818 0 0 0-.61-.054l-2.585.826a.818.818 0 0 1-1.01-.621l-.666-2.62a.818.818 0 0 0-.422-.545l-2.42-1.157a.818.818 0 0 1-.374-1.127l1.306-2.368a.818.818 0 0 0 0-.611L1.246 9.382a.818.818 0 0 1 .374-1.128l2.42-1.156a.818.818 0 0 0 .422-.546l.666-2.619a.818.818 0 0 1 1.01-.621l2.585.826a.818.818 0 0 0 .61-.054l2.37-1.258Z" opacity="0.2"/>
+    <path d="M10.97 16.03a.75.75 0 0 1-.53-.22l-2.97-2.97a.75.75 0 1 1 1.06-1.06l2.44 2.44 5.97-5.97a.75.75 0 0 1 1.06 1.06l-6.5 6.5a.75.75 0 0 1-.53.22Z"/>
+  </svg>
+));
 
-  // Immersive Ergonomic 3D Parallax Tracking
+const LocationPin = React.memo(() => (
+  <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+  </svg>
+));
+
+const StarIcon = React.memo(() => (
+  <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-500" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+  </svg>
+));
+
+export default function ProductShowcasePlaceholder() {
+  // REQUIREMENT 1: triggerOnce: true applied to prevent continuous viewport triggers
+  const { ref, isInView } = useScrollReveal({ threshold: 0.05, triggerOnce: true });
+  const activeTab = 'Dashboard';
+
+  // REQUIREMENT 4 & 10: Optimized Parallax Tracking
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   
@@ -37,134 +583,106 @@ export default function ProductShowcasePlaceholder() {
   const rotateX = useSpring(useTransform(mouseY, [-300, 300], [2.5, -2.5]), springConfig);
   const rotateY = useSpring(useTransform(mouseX, [-500, 500], [-3.5, 3.5]), springConfig);
 
-  const handleMouseMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const height = rect.height;
-    const centerX = e.clientX - rect.left - rect.width / 2;
-    mouseX.set(centerX);
-    mouseY.set(e.clientY - rect.top - height / 2);
-  };
+  const requestRef = useRef(null);
 
-  const handleMouseLeave = () => {
+  const handleMouseMove = useCallback((e) => {
+    // Disable on touch devices based on screen width proxy (hardware acceleration constraint)
+    if (window.innerWidth < 1024) return;
+    
+    // Throttle updates via RequestAnimationFrame
+    if (requestRef.current) return;
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+
+    requestRef.current = requestAnimationFrame(() => {
+      const height = rect.height;
+      const centerX = clientX - rect.left - rect.width / 2;
+      mouseX.set(centerX);
+      mouseY.set(clientY - rect.top - height / 2);
+      requestRef.current = null;
+    });
+  }, [mouseX, mouseY]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (window.innerWidth < 1024) return;
     mouseX.set(0);
     mouseY.set(0);
-  };
+  }, [mouseX, mouseY]);
 
-  const menuTabs = [
-    'Dashboard', 
-    'Search',
-    'Prices', 
-    'Orders', 
-    'Routes', 
-    'Inventory', 
-    'Messages'
-  ];
-
-  // Orchestrated Entrance Stagger Timings
-  const containerVariants = {
+  // REQUIREMENT 2 & 11: Removed all filter: blur() animations. Kept opacity & transform.
+  const containerVariants = useMemo(() => ({
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05, delayChildren: 0.05 }
-    }
-  };
+    visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.05 } }
+  }), []);
 
-  const itemVariants = {
-    hidden: { y: 25, opacity: 0, filter: 'blur(6px)' },
-    visible: {
-      y: 0,
-      opacity: 1,
-      filter: 'blur(0px)',
-      transition: { type: 'spring', stiffness: 95, damping: 15 }
-    }
-  };
+  const itemVariants = useMemo(() => ({
+    hidden: { y: 25, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 95, damping: 15 } }
+  }), []);
 
   return (
     <section 
       ref={ref} 
-      className="py-10 sm:py-16 md:py-32 relative overflow-hidden bg-[#F8FAFC] text-slate-900 select-none z-20 border-y border-slate-200/60"
+      className="py-10 relative overflow-hidden bg-[#F8FAFC] text-slate-900 select-none z-20 border-y border-slate-200/60"
     >
-      {/* Light Cinematic Luxury Background Atmospheric Overlays */}
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-rose-400/20 to-transparent" />
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] md:w-[1100px] h-[400px] md:h-[650px] bg-gradient-to-tr from-rose-300/20 via-pink-200/25 to-sky-200/20 rounded-full blur-[140px] pointer-events-none mix-blend-multiply animate-pulse" style={{ animationDuration: '10s' }} />
-      <div className="absolute bottom-10 right-10 w-[450px] h-[450px] bg-sky-200/15 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
       
-      {/* Abstract Grid Canvas Blueprint Blueprint Matrix */}
-      <div 
-        className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a03_1px,transparent_1px),linear-gradient(to_bottom,#0f172a04_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_75%_65%_at_50%_40%,#000_70%,transparent_100%)] pointer-events-none" 
-      />
-
+      {/* REQUIREMENT 3: Optimized background glow. Reduced extreme radiuses and dimension constraints slightly to save GPU texture sizes while matching visuals. */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] md:w-[700px] h-[300px] md:h-[450px] bg-gradient-to-tr from-rose-100 via-pink-50 to-sky-100 rounded-full blur-[80px] pointer-events-none mix-blend-multiply will-change-transform translate-z-0" />
+      <div className="absolute bottom-10 right-10 w-[300px] h-[300px] bg-sky-100/50 rounded-full blur-[80px] pointer-events-none will-change-transform translate-z-0" />
+      
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative z-10">
         
-        {/* Luxury, minimal, operational enterprise-grade typography styling */}
         <motion.div 
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
-          className="text-center mb-6 md:mb-14 max-w-4xl mx-auto"
+          className="text-center mb-10 max-w-4xl mx-auto relative"
         >
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[100px] bg-gradient-to-r from-pink-200 via-rose-200 to-sky-200 blur-2xl opacity-40 pointer-events-none translate-z-0" />
+          
           <motion.h2 
             variants={itemVariants}
-            className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-3 md:mb-4 text-slate-900 leading-[1.08] sm:leading-[1.05] antialiased"
-          >
-            Realtime Retail Infrastructure.{' '}
-            <span className="bg-gradient-to-r from-rose-500 via-pink-500 to-sky-400 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(244,63,94,0.1)]">
-              Connected Supplier Intelligence.
-            </span>
+            className="text-[40px] sm:text-[58px] md:text-[60px] font-[900] tracking-[-0.06em] leading-[1.0] mb-4 md:mb-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-600 bg-clip-text text-transparent relative z-10"
+            > Business Intelligence Dashboard
           </motion.h2>
+          <motion.p 
+            variants={itemVariants}
+            className="text-[16px] sm:text-[18px] font-medium text-slate-500 max-w-[720px] mx-auto leading-relaxed tracking-tight relative z-10"
+          >
+            One intelligent workspace to discover nearby suppliers, compare wholesale prices instantly, manage inventory, track live orders, and grow your business faster.
+          </motion.p>
         </motion.div>
         
-        {/* Navigation Switcher Tabs Container */}
-        <div className="max-w-2xl mx-auto mb-6 md:mb-10 relative">
+        <div className="max-w-2xl mx-auto mb-10 md:mb-14 relative">
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex flex-nowrap overflow-x-auto gap-1.5 p-1.5 pb-2 rounded-xl bg-slate-200/40 border border-slate-300/30 backdrop-blur-xl custom-scrollbar touch-pan-x snap-x snap-mandatory"
+            className="flex flex-nowrap overflow-x-auto gap-1.5 p-1.5 pb-2 rounded-xl bg-slate-200/40 border border-slate-300/30 backdrop-blur-xl custom-scrollbar touch-pan-x snap-x snap-mandatory will-change-transform translate-z-0"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
-            {/* Ultra-thin neon indicator glowing scrollbar (1px or thinner, visible on mobile) */}
             <style dangerouslySetInnerHTML={{__html: `
-              .custom-scrollbar::-webkit-scrollbar {
-                height: 1px;
-              }
-              .custom-scrollbar::-webkit-scrollbar-track {
-                background: transparent;
-                margin-left: 12px;
-                margin-right: 12px;
-              }
-              .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: linear-gradient(90deg, rgba(244,63,94,0.25), rgba(236,72,153,0.3), rgba(56,189,248,0.25));
-                border-radius: 99px;
-                box-shadow: 0 0 4px rgba(244,63,94,0.1);
-                transition: all 0.3s ease;
-              }
-              .custom-scrollbar:hover::-webkit-scrollbar-thumb,
-              .custom-scrollbar:active::-webkit-scrollbar-thumb {
-                background: linear-gradient(90deg, #f43f5e, #ec4899, #38bdf8);
-                box-shadow: 0 0 8px rgba(244,63,94,0.4);
-              }
+              .custom-scrollbar::-webkit-scrollbar { height: 1px; }
+              .custom-scrollbar::-webkit-scrollbar-track { background: transparent; margin: 0 12px; }
+              .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.3); border-radius: 99px; }
             `}} />
 
-            {menuTabs.map(tab => (
+            {MENU_TABS.map(tab => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs font-bold tracking-wide transition-all duration-200 whitespace-nowrap relative flex-1 md:flex-initial snap-shrink-0 ${
-                  activeTab === tab ? 'text-slate-900' : 'text-slate-500 hover:text-slate-800'
-                }`}
+                className={`px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs font-bold tracking-wide whitespace-nowrap relative flex-1 md:flex-initial snap-shrink-0
+                  ${activeTab === tab 
+                    ? 'text-slate-900 bg-white border border-slate-200/80 shadow-sm pointer-events-auto cursor-default' 
+                    : 'text-slate-500 opacity-55 pointer-events-none cursor-default'
+                  }`}
               >
-                {activeTab === tab && (
-                  <motion.div 
-                    layoutId="activeLightPlaceholderIndicator"
-                    className="absolute inset-0 bg-white border border-slate-200/80 shadow-sm rounded-lg"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  />
-                )}
                 <span className="relative z-10 flex items-center justify-center gap-1.5">
                   {tab}
                   {tab === 'Messages' && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse shadow-[0_0_6px_#f43f5e]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-pink-500 shadow-[0_0_4px_#f43f5e]" />
                   )}
                 </span>
               </button>
@@ -172,169 +690,245 @@ export default function ProductShowcasePlaceholder() {
           </motion.div>
         </div>
         
-        {/* Chassis Canvas Mockup Display */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.96, y: 30, filter: 'blur(6px)' }}
-          animate={isInView ? { opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' } : {}}
+          initial={{ opacity: 0, scale: 0.96, y: 30 }}
+          animate={isInView ? { opacity: 1, scale: 1, y: 0 } : {}}
           transition={{ type: 'spring', stiffness: 60, damping: 18, delay: 0.3 }}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           className="relative max-w-5xl mx-auto px-1 sm:px-4 group preserve-3d cursor-default"
         >
-          {/* Subtle Ambient Shadow Glow Ring */}
-          <div className="absolute -inset-1 bg-gradient-to-tr from-pink-400/10 via-sky-400/5 to-transparent rounded-2xl blur-xl opacity-60 group-hover:opacity-90 transition-opacity duration-500 pointer-events-none" />
+          <div className="absolute -inset-1 bg-gradient-to-tr from-pink-400/5 via-sky-400/5 to-transparent rounded-2xl blur-xl opacity-60 group-hover:opacity-90 transition-opacity duration-500 pointer-events-none" />
 
-          {/* Core Platform Illusion Surface Container */}
+          {/* REQUIREMENT 7: Simplified drop-shadow values mapped to standard sizes for performance without losing premium aesthetic. */}
           <motion.div
             style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
-            className="w-full bg-white/95 rounded-2xl border border-slate-200 shadow-[0_30px_70px_-15px_rgba(15,23,42,0.06)] backdrop-blur-2xl relative overflow-hidden"
+            className="w-full bg-white/90 backdrop-blur-2xl rounded-[28px] border border-white/70 ring-1 ring-slate-200/60 shadow-[0_10px_30px_rgba(15,23,42,.06),0_20px_60px_rgba(15,23,42,.08)] relative overflow-hidden"
           >
-            {/* Top Browser Ribbon Bar Decorator */}
-            <div className="border-b border-slate-200/60 bg-slate-50 p-2 sm:p-2.5 flex items-center justify-between relative">
+            {/* REQUIREMENT 8: Minimized unnecessary nested backdrops inside the opaque core. */}
+            <div className="border-b border-white/40 bg-white/80 p-2 sm:p-2.5 flex items-center justify-between relative z-20">
               <div className="flex gap-1.5 px-2">
-                <div className="w-2 h-2 rounded-full bg-slate-200 group-hover:bg-rose-400/70 transition-colors duration-300" />
-                <div className="w-2 h-2 rounded-full bg-slate-200 group-hover:bg-pink-400/70 transition-colors duration-300" />
-                <div className="w-2 h-2 rounded-full bg-slate-200 group-hover:bg-sky-400/70 transition-colors duration-300" />
+                <div className="w-2.5 h-2.5 rounded-full bg-slate-300 group-hover:bg-rose-400/80 transition-colors duration-300" />
+                <div className="w-2.5 h-2.5 rounded-full bg-slate-300 group-hover:bg-amber-400/80 transition-colors duration-300" />
+                <div className="w-2.5 h-2.5 rounded-full bg-slate-300 group-hover:bg-emerald-400/80 transition-colors duration-300" />
               </div>
-              
-              <div className="bg-slate-200/40 border border-slate-300/20 text-[10px] text-slate-400 font-mono px-4 sm:px-12 py-0.5 rounded-md min-w-[120px] sm:min-w-[240px] text-center tracking-wide truncate max-w-[180px] sm:max-w-none">
-                app.stocklinker.com/{activeTab.toLowerCase()}
+              <div className="bg-slate-100 border border-white ring-1 ring-slate-200 text-[10px] text-slate-500 font-medium px-4 sm:px-12 py-1 rounded-lg min-w-[120px] sm:min-w-[240px] text-center tracking-wide truncate max-w-[180px] sm:max-w-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
+                app.stocklinker.com/dashboard
               </div>
-
-              <div className="flex items-center gap-1.5 text-[9px] font-mono text-slate-400 pr-2">
-                <span className="w-1 h-1 rounded-full bg-sky-400 animate-ping" />
-                <span className="hidden sm:inline tracking-wider">SYSTEM_ACTIVE</span>
+              <div className="flex items-center gap-1.5 text-[9px] font-medium text-slate-500 pr-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
+                <span className="hidden sm:inline tracking-wide">Connected</span>
               </div>
             </div>
 
-            {/* REFINED: Injected Inner Navbar to claim dashboard structure whitespace */}
-            <div className="border-b border-slate-100 bg-white px-4 py-2 flex items-center justify-between text-[11px] font-medium text-slate-500">
-              <div className="flex items-center gap-2">
-                <div className="w-16 h-5 bg-slate-100 rounded animate-pulse hidden sm:block" />
-                <div className="w-5 h-5 rounded-full bg-slate-200 animate-pulse" />
+            <div className="border-b border-slate-100 bg-white/90 px-5 py-3 flex items-center justify-between text-[11px] font-medium z-20 relative">
+              <div className="flex items-center gap-4">
+                <span className="text-slate-900 font-[800] tracking-[-0.04em] hidden sm:block text-sm">StockLinker</span>
+                <span className="w-px h-3.5 bg-slate-200 hidden sm:block" />
+                <span className="text-slate-400 flex items-center gap-1"><LocationPin /> Salem, Tamil Nadu</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 ring-2 ring-white shadow-sm flex items-center justify-center text-[9px] font-bold text-white">
+                  AB
+                </div>
               </div>
             </div>
 
-            {/* REFINED: Optimised compact min-height tracking adjustments for tight smartphone viewport screens */}
-            <div className="p-3 sm:p-6 min-h-[240px] sm:min-h-[340px] md:min-h-[420px] relative bg-slate-50/20">
+            <div className="p-3 sm:p-6 min-h-[240px] sm:min-h-[340px] md:min-h-[420px] relative bg-slate-50/50">
               
-              {/* Ambient Cinematic Lighting Background Scanline Effect */}
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-pink-500/[0.01] to-transparent pointer-events-none animate-[pulse_6s_easeInOut_infinite]" />
-              
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0, scale: 0.99, filter: 'blur(2px)' }}
-                  animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                  exit={{ opacity: 0, scale: 0.99, filter: 'blur(2px)' }}
-                  transition={{ duration: 0.18 }}
-                  className="w-full h-full flex flex-col gap-3 sm:gap-5"
-                >
-                  {/* Realism Interface Blocks — Card Row */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
-                    {[1, 2, 3, 4].map(i => (
-                      <div key={i} className="p-3 sm:p-4 rounded-xl bg-white/90 backdrop-blur-xl border border-slate-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.01)] relative overflow-hidden group/card transition-all duration-500 hover:shadow-[0_12px_32px_rgba(244,63,94,0.05)] hover:border-pink-200/60">
-                        
-                        {/* Shimmer Ambient Glow Element */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-100/30 to-transparent -translate-x-full group-hover/card:animate-[shimmer_2.5s_infinite] pointer-events-none" />
-                        <div className="absolute -inset-px rounded-xl bg-gradient-to-r from-rose-500/0 via-pink-400/0 to-sky-400/0 group-hover/card:from-rose-500/10 group-hover/card:via-pink-400/10 group-hover/card:to-sky-400/0 transition-all duration-500 pointer-events-none" />
-                        
-                        <div className="flex items-center justify-between mb-2 sm:mb-3">
-                          <div className="w-1/2 h-2 bg-slate-200/70 rounded relative overflow-hidden" />
-                          <span className={`w-1.5 h-1.5 rounded-full ${i === 1 ? 'bg-rose-400/80 shadow-[0_0_6px_#f43f5e]' : i === 3 ? 'bg-sky-400/80 shadow-[0_0_6px_#38bdf8]' : 'bg-slate-200'} animate-pulse`} />
+              {/* REQUIREMENT 5: Removed AnimatePresence block since activeTab state is locked. Replaced with lightweight motion.div entry fade. */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.99 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.18 }}
+                className="w-full h-full flex flex-col gap-3 sm:gap-5 will-change-transform translate-z-0"
+              >
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
+                  {NEARBY_SELLERS.map((card) => (
+                    <motion.div key={card.id} whileHover={{ y: -2 }} className="p-3 sm:p-4 rounded-xl bg-white border border-white ring-1 ring-slate-200/70 shadow-sm hover:shadow-xl hover:border-slate-300 transition-all duration-300 flex flex-col justify-between h-[85px] sm:h-[100px] will-change-transform translate-z-0">
+                      <div className="flex justify-between items-start w-full">
+                        <div className="flex items-center gap-2 sm:gap-2.5 overflow-hidden">
+                          <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br ${card.avatarGrad} shadow-lg ring-2 ring-white flex-shrink-0 flex items-center justify-center text-white font-bold text-[9px] sm:text-[11px]`}>{card.init}</div>
+                          <div className="min-w-0">
+                            <div className={`text-[8px] sm:text-[9px] font-semibold tracking-wide uppercase leading-none ${card.typeColor}`}>{card.type}</div>
+                            <div className="text-[10px] sm:text-xs font-bold text-slate-900 truncate mt-1 flex items-center gap-1">
+                              {card.name} {card.verified && <VerifiedBadge className="w-3.5 h-3.5 text-emerald-500" />}
+                            </div>
+                          </div>
                         </div>
-                        <div className="w-5/6 h-3.5 sm:h-4 bg-gradient-to-r from-slate-200/80 to-slate-100/60 rounded mb-1.5 sm:mb-2 relative overflow-hidden" />
-                        <div className="w-1/3 h-1.5 bg-slate-100/80 rounded" />
+                        <div className={`flex items-center gap-1 text-[8px] sm:text-[9px] px-2 py-0.5 rounded-full font-bold border border-slate-200/60 shadow-sm ring-1 flex-shrink-0 ${card.badgeColor}`}>
+                          {card.statusDot && <span className={`w-1.5 h-1.5 rounded-full ${card.statusDot}`}/>} {card.status}
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                      <div className="flex justify-between items-end mt-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[9px] sm:text-[10px] text-slate-500 flex items-center gap-1"><LocationPin /> {card.dist}</span>
+                          <span className="text-[9px] sm:text-[10px] font-medium text-slate-700">{card.info}</span>
+                        </div>
+                        {card.isValue ? (
+                           <div className="text-[9px] sm:text-[10px] font-bold text-emerald-600 text-right leading-tight">
+                             <span className="text-[8px] text-slate-400 block font-normal">Order Value</span>
+                             {card.rating}
+                           </div>
+                        ) : card.isText ? (
+                          <div className="text-[10px] sm:text-[11px] font-medium text-slate-500">{card.rating}</div>
+                        ) : (
+                          <div className="text-[10px] sm:text-[11px] font-bold text-slate-800 flex items-center gap-0.5"><StarIcon /> {card.rating}</div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
 
-                  {/* Realism Analytics Module / Node Pipeline Area */}
-                  <div className="flex-1 min-h-[110px] sm:min-h-[180px] md:min-h-[200px] bg-white/70 border border-slate-200/60 rounded-xl p-3 sm:p-4 flex flex-col justify-between relative overflow-hidden group/graph shadow-sm">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-100/20 to-transparent -translate-x-full group-hover/graph:animate-[shimmer_3s_infinite] pointer-events-none" />
-                    
-                    {/* Continuous Breathing Glow Mesh */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-pink-400/[0.03] via-sky-400/[0.01] to-transparent rounded-full blur-2xl pointer-events-none animate-pulse" style={{ animationDuration: '4s' }} />
-                    <div className="absolute inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-pink-400/20 to-transparent animate-pulse top-10 sm:top-12 pointer-events-none" style={{ animationDuration: '5s' }} />
-                    
-                    <div className="flex justify-between items-center z-10">
-                      <div className="space-y-1">
-                        <div className="w-32 sm:w-40 h-2 sm:h-2.5 bg-slate-200/70 rounded relative overflow-hidden">
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent animate-[shimmer_2s_infinite]" />
-                        </div>
-                        <div className="w-20 sm:w-24 h-1.5 bg-slate-100 rounded" />
+                <div className="flex-1 min-h-[110px] sm:min-h-[180px] md:min-h-[200px] bg-white border border-white ring-1 ring-slate-200/70 rounded-2xl p-3 flex flex-col md:flex-row gap-2 sm:gap-4 shadow-sm overflow-hidden">
+                  
+                  <div className="flex-1 flex flex-col overflow-hidden h-full">
+                    <div className="flex justify-between items-center mb-2 sm:mb-3 px-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-[12px] sm:text-sm font-[800] text-slate-900 leading-none">Compare Product Price</h3>
                       </div>
-                      <div className="w-14 sm:w-16 h-3.5 sm:h-4 rounded-full bg-pink-50/40 border border-pink-100/50 flex items-center justify-center backdrop-blur-sm">
-                        <span className="w-1 h-1 rounded-full bg-pink-400 animate-ping mr-1" />
-                        <span className="w-5 sm:w-6 h-1 bg-pink-200/80 rounded" />
+                      <div className="bg-white border border-slate-200/80 text-slate-600 text-[9px] sm:text-[10px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1.5 shadow-sm ring-1 ring-slate-100/50">
+                        <svg className="w-3 h-3 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        Rice 25kg
                       </div>
                     </div>
+                    
+                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                      <table className="w-full text-left border-collapse">
+                        <thead className="sticky top-0 bg-white shadow-[0_1px_0_0_#e2e8f0] z-10">
+                          <tr className="text-[9px] sm:text-[10px] text-slate-500 font-semibold uppercase tracking-[0.15em]">
+                            <th className="py-2 px-2">Seller</th>
+                            <th className="py-2 px-1 hidden sm:table-cell text-center">Distance</th>
+                            <th className="py-2 px-2 text-right">Qty</th>
+                            <th className="py-2 px-2 text-right text-slate-900">Unit Price</th>
+                            <th className="py-2 px-1 hidden md:table-cell text-center">GST</th>
+                            <th className="py-2 px-1 hidden lg:table-cell text-center">Delivery</th>
+                            <th className="py-2 px-1 text-center">Rating</th>
+                            <th className="py-2 px-2"></th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-[9px] sm:text-[11px]">
+                          {COMPARISON_DATA.map((row, idx) => (
+                            <tr key={idx} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors group">
+                              <td className="py-2.5 px-2 font-semibold text-slate-800 truncate max-w-[90px] sm:max-w-[140px] flex items-center gap-1.5">
+                                {row.name} {row.best && <VerifiedBadge />}
+                              </td>
+                              <td className="py-2.5 px-1 hidden sm:table-cell text-slate-500 text-center font-medium">{row.dist}</td>
+                              <td className="py-2.5 px-2 text-right font-medium text-slate-600">{row.qty}</td>
+                              <td className="py-2.5 px-2 text-right font-bold text-slate-900">{row.price}</td>
+                              <td className="py-2.5 px-1 hidden md:table-cell text-center text-slate-500 font-medium">{row.gst}</td>
+                              <td className={`py-2.5 px-1 hidden lg:table-cell text-center font-semibold ${row.del === 'Today' ? 'text-emerald-600' : 'text-slate-500'}`}>{row.del}</td>
+                              <td className="py-2.5 px-1 text-center font-bold text-slate-700 flex items-center justify-center gap-1"><StarIcon /> {row.rtg}</td>
+                              <td className="py-2.5 px-2 text-right">
+                                <button className="text-[9px] sm:text-[10px] bg-gradient-to-b from-slate-900 to-slate-700 hover:from-slate-800 hover:to-slate-600 text-white px-3 sm:px-4 py-1.5 rounded-xl transition-all font-semibold whitespace-nowrap shadow-md">
+                                  Compare
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
 
-                    {/* Luminous Animated Height-Breathing Graph Skeletons */}
-                    <div className="h-14 sm:h-28 md:h-36 flex items-end justify-between gap-0.5 sm:gap-2 pt-4 sm:pt-6 px-0.5 sm:px-1 relative">
-                      <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
-                        {[1, 2, 3].map(i => <div key={i} className="w-full h-px border-b border-dashed border-slate-300" />)}
+                  <div className="hidden md:flex flex-col w-[170px] lg:w-[200px] border border-emerald-100/50 bg-emerald-50/40 rounded-2xl p-3 justify-between">
+                    <div>
+                      <div className="bg-white/90 text-emerald-700 text-[9px] lg:text-[10px] font-bold px-2.5 py-1.5 rounded-lg inline-flex items-center gap-1.5 mb-3 shadow-sm border border-emerald-100/60 uppercase tracking-[0.1em]">
+                        <VerifiedBadge /> Best Choice
                       </div>
-                      
-                      {[35, 58, 42, 75, 50, 92, 64, 78, 48, 68, 82, 95, 55, 74, 62, 88].map((h, idx) => (
-                        <motion.div 
-                          key={idx} 
-                          initial={{ height: 0 }}
-                          animate={{ height: [`${h - 2}%`, `${h + 3}%`, `${h - 2}%`] }}
-                          transition={{ 
-                            duration: 4 + (idx % 3), 
-                            repeat: Infinity, 
-                            ease: "easeInOut",
-                            delay: idx * 0.08 
-                          }}
-                          className="w-full bg-gradient-to-t from-pink-500/[0.02] via-pink-400/15 to-sky-400/30 rounded-t-[1px] sm:rounded-t-[2px] max-h-[85%] relative group/bar transition-all duration-300 hover:to-rose-400/50 shadow-[0_0_10px_rgba(56,189,248,0.05)]"
-                        >
-                          <div className="absolute inset-0 bg-white/20 opacity-0 group-hover/bar:opacity-100 transition-opacity" />
-                        </motion.div>
+                      <div className="space-y-2 lg:space-y-3">
+                        <div className="flex justify-between items-center text-[10px] lg:text-xs">
+                          <span className="text-slate-500 font-medium">Lowest Price</span>
+                          <span className="font-bold text-slate-900 bg-white shadow-sm border border-slate-100 px-2 py-0.5 rounded-md">₹948</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] lg:text-xs">
+                          <span className="text-slate-500 font-medium">Delivery</span>
+                          <span className="font-bold text-emerald-600">Fastest (Today)</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] lg:text-xs">
+                          <span className="text-slate-500 font-medium">Highest Rating</span>
+                          <span className="font-bold text-slate-900 flex items-center gap-1"><StarIcon /> 5.0</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] lg:text-xs">
+                          <span className="text-slate-500 font-medium">Availability</span>
+                          <span className="font-semibold text-slate-800">520 Bags</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pt-2.5 border-t border-emerald-100/60 mt-3">
+                      <div className="flex justify-between items-center text-[10px] lg:text-xs">
+                        <span className="text-slate-500 font-medium">Est. Savings</span>
+                        <span className="font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded border border-emerald-200/50 shadow-sm">1.2% / Bag</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-4 h-[120px] sm:h-[130px]">
+                  <div className="p-3 sm:p-4 rounded-xl bg-white border border-white ring-1 ring-slate-200/70 shadow-sm flex flex-col justify-between group hover:border-slate-300 transition-colors">
+                    <div className="flex justify-between items-center mb-1">
+                      <h4 className="text-[11px] sm:text-xs font-bold text-slate-800 uppercase tracking-[0.1em]">Today's Orders</h4>
+                      <span className="text-[9px] text-slate-500 font-bold border border-slate-200 shadow-sm px-2 py-0.5 rounded-full bg-slate-50">Live</span>
+                    </div>
+                    <div className="flex items-end justify-between flex-1">
+                      <div className="flex flex-col mb-1">
+                        <span className="text-4xl sm:text-5xl font-[900] tracking-[-0.06em] text-slate-900 leading-none">142</span>
+                        <span className="text-[9px] sm:text-[10px] text-emerald-700 font-semibold mt-2 bg-emerald-50 border border-emerald-100/50 shadow-sm px-2 py-1 rounded-md w-max">↑ +12% vs Yesterday</span>
+                      </div>
+                      <div className="w-[120px] sm:w-[150px] flex flex-col gap-1.5 sm:gap-2 mb-1">
+                        {ORDER_STATS.map((stat, i) => (
+                          <div key={i} className="flex items-center gap-2 text-[8px] sm:text-[9px]">
+                            <span className="w-12 text-slate-500 font-medium text-right">{stat.label}</span>
+                            <div className="flex-1 h-2 bg-slate-100/50 rounded-full overflow-hidden border border-slate-200/30">
+                              {/* REQUIREMENT 11: Optimized Width Animation (Used scaleX instead of width for GPU rendering) */}
+                              <motion.div 
+                                initial={{ scaleX: 0 }}
+                                animate={isInView ? { scaleX: stat.val/stat.max } : {}}
+                                transition={{ duration: 1, delay: 0.2 + (i*0.1), ease: "easeOut" }}
+                                style={{ transformOrigin: "left", willChange: "transform" }}
+                                className={`h-full w-full rounded-full ${stat.color} shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] translate-z-0`} 
+                              />
+                            </div>
+                            <span className="w-4 font-bold text-slate-700">{stat.val}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 sm:p-4 rounded-xl bg-white border border-white ring-1 ring-slate-200/70 shadow-sm flex flex-col h-full overflow-hidden group hover:border-slate-300 transition-colors">
+                    <div className="flex justify-between items-center mb-2.5">
+                      <h4 className="text-[11px] sm:text-xs font-bold text-slate-800 uppercase tracking-[0.1em]">Recent Orders</h4>
+                      <button className="text-[9px] text-slate-500 font-bold hover:text-slate-800 transition-colors">View All</button>
+                    </div>
+                    <div className="flex flex-col flex-1 justify-between gap-1.5 overflow-hidden">
+                      {RECENT_ORDERS.map((o, i) => (
+                        <div key={i} className="flex justify-between items-center bg-white rounded-xl p-1.5 sm:p-2 border border-white shadow-sm ring-1 ring-slate-100/80 hover:ring-slate-200 transition-colors text-[9px] sm:text-[10px]">
+                          <div className="flex gap-2 items-center w-[45%] pl-1">
+                            <span className="font-mono text-slate-400 font-medium">{o.id}</span>
+                            <span className="font-bold text-slate-800 truncate">{o.name}</span>
+                          </div>
+                          <div className="w-[30%] truncate text-slate-500 font-medium">
+                            {o.prod} <span className="font-bold text-slate-700 ml-0.5">{o.qty}</span>
+                          </div>
+                          <div className="w-[25%] flex justify-end gap-2 items-center pr-1">
+                            <span className="hidden lg:inline text-[8px] text-slate-400 font-medium">{o.time}</span>
+                            <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold border shadow-sm ${o.statColor}`}>{o.stat}</span>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Lower Stack Split Complement Smart Components */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-4">
-                    <div className="p-3 rounded-xl bg-white/90 border border-slate-200/60 flex items-center justify-between relative overflow-hidden group/btm transition-all duration-300 hover:border-pink-200/60 shadow-sm">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-100/30 to-transparent -translate-x-full group-hover/btm:animate-[shimmer_2s_infinite] pointer-events-none" />
-                      <div className="flex items-center gap-2.5 sm:gap-3 w-full">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 flex-shrink-0 relative overflow-hidden flex items-center justify-center">
-                          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-sky-50 border border-sky-400/30 animate-pulse" />
-                        </div>
-                        <div className="space-y-1 flex-1">
-                          <div className="w-1/3 h-2 bg-slate-200/70 rounded" />
-                          <div className="w-2/3 h-1.5 bg-slate-100/80 rounded" />
-                        </div>
-                      </div>
-                      <div className="w-10 sm:w-12 h-3.5 sm:h-4 rounded-full bg-slate-100/80 border border-slate-200/40" />
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-white/90 border border-slate-200/60 flex items-center justify-between relative overflow-hidden group/btm2 transition-all duration-300 hover:border-rose-200/60 shadow-sm">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-100/30 to-transparent -translate-x-full group-hover/btm2:animate-[shimmer_2s_infinite] pointer-events-none" />
-                      <div className="flex items-center gap-2.5 sm:gap-3 w-full">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 flex-shrink-0 relative overflow-hidden flex items-center justify-center">
-                          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded bg-rose-50 border border-rose-400/30 animate-pulse" />
-                        </div>
-                        <div className="space-y-1 flex-1">
-                          <div className="w-1/4 h-2 bg-slate-200/70 rounded" />
-                          <div className="w-1/2 h-1.5 bg-slate-100/80 rounded" />
-                        </div>
-                      </div>
-                      <div className="w-7 sm:w-8 h-3.5 sm:h-4 rounded-md bg-rose-50/40 border border-rose-100/40" />
-                    </div>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
+                </div>
+              </motion.div>
             </div>
 
-            {/* Glass Mirror Light Reflective Diagonal Sweep Veil */}
-            <div className="absolute top-0 -inset-full h-full w-1/2 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-40 group-hover:animate-[shimmer_3s_infinite] pointer-events-none" />
+            <div className="absolute top-0 -inset-full h-full w-1/2 block transform -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-40 pointer-events-none" />
           </motion.div>
           
-          {/* Bottom Plastic Hardware Alignment Guard Accent */}
-          <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-20 sm:w-28 h-1 bg-slate-300 border-b border-x border-white rounded-b-xl shadow-md pointer-events-none" />
+          <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-20 sm:w-28 h-1 bg-slate-200 border-b border-x border-white rounded-b-xl shadow-md pointer-events-none" />
         </motion.div>
       </div>
     </section>

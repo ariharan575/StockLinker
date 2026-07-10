@@ -547,7 +547,7 @@ const BrandLogo = ({ isMobileMenu = false }) => (
       </div>
     </div>
     <div className="flex flex-col justify-center">
-      <span className={`font-sans font-bold tracking-tight leading-none text-slate-900 ${isMobileMenu ? 'text-[15px]' : 'text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px]'}`}>
+      <span className={`font-sans font-bold tracking-tight leading-none text-slate-900 ${isMobileMenu ? 'text-[15px]' : 'text-[15px] md:text-[13px] lg:text-[14px] xl:text-[18px]'}`}>
         STOCK<span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-sky-500">LINKER</span>
       </span>
     </div>
