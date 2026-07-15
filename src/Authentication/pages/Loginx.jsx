@@ -34,11 +34,9 @@ import {
 
 import { useAuth } from "../context/AuthContext";
 
-import { useDeviceId } from "../hooks/useDeviceId";
-
 import { useNavigate } from "react-router-dom";
 
-import { authApi } from "../services/api";
+import { authApi } from "../services/api"; 
 
 export default function SaaSAuthUI() {
   const [phone, setPhone] = useState("");
@@ -72,7 +70,7 @@ export default function SaaSAuthUI() {
 
   const { login } = useAuth();
 
-  const deviceId = useDeviceId();
+
 
   const navigate = useNavigate();
 
@@ -224,64 +222,42 @@ export default function SaaSAuthUI() {
   /* =========================================
       VERIFY OTP
   ========================================= */
-
   const handleVerify = async () => {
     if (!isOtpComplete) return;
 
     setLoading(true);
-
     setError(false);
-
     setErrorMessage("");
 
     try {
       const enteredOtp = otp.join("");
+      const result = await confirmationResult.confirm(enteredOtp);
+      const idToken = await result.user.getIdToken();
 
-      const result =
-        await confirmationResult.confirm(
-          enteredOtp
-        );
-
-      const idToken =
-        await result.user.getIdToken();
-
-      const loginResult = await login(
-        authApi.phoneLogin(
-          idToken,
-          deviceId
-        )
-      );
+      // Cookies and devices are handled strictly by the backend 
+      const loginResult = await login(authApi.phoneLogin(idToken));
 
       console.log(loginResult);
 
       if (loginResult.success) {
-        console.log("success");
-        if (loginResult.isNewUser) {
+        if (loginResult.needsRole) {
           navigate("/role-selection");
+        } else if (loginResult.needsOnboarding) {
+          navigate("/onboarding");
         } else {
-          navigate("/dashboard");
+          navigate("/dash");
         }
       } else {
         setError(true);
-
-        setErrorMessage(
-          loginResult.error ||
-            "Login failed"
-        );
-
+        setErrorMessage(loginResult.error || "Login failed");
         setOtp(Array(6).fill(""));
-
         inputsRef.current[0]?.focus();
       }
     } catch (error) {
       console.error(error);
-
       setError(true);
-
       setErrorMessage("Invalid OTP");
-
       setOtp(Array(6).fill(""));
-
       inputsRef.current[0]?.focus();
     } finally {
       setLoading(false);
@@ -399,65 +375,37 @@ export default function SaaSAuthUI() {
     ]?.focus();
   };
 
-  /* =========================================
+/* =========================================
       GOOGLE LOGIN
   ========================================= */
-
   const handleGoogleLogin = () => {
-    localStorage.setItem(
-      "pendingDeviceId",
-      deviceId
-    );
-
-    window.location.href =
-      "http://localhost:8080/oauth2/authorization/google";
+    window.location.href = "http://localhost:8080/oauth2/authorization/google";
   };
 
-  /* =========================================
+/* =========================================
       GUEST LOGIN
   ========================================= */
-
-  const handleGuestLogin =
-    async () => {
-      setLoading(true);
-
-      try {
-        const loginResult =
-          await login(
-            authApi.guestLogin(deviceId)
-          );
-
-           console.log(loginResult);
-
-        if (loginResult.success) {
-          if (
-            loginResult.isNewUser
-          ) {
-            navigate(
-              "/role-selection"
-            );
-          } else {
-            navigate("/dashboard");
-          }
-        } else {
-          setError(true);
-
-          setErrorMessage(
-            loginResult.error ||
-              "Guest login failed"
-          );
-        }
-      } catch (error) {
+  const handleGuestLogin = async () => {
+    setLoading(true);
+    setError(false);
+    setErrorMessage("");
+    
+    try {
+      const loginResult = await login(authApi.guestLogin());
+      
+      if (loginResult.success) {
+        navigate("/dash");
+      } else {
         setError(true);
-
-        setErrorMessage(
-          "Guest login failed. Please try again."
-        );
-      } finally {
-        setLoading(false);
+        setErrorMessage(loginResult.error || "Guest login failed");
       }
-    };
-
+    } catch (err) {
+      setError(true);
+      setErrorMessage("Guest login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
   /* =========================================
       RESEND OTP
   ========================================= */

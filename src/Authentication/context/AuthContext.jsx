@@ -1,161 +1,137 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authApi } from '../services/api';
-import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
-};
-
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isNewUser, setIsNewUser] = useState(false);
-  const navigate = useNavigate();
+  const [authState, setAuthState] = useState({
+    isAuthenticated: false,
+    accountStatus: null,
+    role: null,
+    isInitialized: false,
+  });
 
-  // Load user from token on mount
-  const loadUser = async () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      setLoading(false);
-      return null;
-    }
 
-    try {
-      const response = await authApi.getUserInfo();
-      const userData = response.data;
-      
-      const userObj = {
-        id: userData.userId,
-        email: userData.email,
-        name: userData.name,
-        phone: userData.phone,
-        roles: userData.roles || [],
-        hasBusinessRole: userData.hasBusinessRole || false,
-        businessRole: userData.businessRole
-      };
-      
-      setUser(userObj);
-      setIsNewUser(userData.isNewUser || false);
-      
-      return userObj;
-    } catch (error) {
-      console.error('Failed to load user:', error);
-      // Token might be invalid
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      setUser(null);
-      setIsNewUser(false);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Global listener to catch Axios 401s if a token expires mid-session
   useEffect(() => {
-    loadUser();
+    const handleUnauthorized = () => {
+      setAuthState({
+        isAuthenticated: false,
+        accountStatus: null,
+        role: null,
+        isInitialized: true,
+      });
+    };
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, []);
 
-  const login = async (loginPromise) => {
-    try {
-      const response = await loginPromise;
-      const { accessToken, refreshToken, userId, isNewUser: newUser, hasBusinessRole, roles } = response.data;
-      
-      if (accessToken) {
-        localStorage.setItem('accessToken', accessToken);
-      }
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
-      
-      const userData = { 
-        id: userId, 
-        isNewUser: newUser,
-        hasBusinessRole: hasBusinessRole || false,
-        roles: roles || []
-      };
-      
-      localStorage.setItem('user', JSON.stringify(userData));
-      
-      setUser(userData);
-      setIsNewUser(newUser);
-      
-      return { success: true, isNewUser: newUser };
-    } catch (error) {
-      console.error('Login failed:', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Login failed';
-      return { success: false, error: errorMessage };
-    }
-  };
 
-  const logout = async () => {
+  // Use useCallback to prevent unnecessary re-renders
+  const verifySession = useCallback(async () => {
+    try {
+      const response = await authApi.refresh();
+      setAuthState({
+        isAuthenticated: true,
+        accountStatus: response.data.accountStatus,
+        role: response.data.role,
+        isInitialized: true,
+      });
+      return true;
+    } catch (error) {
+      setAuthState({
+        isAuthenticated: false,
+        accountStatus: null,
+        role: null,
+        isInitialized: true,
+      });
+      return false;
+    }
+  }, []);
+
+  const login = useCallback(async (apiCallPromise) => {
+    try {
+      const response = await apiCallPromise;
+      const { accountStatus, role } = response.data;
+      
+      setAuthState({
+        isAuthenticated: true,
+        accountStatus,
+        role,
+        isInitialized: true,
+      });
+
+      return { 
+        success: true, 
+        needsRole: accountStatus === 'PENDING_ROLE',
+        needsOnboarding: accountStatus === 'PENDING_ONBOARDING'
+      };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Authentication failed.' 
+      };
+    }
+  }, []);
+
+  const selectRole = useCallback(async (roleName) => {
+    try {
+      const response = await authApi.selectRole(roleName);
+      setAuthState((prev) => ({
+        ...prev,
+        role: roleName,
+        accountStatus: response.data.accountStatus,
+      }));
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'Failed to assign role.' };
+    }
+  }, []);
+
+  const logout = useCallback(async () => {
     try {
       await authApi.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear all storage
-      localStorage.clear();
-      sessionStorage.clear();
-      setUser(null);
-      setIsNewUser(false);
-      // Force navigate to login
-      window.location.href = '/login';
+      setAuthState({
+        isAuthenticated: false,
+        accountStatus: null,
+        isInitialized: true,
+      });
     }
-  };
+  }, []);
 
-  const logoutAll = async () => {
-    try {
-      await authApi.logoutAll();
-    } catch (error) {
-      console.error('Logout all error:', error);
-    } finally {
-      // Clear all storage
-      localStorage.clear();
-      sessionStorage.clear();
-      setUser(null);
-      setIsNewUser(false);
-      // Force navigate to login
-      window.location.href = '/login';
-    }
-  };
+  const handleOAuthSuccess = useCallback((status) => {
+    setAuthState({
+      isAuthenticated: true,
+      accountStatus: status,
+      role: null,
+      isInitialized: true,
+    });
+  }, []);
 
-  const selectRole = async (role) => {
-    try {
-      const response = await authApi.selectRole(role);
-      console.log("Role selection response:", response.data);
-      
-      // Reload user info after role upgrade
-      await loadUser();
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Role selection failed:', error);
-      return { success: false, error: error.response?.data?.message || 'Failed to select role' };
-    }
-  };
 
-  const value = {
-    user,
-    loading,
-    isNewUser,
+  const contextValue = {
+    ...authState,
+    verifySession,
     login,
     logout,
-    logoutAll,
     selectRole,
-    loadUser,
-    isAuthenticated: !!localStorage.getItem('accessToken'),
+    handleOAuthSuccess,
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

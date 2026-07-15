@@ -1,17 +1,25 @@
-import React from 'react';
-import { useAuth } from '../context/AuthContext';
-import { LogOut, Users, Home } from 'lucide-react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { LogOut, User, Loader2, Sparkles, Building, LayoutDashboard, Globe, MessageSquare, Settings, Home, Users } from 'lucide-react';
 
 export default function Dashboard() {
-  const { user, logout, logoutAll, isNewUser } = useAuth();
+  const { user, logout, logoutAll, loading } = useAuth();
   const navigate = useNavigate();
 
-  React.useEffect(() => {
-    if (isNewUser) {
+  useEffect(() => {
+    if (user && (user.role === null || user.role === undefined) && user.provider !== 'GUEST') {
       navigate('/role-selection');
     }
-  }, [isNewUser, navigate]);
+  }, [user, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-pink-500" />
+      </div>
+    );
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -55,12 +63,8 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-2xl font-bold mb-4">Welcome to Dashboard!</h2>
             <div className="space-y-2">
-              <p className="text-gray-600"><strong>User ID:</strong> {user?.id}</p>
-              <p className="text-gray-600"><strong>Roles:</strong> {user?.roles?.join(', ') || 'None'}</p>
-              <p className="text-gray-600"><strong>Has Business Role:</strong> {user?.hasBusinessRole ? 'Yes' : 'No'}</p>
-              {user?.businessRole && (
-                <p className="text-gray-600"><strong>Business Role:</strong> {user.businessRole}</p>
-              )}
+              <p className="text-gray-600"><strong>User ID:</strong> {user?.userId}</p>
+              <p className="text-gray-600"><strong>Roles:</strong> {user?.roleName || 'None'}</p>
             </div>
           </div>
         </div>
