@@ -23,12 +23,13 @@ export default function SettingsPage({ activeSection = "account", onSectionChang
 
   const [editedData, setEditedData] = useState({
     // Account
-    ownerName: "Boomathi",
-    userId: "#SL-829101",
+    userName: "Boomathi",
+    userId: "#AB-567955",
     role: "Wholesaler",
     phone: "+91 9876543210",
-    email: "arun@gmail.com",
-    yearsInBusiness: "12 Years",
+    email: "flowermoon@gmail.com",
+    MemberSince: "7 sep 2005",
+
     // Business
     companyName: "Arun Wholesale Traders",
     businessType: "Wholesale",
@@ -38,6 +39,7 @@ export default function SettingsPage({ activeSection = "account", onSectionChang
     altPhone: "+91 9123456780",
     businessEmail: "support@aruntraders.com",
     location: "Salem, Tamil Nadu",
+    yearsInBusiness: "12 Years",
     // Delivery
     addressLine1: "12 Market Street",
     addressLine2: "Near Old Bus Stand",

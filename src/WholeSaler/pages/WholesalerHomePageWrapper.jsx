@@ -1,7 +1,7 @@
 // ProductCategoryWrapper.js
 import React from "react";
-import MainLayout from "../Layout/MainLayout";
-import ProductCategories from "./ProductCategories";
+import MainLayout from "../../Layout/MainLayout";
+import DashboardHome from "./DashboardHome";
 
 export default function ProductCategoryWrapper() {
   const breadcrumbItems = [
@@ -18,10 +18,10 @@ export default function ProductCategoryWrapper() {
       pageBackground="#F8FAFC"
       breadcrumbBackground="#F8FAFC"
       breadcrumbBorder="#e2e8f0"
-      contentPadding="md:px-5 md:pt-4"
+      contentPadding="md:ps-8 pt-2"
       customStyles={{ backgroundColor: "#F8FAFC" }}
     >
-      <ProductCategories />
+      <DashboardHome/>
     </MainLayout>
   );
 }

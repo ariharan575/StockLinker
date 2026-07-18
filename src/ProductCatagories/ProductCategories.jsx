@@ -1,307 +1,35 @@
-// ProductCategories.jsx
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import * as FiIcons from "react-icons/fi";
 import { 
-  FiSearch, FiSliders, FiX, FiChevronRight,
-  FiShoppingBag, FiShoppingCart, FiHome, FiBox, FiSun, FiTruck,
-  FiActivity, FiHeart, FiDroplet, FiSettings, FiClipboard, FiPackage,
-  FiWind, FiTool, FiGrid, FiZap, FiGift, FiBook, FiStar, FiSmartphone,
-  FiWifi, FiCoffee, FiFeather, FiAnchor, FiShield
+  FiSearch, FiX, FiChevronRight, FiAlertCircle, FiLoader
 } from "react-icons/fi";
+import { axiosInstance } from "../Authentication/api/axiosInstance";
 
 // ============================================================
-// DATA
+// CONFIGURATION & UTILS
 // ============================================================
 const GRADIENTS = [
-  ["#FF4D6D", "#FF8A3D"], // coral -> amber (brand)
-  ["#0B1220", "#334155"], // ink -> slate
-  ["#2563EB", "#38BDF8"], // blue -> sky
-  ["#7C3AED", "#C026D3"], // violet -> fuchsia
-  ["#059669", "#84CC16"], // emerald -> lime
-  ["#EA580C", "#FACC15"], // burnt orange -> gold
+  ["#FF4D6D", "#FF8A3D"], 
+  ["#0B1220", "#334155"], 
+  ["#2563EB", "#38BDF8"], 
+  ["#7C3AED", "#C026D3"], 
+  ["#059669", "#84CC16"], 
+  ["#EA580C", "#FACC15"], 
 ];
 
-const gradient = (i) => GRADIENTS[i % GRADIENTS.length];
+const getGradient = (i) => GRADIENTS[i % GRADIENTS.length];
 
-const CATEGORIES = [
-  {
-    id: "electronics",
-    name: "Electronics",
-    icon: "FiCpu",
-    subcategories: [
-      "Televisions", "Home Theater Systems", "Digital Cameras", "Drones & Accessories",
-      "Action Cameras", "Bluetooth Speakers", "Wireless Earbuds", "Power Banks",
-      "Smart Watches", "VR Headsets", "Set-Top Boxes", "Projectors",
-      "Car Electronics", "Surveillance Cameras", "Walkie Talkies", "Extension Cords",
-      "Voltage Stabilizers", "Circuit Testers",
-    ],
-  },
-  {
-    id: "fashion",
-    name: "Fashion & Apparel",
-    icon: "FiShoppingBag",
-    subcategories: [
-      "Men's Clothing", "Women's Clothing", "Kids Wear", "Ethnic Wear",
-      "Denim & Jeans", "Activewear", "Winter Wear", "Formal Suits",
-      "Sarees & Lehengas", "Sleepwear", "Undergarments", "Belts & Wallets",
-      "Sunglasses", "Caps & Hats", "Scarves & Stoles", "Rainwear",
-    ],
-  },
-  {
-    id: "grocery",
-    name: "Grocery & Gourmet",
-    icon: "FiShoppingCart",
-    subcategories: [
-      "Rice & Grains", "Pulses & Lentils", "Edible Oils", "Spices & Masalas",
-      "Tea & Coffee", "Packaged Snacks", "Dry Fruits & Nuts", "Bakery Ingredients",
-      "Sauces & Condiments", "Breakfast Cereals", "Dairy & Dairy Alternatives",
-      "Frozen Foods", "Organic Foods", "Beverages & Juices", "Sweeteners",
-      "Canned & Preserved Foods",
-    ],
-  },
-  {
-    id: "home-appliances",
-    name: "Home Appliances",
-    icon: "FiHome",
-    subcategories: [
-      "Refrigerators", "Washing Machines", "Air Conditioners", "Microwave Ovens",
-      "Water Purifiers", "Vacuum Cleaners", "Air Fryers", "Mixer Grinders",
-      "Ceiling Fans", "Room Heaters", "Water Heaters", "Induction Cooktops",
-      "Dishwashers", "Air Coolers", "Chimneys & Hoods",
-    ],
-  },
-  {
-    id: "furniture",
-    name: "Furniture & Decor",
-    icon: "FiBox",
-    subcategories: [
-      "Sofas & Recliners", "Dining Sets", "Office Chairs", "Office Desks",
-      "Wardrobes", "Bookshelves", "Bed Frames", "Mattresses",
-      "Coffee Tables", "TV Units", "Wall Art & Decor", "Curtains & Blinds",
-      "Rugs & Carpets", "Storage Cabinets", "Outdoor Furniture", "Modular Kitchens",
-    ],
-  },
-  {
-    id: "agriculture",
-    name: "Agriculture",
-    icon: "FiSun",
-    subcategories: [
-      "Seeds & Saplings", "Fertilizers", "Pesticides", "Irrigation Equipment",
-      "Tractors & Implements", "Greenhouse Supplies", "Farm Tools", "Poultry Equipment",
-      "Animal Feed", "Harvesting Machinery", "Sprayers & Dusters", "Solar Water Pumps",
-      "Beekeeping Supplies", "Soil Testing Kits",
-    ],
-  },
-  {
-    id: "automobile",
-    name: "Automobile & Parts",
-    icon: "FiTruck",
-    subcategories: [
-      "Electric Cars", "Used Cars", "Electric Motorcycles", "Electric Scooters",
-      "Car Batteries", "Tyres & Wheels", "Engine Oil & Lubricants", "Car Audio Systems",
-      "Brake Systems", "Car Care & Detailing", "Spare Parts", "Car Seat Covers",
-      "Dash Cameras", "Roof Racks & Carriers", "Two-Wheeler Accessories",
-    ],
-  },
-  {
-    id: "sports",
-    name: "Sports & Fitness",
-    icon: "FiActivity",
-    subcategories: [
-      "Gym Equipment", "Yoga Accessories", "Cricket Gear", "Football Gear",
-      "Badminton & Racquets", "Cycling Equipment", "Camping & Hiking Gear",
-      "Swimming Gear", "Fitness Trackers", "Protein & Supplements",
-      "Boxing Equipment", "Sportswear", "Skateboards & Scooters", "Table Tennis Gear",
-    ],
-  },
-  {
-    id: "healthcare",
-    name: "Healthcare & Medical",
-    icon: "FiHeart",
-    subcategories: [
-      "Diagnostic Equipment", "First Aid Supplies", "Mobility Aids", "Surgical Instruments",
-      "Personal Protective Equipment", "Hospital Furniture", "Health Monitors",
-      "Orthopedic Supports", "Respiratory Equipment", "Dental Supplies",
-      "Ayurvedic Products", "Nutritional Supplements", "Home Care Equipment",
-    ],
-  },
-  {
-    id: "beauty",
-    name: "Beauty & Personal Care",
-    icon: "FiDroplet",
-    subcategories: [
-      "Skincare", "Haircare", "Makeup & Cosmetics", "Fragrances & Perfumes",
-      "Salon Equipment", "Grooming Tools", "Bath & Body", "Nail Care",
-      "Men's Grooming", "Organic & Herbal Care", "Beauty Tools & Accessories",
-    ],
-  },
-  {
-    id: "industrial",
-    name: "Industrial Equipment",
-    icon: "FiSettings",
-    subcategories: [
-      "Compressors", "Generators", "Conveyor Systems", "Hydraulic Equipment",
-      "Pumps & Motors", "Industrial Fans", "Material Handling Equipment",
-      "Welding Equipment", "Safety & Workwear", "Industrial Storage",
-      "Bearings & Seals", "Pneumatic Tools", "Cranes & Hoists",
-    ],
-  },
-  {
-    id: "office-supplies",
-    name: "Office Supplies",
-    icon: "FiClipboard",
-    subcategories: [
-      "Printers & Scanners", "Office Furniture", "Filing & Storage",
-      "Writing Instruments", "Paper Products", "Whiteboards & Displays",
-      "Shredders & Laminators", "Projectors & Screens", "Office Electronics",
-      "Desk Organizers", "Signage & Labeling",
-    ],
-  },
-  {
-    id: "packaging",
-    name: "Packaging & Printing",
-    icon: "FiPackage",
-    subcategories: [
-      "Corrugated Boxes", "Packaging Films", "Labels & Stickers", "Printing Machinery",
-      "Bubble Wrap & Cushioning", "Packaging Tapes", "Bottles & Containers",
-      "Bags & Pouches", "Custom Printing Services", "Pallets & Crates",
-    ],
-  },
-  {
-    id: "chemicals",
-    name: "Chemicals & Materials",
-    icon: "FiWind",
-    subcategories: [
-      "Industrial Chemicals", "Adhesives & Sealants", "Paints & Coatings",
-      "Cleaning Chemicals", "Dyes & Pigments", "Petrochemicals", "Rubber & Plastics",
-      "Laboratory Chemicals", "Water Treatment Chemicals", "Textile Chemicals",
-    ],
-  },
-  {
-    id: "construction",
-    name: "Construction & Building",
-    icon: "FiTool",
-    subcategories: [
-      "Cement & Concrete", "Bricks & Blocks", "Steel & TMT Bars", "Tiles & Sanitaryware",
-      "Doors & Windows", "Roofing Materials", "Plywood & Boards", "Waterproofing Solutions",
-      "Scaffolding Equipment", "Construction Tools", "Paints & Finishes", "Pipes & Fittings",
-    ],
-  },
-  {
-    id: "machinery",
-    name: "Machinery & Tools",
-    icon: "FiGrid",
-    subcategories: [
-      "CNC Machines", "Lathe Machines", "Power Tools", "Hand Tools",
-      "Cutting Tools", "3D Printers", "Packaging Machinery", "Textile Machinery",
-      "Food Processing Machinery", "Woodworking Machinery", "Measuring Instruments",
-    ],
-  },
-  {
-    id: "electrical",
-    name: "Electrical & Lighting",
-    icon: "FiZap",
-    subcategories: [
-      "LED Lights", "Wires & Cables", "Switches & Sockets", "MCBs & Distribution Boards",
-      "Solar Panels", "Inverters & UPS", "Transformers", "Lighting Fixtures",
-      "Smart Home Devices", "Industrial Lighting", "Street Lighting",
-    ],
-  },
-  {
-    id: "toys",
-    name: "Toys & Kids",
-    icon: "FiGift",
-    subcategories: [
-      "Educational Toys", "Remote Control Toys", "Dolls & Action Figures",
-      "Baby Gear", "Outdoor Play Equipment", "Puzzles & Games", "Ride-On Toys",
-      "Stationery for Kids", "Kids Furniture", "Soft Toys",
-    ],
-  },
-  {
-    id: "books",
-    name: "Books & Stationery",
-    icon: "FiBook",
-    subcategories: [
-      "Textbooks", "Notebooks & Diaries", "Art & Craft Supplies", "Office Stationery",
-      "Children's Books", "Religious & Spiritual Books", "Calendars & Planners",
-      "Gift Wrapping Supplies", "Filing Supplies",
-    ],
-  },
-  {
-    id: "jewellery",
-    name: "Jewellery & Watches",
-    icon: "FiStar",
-    subcategories: [
-      "Gold Jewellery", "Silver Jewellery", "Fashion Jewellery", "Wrist Watches",
-      "Jewellery Boxes", "Bridal Jewellery Sets", "Gemstones", "Watch Straps & Parts",
-      "Jewellery Making Supplies",
-    ],
-  },
-  {
-    id: "mobile-accessories",
-    name: "Mobile & Accessories",
-    icon: "FiSmartphone",
-    subcategories: [
-      "Smartphones", "Mobile Cases & Covers", "Screen Protectors", "Chargers & Cables",
-      "Power Banks", "Bluetooth Headsets", "Mobile Repair Parts", "Phone Holders & Mounts",
-      "Selfie Sticks & Tripods", "SIM Accessories",
-    ],
-  },
-  {
-    id: "computers",
-    name: "Computers & Networking",
-    icon: "FiWifi",
-    subcategories: [
-      "Laptops", "Desktops", "Monitors", "Printers", "Keyboards & Mice",
-      "Routers & Networking", "SSDs & Storage", "RAM & Memory", "Computer Accessories",
-      "Servers", "Graphic Cards", "Webcams",
-    ],
-  },
-  {
-    id: "kitchenware",
-    name: "Kitchenware & Dining",
-    icon: "FiCoffee",
-    subcategories: [
-      "Cookware Sets", "Cutlery & Knives", "Dinnerware", "Storage Containers",
-      "Bakeware", "Kitchen Tools & Gadgets", "Glassware & Drinkware",
-      "Coffee & Tea Makers", "Kitchen Textiles", "Commercial Kitchen Equipment",
-    ],
-  },
-  {
-    id: "footwear",
-    name: "Footwear",
-    icon: "FiFeather",
-    subcategories: [
-      "Men's Footwear", "Women's Footwear", "Kids Footwear", "Sports Shoes",
-      "Sandals & Slippers", "Formal Shoes", "Safety Footwear", "Boots",
-      "Footwear Accessories",
-    ],
-  },
-  {
-    id: "pet-supplies",
-    name: "Pet Supplies",
-    icon: "FiAnchor",
-    subcategories: [
-      "Pet Food", "Pet Grooming", "Pet Toys", "Pet Beds & Housing",
-      "Leashes & Collars", "Aquarium Supplies", "Bird Supplies", "Pet Health Care",
-      "Pet Carriers",
-    ],
-  },
-  {
-    id: "security",
-    name: "Security & Safety",
-    icon: "FiShield",
-    subcategories: [
-      "CCTV Cameras", "Access Control Systems", "Fire Safety Equipment",
-      "Alarm Systems", "Metal Detectors", "Safety Signage", "Locks & Padlocks",
-      "Biometric Devices", "Personal Safety Gear",
-    ],
-  },
-].map((cat, i) => ({
-  ...cat,
-  gradient: gradient(i),
-  count: cat.subcategories.length,
-}));
+const images = import.meta.glob(
+    "../assets/subcategories/*",
+    {
+        eager: true,
+        import: "default"
+    }
+);
+
+const getSubcategoryImageUrl = (imageName) => {
+    return images[`../assets/subcategories/${imageName}`] || null;
+};
 
 // ============================================================
 // COMPONENTS
@@ -339,51 +67,33 @@ function SearchBar({ value, onChange, resultCount, placeholder }) {
                    transition-all duration-200"
       >
         <FiSearch className="h-5 w-5 shrink-0 text-[#94A3B8]" aria-hidden="true" />
-
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder || "Search categories, subcategories, products..."}
-          aria-label="Search categories, subcategories and products"
-          className="min-w-0 flex-1 bg-transparent text-[15px] text-[#0B1220] placeholder:text-[#94A3B8]
-                     outline-none"
+          placeholder={placeholder || "Search categories, subcategories..."}
+          aria-label="Search categories, subcategories"
+          className="min-w-0 flex-1 bg-transparent text-[15px] text-[#0B1220] placeholder:text-[#94A3B8] outline-none"
         />
-
-        {value ? (
+        {value && (
           <button
             type="button"
             onClick={() => onChange("")}
             aria-label="Clear search"
             className="shrink-0 rounded-full p-1 text-[#94A3B8] hover:bg-[#F1F2F5] hover:text-[#0B1220]
-                       transition-colors duration-150 focus:outline-none focus-visible:ring-2
-                       focus-visible:ring-[#0B1220]/30"
+                       transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1220]/30"
           >
             <FiX className="h-4 w-4" />
           </button>
-        ) : null}
-
-        <div className="hidden h-6 w-px bg-[#E6E8EE] sm:block" aria-hidden="true" />
-
-        <button
-          type="button"
-          aria-label="Open filters"
-          className="hidden shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-[13px]
-                     font-medium text-[#334155] hover:bg-[#F1F2F5] transition-colors duration-150
-                     sm:flex focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1220]/30"
-        >
-          <FiSliders className="h-4 w-4" />
-          Filters
-        </button>
+        )}
       </div>
-
-      {value ? (
+      {value && (
         <p className="mt-2 pl-1 text-[13px] text-[#64748B]" role="status" aria-live="polite">
           {resultCount === 0
             ? `No matches for "${value}"`
             : `${resultCount} result${resultCount === 1 ? "" : "s"} for "${value}"`}
         </p>
-      ) : null}
+      )}
     </div>
   );
 }
@@ -391,30 +101,28 @@ function SearchBar({ value, onChange, resultCount, placeholder }) {
 // ----- HeroSection -----
 function HeroSection({ searchTerm, onSearchChange, resultCount }) {
   return (
-    <header className="px-1 pb-6 flex items-center justify-between  sm:px-5 ">
+    <header className="px-1 pb-6 flex items-center justify-between sm:px-8">
       <div>
-     <h1 className="text-[26px] font-extrabold tracking-tight text-[#0B1220] sm:text-[34px]">
-        Product Categories
-      </h1>
-      <p className="mt-1 max-w-xl text-[15px] text-[#64748B]">
-        Browse all wholesale categories and discover suppliers faster.
-      </p>
+        <h1 className="text-[26px] font-extrabold tracking-tight text-[#0B1220] sm:text-[34px]">
+          Product Categories
+        </h1>
+        <p className="mt-1 max-w-2xl text-[15px] text-[#64748B]">
+          Browse all wholesale categories and discover suppliers faster.
+        </p>
       </div>
-
-
       <div className="mt-5">
         <SearchBar
           value={searchTerm}
           onChange={onSearchChange}
           resultCount={resultCount}
-          placeholder="Search categories, suppliers, products..."
+          placeholder="Search for subcategories..."
         />
       </div>
     </header>
   );
 }
 
-// ----- CategoryItem -----
+// ----- CategoryItem (Sidebar Link) -----
 function CategoryItem({ category, isActive, onSelect, matchCount, hasSearch }) {
   const Icon = FiIcons[category.icon] || FiIcons.FiGrid;
 
@@ -428,38 +136,28 @@ function CategoryItem({ category, isActive, onSelect, matchCount, hasSearch }) {
         aria-controls={`category-panel-${category.id}`}
         onClick={() => onSelect(category.id)}
         className={`group flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left
-          transition-all duration-200 ease-out
-          focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1220]/40
-          ${
-            isActive
-              ? "bg-[#0B1220] text-[#334155] shadow-[0_4px_14px_rgba(11,18,32,0.25)]"
-              : "hover:bg-[#F1F2F5]"
-          }`}
+          transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1220]/40
+          ${isActive ? "bg-gray-300" : "hover:bg-[#F1F2F5]"}`}
       >
         <span
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors
-            duration-200 ${isActive ? "bg-white/10 text-white" : "bg-[#F1F2F5] text-[#334155] group-hover:bg-white"}`}
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-200 
+          ${isActive ? "" : "bg-[#F1F2F5] text-[#334155] group-hover:bg-white"}`}
         >
           <Icon className="h-4 w-4" aria-hidden="true" />
         </span>
-
         <span className="min-w-0 flex-1">
-          <span
-            className={`block truncate text-[14px] font-medium transition-colors duration-200
-              ${isActive ? "text-white" : "text-[#0B1220]"}`}
-          >
+          <span className={`block truncate text-[14px] font-medium transition-colors duration-200 ${isActive ? "" : "text-[#0B1220]"}`}>
             {category.name}
           </span>
-          {hasSearch ? (
-            <span className={`block text-[11px] ${isActive ? "text-white/60" : "text-[#94A3B8]"}`}>
+          {hasSearch && (
+            <span className={`block text-[11px] ${isActive ? "text-gray-600" : "text-[#94A3B8]"}`}>
               {matchCount} match{matchCount === 1 ? "" : "es"}
             </span>
-          ) : null}
+          )}
         </span>
-
         <FiChevronRight
           className={`h-4 w-4 shrink-0 transition-all duration-200
-            ${isActive ? "translate-x-0 text-white/70" : "-translate-x-0.5 text-[#CBD2DB] group-hover:translate-x-0 group-hover:text-[#64748B]"}`}
+            ${isActive ? "translate-x-0 text-gray-700" : "-translate-x-0.5 text-[#CBD2DB] group-hover:translate-x-0 group-hover:text-[#64748B]"}`}
           aria-hidden="true"
         />
       </button>
@@ -470,10 +168,9 @@ function CategoryItem({ category, isActive, onSelect, matchCount, hasSearch }) {
 // ----- CategorySidebar -----
 function CategorySidebar({ categories, activeId, onSelect, searchTerm, matchCounts }) {
   const hasSearch = Boolean(searchTerm);
-
   return (
-    <div className="w-[210px] shrink-0 border-r border-[#EEF0F3] bg-white lg:w-[270px]">
-      <Scrollbar className="h-full px-1.5 py-4 mt-[62px]">
+    <div className="w-[210px] shrink-0 border-l border-[#EEF0F3] bg-white lg:w-[270px]">
+      <Scrollbar className="h-full md:px-1.5 py-4">
         <ul role="tablist" className="space-y-0.5">
           {categories.map((category) => (
             <CategoryItem
@@ -491,8 +188,12 @@ function CategorySidebar({ categories, activeId, onSelect, searchTerm, matchCoun
   );
 }
 
-// ----- CategoryCard -----
-function CategoryCard({ name, gradient, onClick }) {
+// ----- CategoryCard (Subcategory Display) -----
+function CategoryCard({ subcategory, gradient, onClick }) {
+  const { name, imageName } = subcategory;
+  const [imgError, setImgError] = useState(false);
+
+  // Fallback Initials (if image fails to load or doesn't exist)
   const initials = name
     .split(" ")
     .filter(Boolean)
@@ -500,8 +201,9 @@ function CategoryCard({ name, gradient, onClick }) {
     .map((w) => w[0])
     .join("")
     .toUpperCase();
-
   const [from, to] = gradient;
+  
+  const imageUrl = getSubcategoryImageUrl(imageName);
 
   return (
     <button
@@ -513,29 +215,39 @@ function CategoryCard({ name, gradient, onClick }) {
         hover:-translate-y-1 hover:border-[#E6E8EE] hover:shadow-[0_16px_32px_-12px_rgba(11,18,32,0.18)]
         focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1220]/40"
     >
-      <span className="relative flex h-20 w-20 items-center justify-center">
+      <span className="relative flex h-23 w-25 items-center justify-center">
         <span
           className="absolute inset-[-4px] rounded-full opacity-0 blur-[1px] transition-opacity
             duration-300 ease-out group-hover:opacity-100 group-hover:animate-[spin_3s_linear_infinite]"
-          style={{
-            background: `conic-gradient(from 0deg, ${from}, ${to}, transparent 60%)`,
-          }}
+          style={{ background: `conic-gradient(from 0deg, ${from}, ${to}, transparent 60%)` }}
           aria-hidden="true"
         />
-        <span
-          className="relative flex h-[72px] w-[72px] items-center justify-center rounded-full text-[15px]
-            font-bold text-white shadow-[0_6px_16px_-6px_rgba(11,18,32,0.35)]
-            transition-transform duration-300 ease-out group-hover:scale-[1.06]"
-          style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
-        >
-          {initials}
-        </span>
+        
+        {/* Render true database image, fallback to initials on error */}
+        {imageUrl && !imgError ? (
+          <img
+            src={imageUrl}
+onError={() => {
+    console.log("Failed:", imageName);
+    console.log(imageUrl);
+    setImgError(true);
+}}
+            className="relative h-[90px] w-[200px] rounded-full object-cover shadow-[0_6px_16px_-6px_rgba(11,18,32,0.35)]
+              transition-transform duration-300 ease-out group-hover:scale-[1.06] bg-white"
+          />
+        ) : (
+          <span
+            className="relative flex h-[72px] w-[72px] items-center justify-center rounded-full text-[15px]
+              font-bold text-white shadow-[0_6px_16px_-6px_rgba(11,18,32,0.35)]
+              transition-transform duration-300 ease-out group-hover:scale-[1.06]"
+            style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
+          >
+            AB
+          </span>
+        )}
       </span>
 
-      <span
-        className="line-clamp-2 text-[13px] font-medium leading-snug text-[#334155]
-          transition-colors duration-300 group-hover:text-[#0B1220]"
-      >
+      <span className="line-clamp-2 text-[13px] font-medium leading-snug text-[#334155] transition-colors duration-300 group-hover:text-[#0B1220]">
         {name}
       </span>
     </button>
@@ -549,20 +261,18 @@ function CategoryGrid({ subcategories, gradient, onSelectSubcategory }) {
       <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-2 text-center">
         <p className="text-[15px] font-medium text-[#334155]">No subcategories found</p>
         <p className="max-w-xs text-[13px] text-[#94A3B8]">
-          Try a different search term or pick another category from the left.
+          Try a different search term or pick another category.
         </p>
       </div>
     );
   }
 
   return (
-    <div
-      className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5"
-    >
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
       {subcategories.map((sub) => (
         <CategoryCard
-          key={sub}
-          name={sub}
+          key={sub.id}
+          subcategory={sub}
           gradient={gradient}
           onClick={() => onSelectSubcategory?.(sub)}
         />
@@ -571,18 +281,18 @@ function CategoryGrid({ subcategories, gradient, onSelectSubcategory }) {
   );
 }
 
-// ----- CategoryContent -----
+// ----- CategoryContent (Left Side View) -----
 function CategoryContent({ category, subcategories, searchTerm, onSelectSubcategory }) {
   if (!category) {
     return (
-      <div className="flex flex-1 items-center justify-center p-8">
-        <p className="text-[15px] text-[#64748B]">No category selected</p>
+      <div className="flex flex-1 items-center justify-center p-8 bg-[#FAFBFC]">
+        <p className="text-[15px] text-[#64748B]">No category selected or found</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#FAFBFC] ">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[#FAFBFC]">
       <div className="flex items-center justify-between border-b border-[#EEF0F3] px-6 py-4">
         <div>
           <h2 id={`category-panel-${category.id}`} className="text-[17px] font-bold text-[#0B1220]">
@@ -594,7 +304,7 @@ function CategoryContent({ category, subcategories, searchTerm, onSelectSubcateg
         </div>
         {searchTerm && subcategories.length > 0 && (
           <span className="rounded-full bg-[#0B1220]/5 px-3 py-1 text-[12px] font-medium text-[#334155]">
-            {subcategories.length} results
+            {subcategories.length} search results
           </span>
         )}
       </div>
@@ -613,55 +323,77 @@ function CategoryContent({ category, subcategories, searchTerm, onSelectSubcateg
 // ============================================================
 // MAIN PAGE COMPONENT
 // ============================================================
+export default function ProductCategoriesPage({ headerOffset = 72 }) {
+  const [categoriesData, setCategoriesData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-/**
- * ProductCategoriesPage
- * ----------------------------------------------------------------------
- * Drop this straight inside your existing <AppLayout>. It does not render
- * a sidebar, header, or any app chrome — only the categories experience
- * itself, sized to fill the space your layout gives it.
- *
- * <AppLayout>
- *   <Sidebar />          // already exists in the app
- *   <Header />           // already exists in the app
- *   <ProductCategoriesPage />
- * </AppLayout>
- *
- * Height: the page assumes it is rendered under your existing header. Pass
- * `headerOffset` (px) if your header + any top padding is taller/shorter
- * than the 72px default, so the categories card fills the remaining
- * viewport exactly, without the page itself scrolling.
- */
-function ProductCategoriesPage({ headerOffset = 72 }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeCategoryId, setActiveCategoryId] = useState(CATEGORIES[0].id);
+  const [activeCategoryId, setActiveCategoryId] = useState(null);
 
+  // 1. Fetch Data from Backend API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setIsLoading(true);
+        // Replace with your exact Spring Boot URL if running on a different port locally (e.g. http://localhost:8080/api/v1/categories)
+        const response = await axiosInstance.get('/v1/categories');
+        console.log(response);
+
+       console.log(response.data);
+
+        const data = response.data;
+                console.log(data);
+
+          
+        // if (!response.ok) throw new Error("Failed to fetch categories.");
+        
+        // Enrich backend data with frontend visual gradients
+        const enrichedData = data.map((cat, index) => ({
+          ...cat,
+          gradient: getGradient(index),
+          count: cat.subcategories.length,
+        }));
+
+        setCategoriesData(enrichedData);
+        if (enrichedData.length > 0) {
+          setActiveCategoryId(enrichedData[0].id);
+        }
+      } catch (err) {
+        setError(err.message || "An unexpected error occurred.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // 2. Search & Filtering Logic (Smart Subcategory searching)
   const normalizedSearch = searchTerm.trim().toLowerCase();
 
-  // For every category, work out which subcategories match the search term
-  // and whether the category itself matches by name. Runs once per keystroke.
   const searchIndex = useMemo(() => {
-    if (!normalizedSearch) return null;
+    if (!normalizedSearch || categoriesData.length === 0) return null;
 
     const index = {};
-    for (const category of CATEGORIES) {
+    for (const category of categoriesData) {
       const nameMatches = category.name.toLowerCase().includes(normalizedSearch);
       const matchingSubs = category.subcategories.filter((sub) =>
-        sub.toLowerCase().includes(normalizedSearch)
+        sub.name.toLowerCase().includes(normalizedSearch)
       );
+
       if (nameMatches || matchingSubs.length > 0) {
         index[category.id] = { nameMatches, matchingSubs };
       }
     }
     return index;
-  }, [normalizedSearch]);
+  }, [normalizedSearch, categoriesData]);
 
-  // Categories shown in the sidebar: everything, unless searching, in which
-  // case only categories that matched (by name or by a subcategory).
+  // Main Categories on the right side
   const visibleCategories = useMemo(() => {
-    if (!searchIndex) return CATEGORIES;
-    return CATEGORIES.filter((c) => searchIndex[c.id]);
-  }, [searchIndex]);
+    if (!searchIndex) return categoriesData;
+    return categoriesData.filter((c) => searchIndex[c.id]);
+  }, [searchIndex, categoriesData]);
 
   const matchCounts = useMemo(() => {
     if (!searchIndex) return {};
@@ -673,36 +405,32 @@ function ProductCategoriesPage({ headerOffset = 72 }) {
     );
   }, [searchIndex]);
 
-  // Total match count surfaced in the hero's "N results" caption.
   const totalResultCount = useMemo(() => {
     if (!searchIndex) return 0;
     return Object.values(matchCounts).reduce((sum, n) => sum + n, 0);
   }, [searchIndex, matchCounts]);
 
-  // Keep the active tab valid: if a search filters the current category
-  // out, jump to the first remaining match instead of showing a dead panel.
+  // Keep the active tab valid when filtering
   useEffect(() => {
     if (visibleCategories.length === 0) return;
     const stillVisible = visibleCategories.some((c) => c.id === activeCategoryId);
     if (!stillVisible) {
       setActiveCategoryId(visibleCategories[0].id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visibleCategories]);
+  }, [visibleCategories, activeCategoryId]);
 
   const activeCategory = useMemo(
     () => visibleCategories.find((c) => c.id === activeCategoryId) ?? null,
     [visibleCategories, activeCategoryId]
   );
 
-  // Subcategories to render on the right: filtered to the search term when
-  // there is one, falling back to the full list if only the category name
-  // (not any of its subcategories) matched.
+  // Filtered Subcategories on the left side
   const visibleSubcategories = useMemo(() => {
     if (!activeCategory) return [];
     if (!searchIndex) return activeCategory.subcategories;
     const entry = searchIndex[activeCategory.id];
     if (!entry) return [];
+    
     return entry.matchingSubs.length > 0 ? entry.matchingSubs : activeCategory.subcategories;
   }, [activeCategory, searchIndex]);
 
@@ -710,21 +438,42 @@ function ProductCategoriesPage({ headerOffset = 72 }) {
     setActiveCategoryId(id);
   }, []);
 
-  const handleSelectSubcategory = useCallback((subName) => {
-    // Wire this up to your product listing route, e.g.:
-    // navigate(`/categories/${activeCategoryId}/${slugify(subName)}`);
-    console.log("Navigate to subcategory:", subName);
-  }, []);
+  const handleSelectSubcategory = useCallback((sub) => {
+    console.log(`Navigating to: /categories/${activeCategory.slug}/${sub.slug}`);
+  }, [activeCategory]);
 
   const containerHeightStyle = {
-    // calc(100vh - header - hero). Adjust `headerOffset` via prop if your
-    // app header is a different height than the 72px default.
-    height: `calc(100vh - ${headerOffset}px - 176px)`,
+    height: `calc(100vh - ${headerOffset}px - 128px)`,
     minHeight: "420px",
   };
 
+  // State Views: Loading / Error
+  if (isLoading) {
+    return (
+      <div className="flex h-[80vh] items-center justify-center flex-col gap-3">
+        <FiLoader className="h-8 w-8 animate-spin text-[#0B1220]" />
+        <p className="text-[15px] font-medium text-[#64748B]">Loading Categories...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-[80vh] items-center justify-center flex-col gap-3 text-red-500">
+        <FiAlertCircle className="h-10 w-10" />
+        <p className="text-[16px] font-semibold">{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-2 rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-full flex-col bg-[#F6F7F9] ">
+    <div className="flex h-full flex-col bg-[#F6F7F9]">
       <HeroSection
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -736,8 +485,7 @@ function ProductCategoriesPage({ headerOffset = 72 }) {
         className="flex overflow-hidden rounded-3xl border mx-3 border-[#EEF0F3] bg-white
           shadow-[0_1px_2px_rgba(15,23,42,0.03),0_20px_40px_-24px_rgba(15,23,42,0.12)]"
       >
-
-
+        {/* LEFT SIDE: Subcategories List */}
         <CategoryContent
           category={activeCategory}
           subcategories={visibleSubcategories}
@@ -745,7 +493,8 @@ function ProductCategoriesPage({ headerOffset = 72 }) {
           onSelectSubcategory={handleSelectSubcategory}
         />
 
-         <CategorySidebar
+        {/* RIGHT SIDE: Main Categories List */}
+        <CategorySidebar
           categories={visibleCategories}
           activeId={activeCategoryId}
           onSelect={handleSelectCategory}
@@ -754,11 +503,7 @@ function ProductCategoriesPage({ headerOffset = 72 }) {
         />
       </div>
 
-      {/* Breathing room below the card so it doesn't sit flush with the
-          layout's own bottom edge. */}
       <div className="h-4 shrink-0 sm:h-6" aria-hidden="true" />
     </div>
   );
 }
-
-export default ProductCategoriesPage;

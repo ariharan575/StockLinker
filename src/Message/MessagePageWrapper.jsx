@@ -16,7 +16,7 @@ export default function MessagePageWrapper() {
       activeNav="messages"
       breadcrumbItems={breadcrumbItems}
       showBreadcrumb={true}
-      contentPadding="px-0 py-4" // Remove all padding
+      contentPadding="px-0 py-4" 
       maxWidth="100%" // Full width
       customStyles={{
         overflow: "hidden",

@@ -45,8 +45,8 @@ export const QUICK_ACTIONS = [
 // ─── CATEGORIES ──────────────────────────────────────────────────────
 export const CATEGORIES = [
   { name:"Grocery", sup:156, image:"https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=500&q=85" },
-  { name:"Beverages", sup:89, image:"https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=500&q=85" },
-  { name:"Snacks", sup:67, image:"https://images.unsplash.com/photo-1621939514649-280e2ee25f60?auto=format&fit=crop&w=500&q=85" },
+  { name:"Beverages", sup:89, image:"https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=500&q=85" },
+  { name:"Milk", sup:67, image:"https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=500&q=85" },
   { name:"Dairy", sup:45, image:"https://images.unsplash.com/photo-1628088062854-d1870b4553da?auto=format&fit=crop&w=500&q=85" },
   { name:"Personal Care", sup:123, image:"https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=500&q=85" },
   { name:"Household", sup:98, image:"https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&w=500&q=85" },

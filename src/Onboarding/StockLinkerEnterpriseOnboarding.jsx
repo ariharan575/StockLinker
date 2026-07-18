@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Sparkles,
   Check,
+  Loader2
 } from "lucide-react";
 import { 
   STEPS, 
@@ -21,11 +22,20 @@ import {
 } from "./constants";
 import { BusinessStep, AddressStep, MarketplaceStep, SuccessScreen } from "./Steps";
 
+import { onboardingApi } from "../Authentication/services/api";
+import { useAuth } from "../Authentication/context/AuthContext";
+
 export default function StockLinkerEnterpriseOnboarding() {
-  const [role] = useState("SHOPKEEPER");
+  const { role, verifySession } = useAuth();
   const [step, setStep] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // NEW: State for fetched categories
+  const [dbCategories, setDbCategories] = useState([]);
+  
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -33,6 +43,18 @@ export default function StockLinkerEnterpriseOnboarding() {
   });
 
   useEffect(() => {
+
+    const fetchCategories = async () => {
+      try {
+        const response = await onboardingApi.getCategories();
+        setDbCategories(response.data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch categories", err);
+      }
+    };
+
+    fetchCategories();
+
     const timer = setTimeout(() => {
       setLoading(false);
     }, 1500);
@@ -40,7 +62,7 @@ export default function StockLinkerEnterpriseOnboarding() {
     return () => clearTimeout(timer);
   }, []);
 
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
     ownerName: "",
     businessName: "",
     mobile: "",
@@ -53,7 +75,7 @@ export default function StockLinkerEnterpriseOnboarding() {
     district: "",
     state: "",
     pincode: "",
-    businessCategories: [],
+    categoryIds: [], // Changed from businessCategories to categoryIds
     deliverySupport: "",
     storeSize: "",
   });
@@ -67,86 +89,126 @@ export default function StockLinkerEnterpriseOnboarding() {
       ...prev,
       [field]: value,
     }));
+    if(error) setError(null); // Clear errors when user types
   };
 
-  const nextStep = () => {
-    if (step < STEPS.length - 1) {
-      setStep((prev) => prev + 1);
-    } else {
-      setCompleted(true);
+const handleNextStep = async () => {
+    setApiLoading(true);
+    setError(null);
+    try {
+      if (step === 0) {
+        await onboardingApi.saveBusiness({
+          ownerName: formData.ownerName,
+          businessName: formData.businessName,
+          mobile: formData.mobile,
+          alternateMobile: formData.alternateMobile,
+          businessEmail: formData.businessEmail,
+          gstNumber: formData.gstNumber,
+        });
+        setStep(1);
+      } else if (step === 1) {
+        await onboardingApi.saveAddress({
+          addressLine1: formData.address1,
+          addressLine2: formData.address2,
+          city: formData.city,
+          district: formData.district,
+          state: formData.state,
+          pincode: formData.pincode,
+        });
+        setStep(2);
+      } else if (step === 2) {
+        await onboardingApi.saveMarketplace({
+          categoryIds: formData.categoryIds, // Sending IDs here
+          deliveryAvailable: formData.deliverySupport === "Yes, We Deliver",
+          storeSize: formData.storeSize
+            ? formData.storeSize.toUpperCase().replace(/\s+/g, "_")
+            : null,
+        });
+        
+        await verifySession();
+        setStep(3);
+        setCompleted(true);
+      }
+    } catch (err) {
+      console.error(err);
+      const validationErrs = err.response?.data?.validationErrors;
+      if (validationErrs && validationErrs.length > 0) {
+        setError(validationErrs.join(' | '));
+      } else {
+        setError(err.response?.data?.message || "Failed to save data. Please check your inputs.");
+      }
+    } finally {
+      setApiLoading(false);
     }
   };
 
   const prevStep = () => {
     if (step > 0) {
       setStep((prev) => prev - 1);
+      setError(null);
     }
   };
 
-  const toggleCategory = (category) => {
-    const exists = formData.businessCategories.includes(category);
+const toggleCategory = (categoryId) => {
+    const exists = formData.categoryIds.includes(categoryId);
     if (exists) {
       updateField(
-        "businessCategories",
-        formData.businessCategories.filter((item) => item !== category)
+        "categoryIds",
+        formData.categoryIds.filter((id) => id !== categoryId)
       );
     } else {
-      updateField("businessCategories", [
-        ...formData.businessCategories,
-        category,
-      ]);
+      updateField("categoryIds", [...formData.categoryIds, categoryId]);
     }
   };
 
   const categories = role === "WHOLESALER" ? WHOLESALER_CATEGORIES : SHOPKEEPER_CATEGORIES;
 
-    if (loading) {
-      return (
-        <div className="min-h-screen overflow-hidden bg-[#020617] flex items-center justify-center relative">
-          <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.2, 0.45, 0.2],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-            }}
-            className="absolute w-[340px] h-[340px] rounded-full bg-pink-500/20 blur-3xl"
-          />
-  
-          <motion.div
-            animate={{
-              rotate: 360,
-            }}
-            transition={{
-              repeat: Infinity,
-              ease: "linear",
-              duration: 3,
-            }}
-            className="relative w-24 h-24"
-          >
-            <div className="absolute inset-0 rounded-full border-[6px] border-white/10" />
-  
-            <div className="absolute inset-0 rounded-full border-t-[6px] border-pink-400 border-r-[6px] border-sky-400 border-b-transparent border-l-transparent" />
-          </motion.div>
-  
-          <motion.h1
-            initial={{
-              opacity: 0,
-              y: 20,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            className="absolute mt-44 text-4xl font-black tracking-tight text-white"
-          >
-            StockLinker
-          </motion.h1>
-        </div>
-      );
-    }
+  if (loading) {
+    return (
+      <div className="min-h-screen overflow-hidden bg-[#020617] flex items-center justify-center relative">
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.45, 0.2],
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+          }}
+          className="absolute w-[340px] h-[340px] rounded-full bg-pink-500/20 blur-3xl"
+        />
+
+        <motion.div
+          animate={{
+            rotate: 360,
+          }}
+          transition={{
+            repeat: Infinity,
+            ease: "linear",
+            duration: 3,
+          }}
+          className="relative w-24 h-24"
+        >
+          <div className="absolute inset-0 rounded-full border-[6px] border-white/10" />
+          <div className="absolute inset-0 rounded-full border-t-[6px] border-pink-400 border-r-[6px] border-sky-400 border-b-transparent border-l-transparent" />
+        </motion.div>
+
+        <motion.h1
+          initial={{
+            opacity: 0,
+            y: 20,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          className="absolute mt-44 text-4xl font-black tracking-tight text-white"
+        >
+          StockLinker
+        </motion.h1>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen overflow-x-hidden transition-all duration-500 bg-gray-200 text-slate-900">
@@ -233,16 +295,16 @@ export default function StockLinkerEnterpriseOnboarding() {
                 <div className="relative z-10 flex-1 px-4 flex flex-col justify-center">
                   {STEPS.map((item, index) => {
                     const active = step === index;
-                    const completed = index < step;
+                    const isCompleted = index < step;
                     return (
                       <React.Fragment key={item}>
                         <motion.div whileHover={{ x: 4 }} className={`relative flex items-center gap-4 px-3 py-3 rounded-2xl transition-all duration-300 ${active ? "bg-white/10" : "hover:bg-white/[0.05]"}`}>
                           <motion.div
                             animate={active ? { y: [0, -2, 0], rotate: [0, -2, 2, 0] } : {}}
                             transition={{ duration: 2.2, repeat: Infinity }}
-                            className={`shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm border ${completed ? "bg-pink-500 border-pink-400 text-white" : active ? "bg-sky-400 border-sky-300 text-white shadow-[0_0_20px_rgba(56,189,248,0.45)]" : "bg-white/[0.05] border-white/10 text-slate-300"}`}
+                            className={`shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm border ${isCompleted ? "bg-pink-500 border-pink-400 text-white" : active ? "bg-sky-400 border-sky-300 text-white shadow-[0_0_20px_rgba(56,189,248,0.45)]" : "bg-white/[0.05] border-white/10 text-slate-300"}`}
                           >
-                            {completed ? <Check size={15} /> : index + 1}
+                            {isCompleted ? <Check size={15} /> : index + 1}
                           </motion.div>
                           <div className="whitespace-nowrap opacity-0 -translate-x-5 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
                             <h3 className={`text-[15px] font-bold ${active ? "text-white" : "text-slate-200"}`}>{item}</h3>
@@ -253,7 +315,7 @@ export default function StockLinkerEnterpriseOnboarding() {
                           <div className="ml-[26px] h-7 w-[2px] rounded-full overflow-hidden bg-white/10">
                             <motion.div
                               initial={{ height: 0 }}
-                              animate={{ height: completed || active ? "100%" : "0%" }}
+                              animate={{ height: isCompleted || active ? "100%" : "0%" }}
                               transition={{ duration: 0.5 }}
                               className="w-full rounded-full bg-gradient-to-b from-pink-400 to-sky-400"
                             />
@@ -287,8 +349,7 @@ export default function StockLinkerEnterpriseOnboarding() {
               className="hidden xl:flex flex-col h-full rounded-2xl overflow-hidden border bg-white/80 border-slate-200 backdrop-blur-xl"
             >
               <div className="relative p-7 overflow-hidden flex-1 flex flex-col">
-                <div className="absolute inset-0  bg-gradient-to-b from-[#132238] via-[#17304d] to-[#1b1b3a] border-[#20324a]
-                  shadow-[0_20px_60px_rgba(0,0,0,0.22)]" />
+                <div className="absolute inset-0 bg-gradient-to-b from-[#132238] via-[#17304d] to-[#1b1b3a] border-[#20324a] shadow-[0_20px_60px_rgba(0,0,0,0.22)]" />
                 <motion.div
                   animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
                   transition={{ duration: 7, repeat: Infinity }}
@@ -334,7 +395,7 @@ export default function StockLinkerEnterpriseOnboarding() {
                 <div className="mt-8 space-y-4 relative z-10">
                   {STEPS.map((item, index) => {
                     const active = step === index;
-                    const completed = index < step;
+                    const isCompleted = index < step;
                     return (
                       <motion.div
                         key={item}
@@ -350,12 +411,12 @@ export default function StockLinkerEnterpriseOnboarding() {
                             whileHover={{ scale: 1.08 }}
                             animate={active ? { y: [0, -2, 0] } : {}}
                             transition={{ duration: 2, repeat: Infinity }}
-                            className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold border transition-all duration-300 ${completed ? "bg-pink-400 border-pink-400 text-white" : active ? "bg-sky-400 border-sky-400 text-white" : "bg-slate-100 border-slate-200 text-slate-600"}`}
+                            className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold border transition-all duration-300 ${isCompleted ? "bg-pink-400 border-pink-400 text-white" : active ? "bg-sky-400 border-sky-400 text-white" : "bg-slate-100 border-slate-200 text-slate-600"}`}
                           >
-                            {completed ? <Check size={16} /> : index + 1}
+                            {isCompleted ? <Check size={16} /> : index + 1}
                           </motion.div>
                           {index !== STEPS.length - 1 && (
-                            <div className={`w-[2px] h-6 mt-2 rounded-full ${completed ? "bg-gradient-to-b from-pink-400 to-sky-400" : "bg-slate-200"}`} />
+                            <div className={`w-[2px] h-6 mt-2 rounded-full ${isCompleted ? "bg-gradient-to-b from-pink-400 to-sky-400" : "bg-slate-200"}`} />
                           )}
                         </div>
                         <div className="pt-1">
@@ -375,7 +436,7 @@ export default function StockLinkerEnterpriseOnboarding() {
               initial={{ opacity: 0, y: 50, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.7 }}
-              className="rounded-2xl border overflow-hidden backdrop-blur-xl w-full max-w-[1180px] h-full bg-white/80 border-slate-200"
+              className="rounded-2xl border overflow-hidden backdrop-blur-xl w-full max-w-[1180px] h-full bg-white/80 border-slate-200 flex flex-col"
             >
               {/* MOBILE / TABLET HEADER */}
               <div className="xl:hidden px-5 sm:px-7 pt-7 pb-6">
@@ -426,7 +487,7 @@ export default function StockLinkerEnterpriseOnboarding() {
                       <div className="flex items-center justify-between relative">
                         {STEPS.map((item, index) => {
                           const active = step === index;
-                          const completed = index < step;
+                          const isCompleted = index < step;
                           return (
                             <div key={item} className="relative flex flex-col items-center flex-1">
                               {index !== STEPS.length - 1 && (
@@ -434,7 +495,7 @@ export default function StockLinkerEnterpriseOnboarding() {
                                   initial={{ scaleX: 0 }}
                                   animate={{ scaleX: 1 }}
                                   transition={{ duration: 0.5 }}
-                                  className={`absolute top-5 left-[55%] w-full h-[2px] origin-left ${completed ? "bg-gradient-to-r from-pink-400 to-sky-400" : "bg-slate-200"}`}
+                                  className={`absolute top-5 left-[55%] w-full h-[2px] origin-left ${isCompleted ? "bg-gradient-to-r from-pink-400 to-sky-400" : "bg-slate-200"}`}
                                 />
                               )}
                               <motion.div
@@ -442,9 +503,9 @@ export default function StockLinkerEnterpriseOnboarding() {
                                 whileHover={{ y: -2 }}
                                 animate={{ scale: active ? [1, 1.08, 1] : 1 }}
                                 transition={{ duration: 2, repeat: Infinity }}
-                                className={`relative z-10 w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-bold border transition-all duration-300 ${completed ? "bg-pink-400 border-pink-400 text-white" : active ? "bg-sky-400 border-sky-400 text-white shadow-[0_0_20px_rgba(56,189,248,0.5)]" : "bg-white border-slate-300 text-slate-600"}`}
+                                className={`relative z-10 w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-bold border transition-all duration-300 ${isCompleted ? "bg-pink-400 border-pink-400 text-white" : active ? "bg-sky-400 border-sky-400 text-white shadow-[0_0_20px_rgba(56,189,248,0.5)]" : "bg-white border-slate-300 text-slate-600"}`}
                               >
-                                {completed ? <Check size={14} /> : index + 1}
+                                {isCompleted ? <Check size={14} /> : index + 1}
                               </motion.div>
                               <span className={`mt-2 text-[11px] sm:text-xs font-semibold ${active ? "text-pink-500" : "text-slate-500"}`}>{item}</span>
                             </div>
@@ -465,37 +526,48 @@ export default function StockLinkerEnterpriseOnboarding() {
               </div>
 
               {/* BODY */}
-              <div className="p-5 sm:p-7 lg:p-8 xl:p-9">
-                <AnimatePresence mode="wait">
-                  {!completed ? (
-                    <motion.div
-                      key={step}
-                      initial={{ opacity: 0, x: 40 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -40 }}
-                      transition={{ duration: 0.35 }}
-                    >
-                      {step === 0 && (
-                        <BusinessStep formData={formData} updateField={updateField} />
-                      )}
-                      {step === 1 && (
-                        <AddressStep formData={formData} updateField={updateField} />
-                      )}
-                      {step === 2 && (
-                        <MarketplaceStep
-                          role={role}
-                          categories={categories}
-                          formData={formData}
-                          updateField={updateField}
-                          toggleCategory={toggleCategory}
-                        />
-                      )}
-                      {step === 3 && <SuccessScreen />}
-                    </motion.div>
-                  ) : (
-                    <SuccessScreen />
-                  )}
-                </AnimatePresence>
+              <div className="p-5 sm:p-7 lg:p-8 xl:p-9 flex-1 flex flex-col">
+                
+                {/* Global Error Notice */}
+                {error && (
+                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 p-4 rounded-xl bg-red-50 text-red-600 text-sm font-semibold border border-red-200 flex items-center gap-2">
+                    <span className="shrink-0">⚠️</span>
+                    {error}
+                  </motion.div>
+                )}
+
+                <div className="flex-1">
+                  <AnimatePresence mode="wait">
+                    {!completed ? (
+                      <motion.div
+                        key={step}
+                        initial={{ opacity: 0, x: 40 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -40 }}
+                        transition={{ duration: 0.35 }}
+                      >
+                        {step === 0 && (
+                          <BusinessStep formData={formData} updateField={updateField} />
+                        )}
+                        {step === 1 && (
+                          <AddressStep formData={formData} updateField={updateField} />
+                        )}
+                       {step === 2 && (
+                             <MarketplaceStep
+                               role={role}
+                               categories={dbCategories} 
+                               formData={formData}
+                               updateField={updateField}
+                               toggleCategory={toggleCategory}
+                            />
+                         )}
+                        {step === 3 && <SuccessScreen />}
+                      </motion.div>
+                    ) : (
+                      <SuccessScreen />
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 {/* FOOTER */}
                 {!completed && step !== 3 && (
@@ -505,30 +577,44 @@ export default function StockLinkerEnterpriseOnboarding() {
                     className="mt-10 pt-6 border-t flex flex-col-reverse sm:flex-row gap-4 justify-between border-slate-200"
                   >
                     <motion.button
-                      whileHover={{ scale: 1.03, borderColor: "rgba(244,114,182,0.6)" }}
-                      whileTap={{ scale: 0.97 }}
+                      whileHover={step === 0 || apiLoading ? {} : { scale: 1.03, borderColor: "rgba(244,114,182,0.6)" }}
+                      whileTap={step === 0 || apiLoading ? {} : { scale: 0.97 }}
                       onClick={prevStep}
-                      disabled={step === 0}
+                      disabled={step === 0 || apiLoading}
                       className={`h-12 px-6 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 border ${
-                        step === 0 ? "opacity-40 cursor-not-allowed" : "bg-slate-100 border-slate-200 hover:border-pink-400"
+                        step === 0 || apiLoading ? "opacity-40 cursor-not-allowed" : "bg-slate-100 border-slate-200 hover:border-pink-400"
                       }`}
                     >
                       <ArrowLeft size={17} />
                       Back
                     </motion.button>
+                    
                     <motion.button
-                      whileHover={{ scale: 1.03, boxShadow: "0 0 30px rgba(236,72,153,0.35)" }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={nextStep}
-                      className="relative overflow-hidden h-12 px-9 rounded-lg bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 text-white text-sm font-bold flex items-center justify-center gap-2"
+                      whileHover={apiLoading ? {} : { scale: 1.03, boxShadow: "0 0 30px rgba(236,72,153,0.35)" }}
+                      whileTap={apiLoading ? {} : { scale: 0.97 }}
+                      onClick={handleNextStep}
+                      disabled={apiLoading}
+                      className="relative overflow-hidden h-12 px-9 rounded-lg bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-80"
                     >
-                      <motion.div
-                        animate={{ x: ["-120%", "220%"] }}
-                        transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-                        className="absolute inset-y-0 left-0 w-20 bg-white/20 skew-x-12"
-                      />
-                      <span className="relative z-10">Save & Continue</span>
-                      <ArrowRight size={16} className="relative z-10" />
+                      {!apiLoading && (
+                        <motion.div
+                          animate={{ x: ["-120%", "220%"] }}
+                          transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+                          className="absolute inset-y-0 left-0 w-20 bg-white/20 skew-x-12"
+                        />
+                      )}
+                      
+                      {apiLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin relative z-10" />
+                          <span className="relative z-10">Saving...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="relative z-10">Save & Continue</span>
+                          <ArrowRight size={16} className="relative z-10" />
+                        </>
+                      )}
                     </motion.button>
                   </motion.div>
                 )}

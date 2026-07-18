@@ -72,10 +72,10 @@ export function BusinessSection({
           <div className="grid gap-4 sm:grid-cols-2">
             <EditableDetailItem
               label="Owner Name"
-              value={editedData.ownerName}
+              value={editedData.userName}
               isEditing={isEditing}
               onChange={handleFieldChange}
-              fieldKey="ownerName"
+              fieldKey="userName"
             />
             <EditableDetailItem
               label="Company Name"
@@ -111,6 +111,13 @@ export function BusinessSection({
               isEditing={isEditing}
               onChange={handleFieldChange}
               fieldKey="operatingTiming"
+            />
+              <EditableDetailItem
+              label="Year is Business"
+              value={editedData.yearsInBusiness}
+              isEditing={isEditing}
+              onChange={handleFieldChange}
+              fieldKey="yearsInBusiness"
             />
           </div>
         </div>
@@ -173,7 +180,7 @@ export function BusinessSection({
         <SmallCard title="Coverage Radius" value="60 KM" icon={MapPinned} />
         <SmallCard title="Coverage Areas" value="18" icon={Layers3} />
         <SmallCard title="Delivery Time" value="35 Min" icon={Clock3} />
-        <SmallCard title="Verified" value="Approved" icon={ShieldCheck} />
+        <SmallCard title="Business Status" value="Verified" icon={ShieldCheck} />
       </div>
     </SectionBox>
   );

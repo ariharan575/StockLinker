@@ -40,10 +40,10 @@ export function InventorySection() {
           </h3>
 
           <div className="grid gap-4">
-            <DetailItem label="Best Selling" value="Premium Rice" />
+            <DetailItem label="Best Selling Product" value="Premium Rice" />
             <DetailItem label="Monthly Growth" value="+24%" />
-            <DetailItem label="Stock Value" value="₹8.2 Lakhs" />
-            <DetailItem label="Fast Moving" value="Groceries" />
+            <DetailItem label="Inventory Value" value="₹8.2 Lakhs" />
+            <DetailItem label="Fast Moving Category" value="Groceries" />
           </div>
         </div>
 

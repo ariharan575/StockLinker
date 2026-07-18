@@ -17,9 +17,6 @@ import { useNavigate } from "react-router-dom";
 
 // Business Step Component
 export function BusinessStep({ formData, updateField }) {
-
-  const navigate = useNavigate();
-
   return (
     <div>
       <SectionTitle
@@ -227,9 +224,10 @@ export function AddressStep({ formData, updateField }) {
 }
 
 // Marketplace Step Component
+
 export function MarketplaceStep({
   role,
-  categories,
+  categories, // Now receiving fetched DB categories
   formData,
   toggleCategory,
   updateField,
@@ -254,43 +252,28 @@ export function MarketplaceStep({
         </h3>
 
         <div className="mt-6 flex flex-wrap gap-3">
+          {categories.length === 0 && <p className="text-sm text-slate-500">Loading categories...</p>}
+          
           {categories.map((item, index) => {
-            const active =
-              formData.businessCategories.includes(
-                item
-              );
+            // item is now an object: { id, name }
+            const active = formData.categoryIds.includes(item.id);
 
             return (
               <motion.button
-                key={item}
-                initial={{
-                  opacity: 0,
-                  y: 10,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                transition={{
-                  delay: index * 0.04,
-                }}
-                whileHover={{
-                  y: -3,
-                  scale: 1.02,
-                }}
-                whileTap={{
-                  scale: 0.97,
-                }}
-                onClick={() =>
-                  toggleCategory(item)
-                }
+                key={item.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.04 }}
+                whileHover={{ y: -3, scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => toggleCategory(item.id)} // Store ID instead of Name
                 className={`px-4 py-3 rounded-2xl border text-sm font-semibold transition-all duration-300 ${
                   active
                     ? "bg-pink-100 border-pink-300 text-pink-700"
                     : "bg-slate-50 border-slate-200 hover:border-pink-300 text-slate-700"
                 }`}
               >
-                {item}
+                {item.name}
               </motion.button>
             );
           })}
@@ -311,41 +294,21 @@ export function MarketplaceStep({
           ).map((item, index) => {
             const active =
               role === "WHOLESALER"
-                ? formData.deliverySupport ===
-                  item
+                ? formData.deliverySupport === item
                 : formData.storeSize === item;
 
             return (
               <motion.button
                 key={item}
-                initial={{
-                  opacity: 0,
-                  y: 10,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                transition={{
-                  delay: index * 0.05,
-                }}
-                whileHover={{
-                  y: -5,
-                  scale: 1.02,
-                }}
-                whileTap={{
-                  scale: 0.98,
-                }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                whileHover={{ y: -5, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() =>
                   role === "WHOLESALER"
-                    ? updateField(
-                        "deliverySupport",
-                        item
-                      )
-                    : updateField(
-                        "storeSize",
-                        item
-                      )
+                    ? updateField("deliverySupport", item)
+                    : updateField("storeSize", item)
                 }
                 className={`rounded-2xl border p-4 text-left transition-all duration-300 ${
                   active
@@ -357,10 +320,7 @@ export function MarketplaceStep({
                   <h4 className="font-bold text-sm leading-tight">
                     {item}
                   </h4>
-
-                  {active && (
-                    <Check size={16} />
-                  )}
+                  {active && <Check size={16} />}
                 </div>
               </motion.button>
             );
@@ -371,9 +331,9 @@ export function MarketplaceStep({
   );
 }
 
+
 // Success Screen Component
 export function SuccessScreen() {
-
   const navigate = useNavigate();
   
   return (
@@ -465,10 +425,10 @@ export function SuccessScreen() {
         transition={{
           delay: 0.4,
         }}
-        className="mt-10 h-16 px-15 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 text-white font-black text-lg shadow-[0_20px_60px_rgba(236,72,153,0.35)]"
-          
+        className="mt-10 h-16 px-10 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 text-white font-black text-lg shadow-[0_20px_60px_rgba(236,72,153,0.35)]"
+        onClick={() => navigate("/dashboard")}
       >
-       <span onClick={(()=> navigate("/dash"))}> Launch Dashboard →</span>
+        <span>Launch Dashboard →</span>
       </motion.button>
     </div>
   );

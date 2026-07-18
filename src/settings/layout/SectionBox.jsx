@@ -47,12 +47,6 @@ export function SectionBox({
         `}
       >
         <div>
-          <div className="flex items-center gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-500/10 via-pink-500/10 to-rose-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-pink-400">
-              <Sparkles size={12} />
-              StockLinker
-            </div>
-          </div>
           <h2
             className={`
               mt-3

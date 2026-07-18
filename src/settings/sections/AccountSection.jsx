@@ -221,11 +221,11 @@ export function AccountSection({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <EditableDetailItem
-              label="Owner Name"
-              value={editedData.ownerName}
+              label="User Name"
+              value={editedData.userName}
               isEditing={isEditing}
               onChange={handleFieldChange}
-              fieldKey="ownerName"
+              fieldKey="userName"
             />
             <EditableDetailItem
               label="User ID"
@@ -256,11 +256,11 @@ export function AccountSection({
               fieldKey="email"
             />
             <EditableDetailItem
-              label="Years In Business"
-              value={editedData.yearsInBusiness}
+              label="Member Since"
+              value={editedData.MemberSince}
               isEditing={isEditing}
               onChange={handleFieldChange}
-              fieldKey="yearsInBusiness"
+              fieldKey="MemberSince"
             />
           </div>
         </div>
@@ -461,12 +461,12 @@ export function AccountSection({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SmallCard title="Orders" value="12,482" icon={ShoppingBag} />
         <SmallCard title="Products" value="2,480" icon={Package2} />
         <SmallCard title="Deliveries" value="8,921" icon={Truck} />
         <SmallCard title="Growth" value="+24%" icon={TrendingUp} />
-      </div>
+      </div> */}
     </SectionBox>
   );
 }
