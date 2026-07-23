@@ -23,7 +23,7 @@ function DashboardHome() {
 
         <div style={{ animationDelay: "80ms" }} className="animate-[fadeUp_0.6s_ease-out_both]">
           {isLoading ? (
-            <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="rounded-3xl border border-gray-100 bg-white shadow-sm">
               {Array.from({ length: 4 }).map((_, i) => (
                 <SkeletonRow key={i} />
               ))}

@@ -1,4 +1,3 @@
-// ConnectedSupplierWrapper.js
 import React from "react";
 import MainLayout from "../Layout/MainLayout";
 import ConnectedSupplierPage from "./ConnectedSupplierPage";
@@ -6,8 +5,8 @@ import ConnectedSupplierPage from "./ConnectedSupplierPage";
 export default function ConnectedSupplierWrapper() {
   const breadcrumbItems = [
     { label: "Home", path: "/" },
-    { label: "Nearbyseller", path: "/nearbyseller" },
-    { label: "Compare Prices", isCurrent: true }
+    { label: "Network", path: "/network" },
+    { label: "Connections", isCurrent: true }
   ];
 
   return (
@@ -15,6 +14,8 @@ export default function ConnectedSupplierWrapper() {
       activeNav="suppliers"
       breadcrumbItems={breadcrumbItems}
       maxWidth={1400}
+      pageBackground="#FAFAFA"
+      customStyles={{ backgroundColor: "#FAFAFA" }}
     >
       <ConnectedSupplierPage />
     </MainLayout>

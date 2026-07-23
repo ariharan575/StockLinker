@@ -1,770 +1,521 @@
-import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Search,
-  Filter,
-  ChevronDown,
-  ArrowRight,
-  X,
-  RotateCcw,
-  BadgeCheck,
-  MapPin,
-  Copy,
-  ArrowUpDown,
-  Download,
-} from "lucide-react";
-
-/* -------------------------------------------------------------------------- */
-/* Dummy data                                                                 */
-/* -------------------------------------------------------------------------- */
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, MapPin, CheckCircle2, Truck, ShoppingCart, Loader2, RotateCcw, ShieldCheck, X, AlertCircle } from 'lucide-react';
+import { orderApi, networkApi } from '../Authentication/services/api';
+import { useAuth } from '../Authentication/context/AuthContext';
+import SockJS from 'sockjs-client';
+import { Stomp } from '@stomp/stompjs';
 
 const TABS = [
-  { key: "all", label: "All Orders", count: null },
-  { key: "active", label: "Active", count: 32 },
-  { key: "processing", label: "Processing", count: 18 },
-  { key: "delivered", label: "Delivered", count: 74 },
-  { key: "cancelled", label: "Cancelled", count: 4 },
+  { key: "all", label: "All Orders" },
+  { key: "PENDING", label: "Pending" },
+  { key: "PROCESSING", label: "Processing" },
+  { key: "OUT_FOR_DELIVERY", label: "Out of Delivery" },
+  { key: "DELIVERED", label: "Delivered" },
+  { key: "CANCELLED", label: "Cancelled" },
 ];
 
 const STATUS_STYLES = {
-  Delivered: "bg-emerald-50 text-emerald-600",
-  Processing: "bg-amber-50 text-amber-600",
-  "In Transit": "bg-amber-50 text-amber-600",
-  Cancelled: "bg-rose-50 text-rose-600",
-  "Order Completed": "bg-emerald-50 text-emerald-600",
+  DELIVERED: "bg-[#ECFDF3] text-[#067647] border-[#DCFAE6]",
+  PROCESSING: "bg-[#FFFAEB] text-[#B54708] border-[#FEF0C7]",
+  OUT_FOR_DELIVERY: "bg-indigo-50 text-indigo-700 border-indigo-100",
+  CANCELLED: "bg-[#FEF3F2] text-[#B42318] border-[#FEE4E2]",
+  PENDING: "bg-slate-100 text-slate-600 border-slate-200",
 };
 
-const ORDERS = [
-  {
-    id: "SL-928392",
-    placedOn: "20 Jun 2026, 11:30 AM",
-    status: "Delivered",
-    deliveredOn: "24 Jun 2026",
-    deliveredLabel: "Delivered on",
-    invoiceId: "INV-2026-06-928392",
-    supplier: {
-      name: "ABC Fashion Wholesale",
-      verified: true,
-      location: "Tirupur, Tamil Nadu",
-      gstin: "33ABCDE1234F1Z5",
-      businessType: "Manufacturer",
-    },
-    products: [
-      { name: "Premium Cotton Shirt", sku: "SH-001", qty: "50 Units", rate: 800, total: 40000 },
-      { name: "Denim Jeans", sku: "JN-022", qty: "30 Units", rate: 1000, total: 30000 },
-      { name: "Sports Shoes", sku: "SS-105", qty: "20 Units", rate: 500, total: 10000 },
-      { name: "Cotton Kurta Set", sku: "KS-089", qty: "15 Units", rate: 200, total: 3000 },
-    ],
-    totalValue: 83000,
-    bill: {
-      totalAmount: 83000,
-      discount: 0,
-      tax: 0,
-      finalAmount: 83000,
-    },
-    totalProducts: 4,
-    totalQuantity: 115,
-  },
-  {
-    id: "SL-928391",
-    placedOn: "18 Jun 2026, 09:15 AM",
-    status: "Processing",
-    deliveredOn: "25 Jun 2026",
-    deliveredLabel: "Expected Delivery",
-    invoiceId: "INV-2026-06-928391",
-    supplier: {
-      name: "Global Houseware Ltd.",
-      verified: true,
-      location: "Delhi, Delhi",
-      gstin: "07ABCDE1234F1Z5",
-      businessType: "Distributor",
-    },
-    products: [
-      { name: "Plastic Storage Box", sku: "PB-001", qty: "100 Units", rate: 200, total: 20000 },
-      { name: "Kitchen Rack", sku: "KR-002", qty: "40 Units", rate: 300, total: 12000 },
-      { name: "Steel Water Bottle", sku: "SB-003", qty: "60 Units", rate: 150, total: 9000 },
-      { name: "Lunch Box", sku: "LB-004", qty: "50 Units", rate: 136, total: 6800 },
-    ],
-    totalValue: 47800,
-    bill: {
-      totalAmount: 47800,
-      discount: 0,
-      tax: 0,
-      finalAmount: 47800,
-    },
-    totalProducts: 4,
-    totalQuantity: 250,
-  },
-  {
-    id: "SL-928390",
-    placedOn: "16 Jun 2026, 04:20 PM",
-    status: "Delivered",
-    deliveredOn: "20 Jun 2026",
-    deliveredLabel: "Delivered on",
-    invoiceId: "INV-2026-06-928390",
-    supplier: {
-      name: "Shree Traders",
-      verified: true,
-      location: "Madurai, Tamil Nadu",
-      gstin: "33ABCDE1234F1Z5",
-      businessType: "Wholesaler",
-    },
-    products: [
-      { name: "Wooden Dinner Set", sku: "WD-001", qty: "20 Units", rate: 840, total: 16800 },
-      { name: "Stainless Steel Tumbler", sku: "ST-002", qty: "40 Units", rate: 200, total: 8000 },
-    ],
-    totalValue: 24800,
-    bill: {
-      totalAmount: 24800,
-      discount: 0,
-      tax: 0,
-      finalAmount: 24800,
-    },
-    totalProducts: 2,
-    totalQuantity: 60,
-  },
-];
-
-const BUY_AGAIN = [
-  { name: "Premium Cotton Shirt", supplier: "ABC Fashion Wholesale", date: "20 Jun 2026", qty: "50 Units" },
-  { name: "Denim Jeans", supplier: "ABC Fashion Wholesale", date: "20 Jun 2026", qty: "30 Units" },
-  { name: "Sports Shoes", supplier: "ABC Fashion Wholesale", date: "20 Jun 2026", qty: "20 Units" },
-];
-
-const RECENT_SUPPLIERS = [
-  { name: "ABC Fashion Wholesale", location: "Tirupur, Tamil Nadu", products: "120+ Products" },
-  { name: "Global Houseware Ltd.", location: "Delhi, Delhi", products: "80+ Products" },
-  { name: "Shree Traders", location: "Madurai, Tamil Nadu", products: "95+ Products" },
-  { name: "Kumar Enterprises", location: "Ludhiana, Punjab", products: "70+ Products" },
-  { name: "Maha Supply Co.", location: "Mumbai, Maharashtra", products: "110+ Products" },
-];
-
-const SORT_OPTIONS = ["Newest First", "Oldest First", "Amount High", "Amount Low"];
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
-const formatINR = (n) => `₹${n.toLocaleString("en-IN")}`;
-
-function useClickOutside(ref, onOutside) {
-  useEffect(() => {
-    function handler(e) {
-      if (ref.current && !ref.current.contains(e.target)) onOutside();
-    }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [ref, onOutside]);
-}
-
-/* -------------------------------------------------------------------------- */
-/* Sort dropdown                                                              */
-/* -------------------------------------------------------------------------- */
-
-function SortDropdown() {
-  const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState("Newest First");
-  const ref = useRef(null);
-  useClickOutside(ref, () => setOpen(false));
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 text-[15px] font-[500] leading-[22px] text-slate-700 rounded-lg border border-slate-200 px-3 py-2 hover:bg-slate-50 transition-colors"
-      >
-        <ArrowUpDown size={15} className="text-slate-400" />
-        Sort: {selected}
-        <ChevronDown size={15} className="text-slate-400" />
-      </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
-            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute right-0 mt-2 w-44 rounded-[14px] bg-white border border-slate-200/80 shadow-[0_12px_32px_rgba(0,0,0,0.09)] p-1.5 z-20"
-          >
-            <p className="text-[13px] font-[700] leading-[20px] uppercase tracking-[0.08em] text-slate-400 px-2.5 pt-1 pb-1.5">
-              Sort By
-            </p>
-            {SORT_OPTIONS.map((opt) => (
-              <button
-                key={opt}
-                onClick={() => {
-                  setSelected(opt);
-                  setOpen(false);
-                }}
-                className={`w-full text-left text-[15px] leading-[22px] rounded-lg px-2.5 py-2 transition-colors ${
-                  selected === opt
-                    ? "bg-rose-50 text-rose-500 font-[600]"
-                    : "text-slate-700 font-[500] hover:bg-slate-50"
-                }`}
-              >
-                {opt}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Filter dropdown                                                            */
-/* -------------------------------------------------------------------------- */
-
-function FilterDropdown() {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useClickOutside(ref, () => setOpen(false));
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 text-[15px] font-[500] leading-[22px] text-slate-700 rounded-lg border border-slate-200 px-3 py-2 hover:bg-slate-50 transition-colors"
-      >
-        <Filter size={15} className="text-slate-400" />
-        Filter
-        <ChevronDown size={15} className="text-slate-400" />
-      </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
-            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute right-0 mt-2 w-64 rounded-[14px] bg-white border border-slate-200/80 shadow-[0_12px_32px_rgba(0,0,0,0.09)] p-4 z-20"
-          >
-            <p className="text-[18px] font-[700] leading-[26px] tracking-[-0.02em] text-slate-900 mb-3">Filters</p>
-
-            <label className="block text-[13px] font-[700] leading-[20px] uppercase tracking-[0.08em] text-slate-400 mb-1.5">
-              Supplier
-            </label>
-            <button className="w-full flex items-center justify-between text-[15px] font-[500] leading-[22px] text-slate-700 rounded-lg border border-slate-200 px-2.5 py-2 mb-3">
-              All Suppliers <ChevronDown size={15} className="text-slate-400" />
-            </button>
-
-            <label className="block text-[13px] font-[700] leading-[20px] uppercase tracking-[0.08em] text-slate-400 mb-1.5">
-              Date Range
-            </label>
-            <button className="w-full flex items-center justify-between text-[15px] font-[500] leading-[22px] text-slate-700 rounded-lg border border-slate-200 px-2.5 py-2 mb-3">
-              Select Range <ChevronDown size={15} className="text-slate-400" />
-            </button>
-
-            <label className="block text-[13px] font-[700] leading-[20px] uppercase tracking-[0.08em] text-slate-400 mb-1.5">
-              Status
-            </label>
-            <button className="w-full flex items-center justify-between text-[15px] font-[500] leading-[22px] text-slate-700 rounded-lg border border-slate-200 px-2.5 py-2 mb-4">
-              Any Status <ChevronDown size={15} className="text-slate-400" />
-            </button>
-
-            <button
-              onClick={() => setOpen(false)}
-              className="w-full text-[15px] font-[600] leading-[22px] text-white rounded-lg py-2 bg-gradient-to-r from-pink-500 via-red-500 to-orange-500"
-            >
-              Apply
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Order card                                                                 */
-/* -------------------------------------------------------------------------- */
-
-function OrderCard({ order, index, onViewMore }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -2 }}
-      className="rounded-[16px] bg-white border border-slate-200/60 p-4 md:p-5 shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] mb-4"
-    >
-      <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1.2fr_0.8fr] gap-5 md:gap-0 items-center">
-        
-        {/* --- COLUMN 1: Order Details --- */}
-        <div className="flex flex-col md:pr-5">
-          <div className="flex items-center gap-2 mb-2.5">
-            <span className="text-[17px] font-[700] leading-[24px] tracking-[-0.02em] text-slate-900">{order.id}</span>
-            <Copy 
-              size={15} 
-              className="text-slate-400 cursor-pointer hover:text-slate-600 transition-colors" 
-            />
-            <span
-              className={`inline-block text-[13px] font-[700] leading-[20px] px-2 py-0.5 rounded-md uppercase tracking-[0.06em] ${STATUS_STYLES[order.status]}`}
-            >
-              {order.status}
-            </span>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[15px] leading-[22px] text-slate-700">
-              <span className="text-[14px] font-[500] leading-[20px] text-slate-400">Placed on:</span> <span className="font-[600]">{order.placedOn}</span>
-            </p>
-            <p className="text-[15px] leading-[22px] text-slate-700">
-              <span className="text-[14px] font-[500] leading-[20px] text-slate-400">
-                {order.deliveredLabel || "Delivered on"}:
-              </span>{" "}
-              <span className="font-[600]">{order.deliveredOn}</span>
-            </p>
-          </div>
-        </div>
-
-        {/* --- COLUMN 2: Supplier Details --- */}
-        <div className="flex flex-col md:border-l md:border-slate-100 md:px-6">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="text-[17px] font-[700] leading-[24px] tracking-[-0.02em] text-slate-900">
-              {order.supplier.name}
-            </span>
-            {order.supplier.verified && (
-              <BadgeCheck size={16} className="text-blue-500 shrink-0" />
-            )}
-          </div>
-          <div className="flex items-center gap-1.5 text-[15px] font-[400] leading-[22px] text-slate-500 mb-1.5">
-            <MapPin size={15} className="text-slate-400" />
-            <span>{order.supplier.location}</span>
-          </div>
-          <p className="text-[14px] font-[400] leading-[20px] text-slate-500">
-            {order.totalProducts} Items Included
-          </p>
-        </div>
-
-        {/* --- COLUMN 3: Order Summary & Actions --- */}
-        <div className="flex flex-col md:border-l md:border-slate-100 md:pl-6 md:items-end text-left md:text-right mt-2 md:mt-0">
-          <p className="text-[14px] font-[500] leading-[20px] text-slate-400 mb-0.5">
-            Total Bill Amount
-          </p>
-          <p className="text-[18px] font-[800] leading-[26px] text-slate-900 mb-3">
-            ₹{order.totalValue?.toLocaleString('en-IN') || "0"}
-          </p>
-          
-          <button 
-            onClick={() => onViewMore(order)}
-            className="w-full md:w-auto h-[36px] flex items-center justify-center gap-1.5 text-[15px] font-[600] leading-[22px] text-white rounded-lg px-5 bg-gradient-to-r from-pink-500 to-orange-500 shadow-sm shadow-orange-500/20 hover:shadow-md hover:shadow-orange-500/40 hover:-translate-y-0.5 transition-all"
-          >
-            View Details
-            <ArrowRight size={15} strokeWidth={2.5} />
-          </button>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Buy again card                                                             */
-/* -------------------------------------------------------------------------- */
-
-function BuyAgainCard({ item, index }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 12 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.35, delay: 0.15 + index * 0.06 }}
-      className="rounded-[16px] bg-white border border-slate-200/80 p-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
-    >
-      <p className="text-[17px] font-[700] leading-[24px] tracking-[-0.02em] text-slate-900 mb-0.5">{item.name}</p>
-      <p className="text-[15px] font-[400] leading-[22px] text-slate-500 mb-2">{item.supplier}</p>
-      <p className="text-[15px] leading-[22px] text-slate-700 mb-0.5">
-        <span className="text-[14px] font-[500] leading-[20px] text-slate-400">Last ordered:</span> <span className="font-[600]">{item.date}</span>
-      </p>
-      <p className="text-[15px] leading-[22px] text-slate-700 mb-2.5">
-        <span className="text-[14px] font-[500] leading-[20px] text-slate-400">Qty:</span> <span className="font-[600]">{item.qty}</span>
-      </p>
-      <button className="w-full h-[34px] flex items-center justify-center gap-1.5 text-[15px] font-[500] leading-[22px] text-rose-500 border border-rose-200 rounded-lg hover:bg-rose-50 transition-colors">
-        <RotateCcw size={14} />
-        Reorder
-      </button>
-    </motion.div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Order Details Modal                                                        */
-/* -------------------------------------------------------------------------- */
-
-function OrderDetailsModal({ order, onClose }) {
-  if (!order) return null;
-
-  const statusStyles = {
-    Delivered: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    Processing: "bg-amber-50 text-amber-700 border-amber-200",
-    Cancelled: "bg-rose-50 text-rose-700 border-rose-200",
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
-      />
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
-        className="relative w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-200"
-      >
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 shrink-0">
-          <div>
-            <h2 className="text-[18px] font-[700] leading-[26px] tracking-[-0.02em] text-slate-900 flex items-center gap-2.5">
-              Order {order.id}
-              <span
-                className={`inline-flex px-2 py-0.5 rounded-full text-[13px] font-[700] leading-[20px] uppercase tracking-[0.06em] border ${
-                  statusStyles[order.status] || "bg-slate-50 text-slate-700 border-slate-200"
-                }`}
-              >
-                {order.status}
-              </span>
-            </h2>
-            <p className="text-[15px] font-[400] leading-[22px] text-slate-500 mt-1">Placed on {order.placedOn}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="overflow-y-auto px-6 py-5 flex-1">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-[24px] mb-6">
-            <div>
-              <span className="text-[14px] font-[700] leading-[20px] uppercase tracking-[0.08em] text-slate-400 mb-2.5 block">
-                Delivery & Invoice
-              </span>
-              <div className="bg-slate-50 rounded-xl p-4 space-y-3 border border-slate-100">
-                <div className="flex justify-between items-center">
-                  <span className="text-[14px] font-[500] leading-[20px] text-slate-400">{order.deliveredLabel}</span>
-                  <span className="text-[15px] font-[600] leading-[22px] text-slate-900">{order.deliveredOn}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[14px] font-[500] leading-[20px] text-slate-400">Invoice ID</span>
-                  <span className="text-[15px] font-[600] leading-[22px] text-slate-900">{order.invoiceId}</span>
-                </div>
-                <div className="pt-2.5 border-t border-slate-200">
-                  <button className="flex items-center justify-center w-full gap-1.5 bg-white border border-slate-200 text-slate-700 text-[15px] font-[500] leading-[22px] rounded-[8px] h-[36px] shadow-sm hover:bg-slate-50 transition-colors">
-                    <Download size={16} />
-                    Download Invoice
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <span className="text-[14px] font-[700] leading-[20px] uppercase tracking-[0.08em] text-slate-400 mb-2.5 block">
-                Seller Details
-              </span>
-              <div className="bg-slate-50 rounded-xl p-4 space-y-2.5 border border-slate-100">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="text-[17px] font-[700] leading-[24px] tracking-[-0.02em] text-slate-900">{order.supplier.name}</span>
-                  {order.supplier.verified && <BadgeCheck size={17} className="text-blue-500" />}
-                </div>
-                <div className="flex items-center gap-1.5 text-[15px] font-[400] leading-[22px] text-slate-500">
-                  <MapPin size={16} className="text-slate-400" />
-                  {order.supplier.location}
-                </div>
-                <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-200">
-                  <div>
-                    <span className="text-[14px] font-[500] leading-[20px] text-slate-400 block mb-0.5">Business Type</span>
-                    <span className="text-[15px] font-[600] leading-[22px] text-slate-900">{order.supplier.businessType}</span>
-                  </div>
-                  <div>
-                    <span className="text-[14px] font-[500] leading-[20px] text-slate-400 block mb-0.5">GSTIN</span>
-                    <span className="text-[15px] font-[600] leading-[22px] text-slate-900">{order.supplier.gstin}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <span className="text-[14px] font-[700] leading-[20px] uppercase tracking-[0.08em] text-slate-400 mb-2.5 block">
-            Product Details ({order.products.length} Items)
-          </span>
-          <div className="overflow-x-auto border border-slate-200 rounded-xl mb-6">
-            <table className="w-full min-w-[500px] border-collapse">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr className="text-left text-[14px] font-[700] leading-[20px] uppercase tracking-[0.08em] text-slate-400">
-                  <th className="py-3 px-4">Product Name</th>
-                  <th className="py-3 px-4 whitespace-nowrap">SKU</th>
-                  <th className="py-3 px-4 whitespace-nowrap">Quantity</th>
-                  <th className="py-3 px-4 whitespace-nowrap">Rate</th>
-                  <th className="py-3 px-4 text-right whitespace-nowrap">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {order.products.map((p, i) => (
-                  <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-3 px-4 text-[16px] font-[600] leading-[24px] text-slate-900 whitespace-nowrap">
-                      {p.name}
-                    </td>
-                    <td className="py-3 px-4 text-[15px] font-[500] leading-[22px] text-slate-700 whitespace-nowrap">{p.sku}</td>
-                    <td className="py-3 px-4 text-[15px] font-[500] leading-[22px] text-slate-700 whitespace-nowrap">{p.qty}</td>
-                    <td className="py-3 px-4 text-[15px] font-[500] leading-[22px] text-slate-700 whitespace-nowrap">
-                      {formatINR(p.rate)}
-                    </td>
-                    <td className="py-3 px-4 text-[15px] font-[700] leading-[22px] text-slate-900 text-right whitespace-nowrap">
-                      {formatINR(p.total)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex flex-col items-end">
-            <div className="w-full md:w-1/2 lg:w-1/3 bg-slate-50 rounded-xl p-4 border border-slate-200">
-              <span className="text-[14px] font-[700] leading-[20px] uppercase tracking-[0.08em] text-slate-400 mb-3 block">
-                Bill Summary
-              </span>
-              <div className="space-y-2.5 mb-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[14px] font-[500] leading-[20px] text-slate-400">Subtotal Amount</span>
-                  <span className="text-[15px] font-[600] leading-[22px] text-slate-700">{formatINR(order.bill.totalAmount)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[14px] font-[500] leading-[20px] text-slate-400">Discount</span>
-                  <span className="text-[15px] font-[600] leading-[22px] text-slate-700">{formatINR(order.bill.discount)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[14px] font-[500] leading-[20px] text-slate-400">Tax (0%)</span>
-                  <span className="text-[15px] font-[600] leading-[22px] text-slate-700">{formatINR(order.bill.tax)}</span>
-                </div>
-              </div>
-              <div className="border-t border-slate-200 pt-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[18px] font-[700] leading-[26px] tracking-[-0.02em] text-slate-900">Final Bill Amount</span>
-                  <span className="text-[18px] font-[800] leading-[26px] text-slate-900">
-                    {formatINR(order.bill.finalAmount)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* Main page                                                                  */
-/* -------------------------------------------------------------------------- */
+const formatINR = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 export default function OrdersPage() {
+  const navigate = useNavigate();
+  const { user, role } = useAuth(); // 'SHOPKEEPER' or 'WHOLESALER'
+  
   const [activeTab, setActiveTab] = useState("all");
   const [modalOrder, setModalOrder] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const [liveRoute, setLiveRoute] = useState([]);
+  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  
+  // Quick Reorder / Discovery State
+  const [bottomCards, setBottomCards] = useState([]);
+
+  // Wholesaler Modals State
+  const [acceptModalOrder, setAcceptModalOrder] = useState(null);
+  const [rejectModalOrder, setRejectModalOrder] = useState(null);
+  const [routeBuilderModalOpen, setRouteBuilderModalOpen] = useState(false);
+  
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [routeOrders, setRouteOrders] = useState([]);
+  const [isSavingRoute, setIsSavingRoute] = useState(false);
+
+  // 1. Fetch Orders
+  const fetchOrders = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await orderApi.getOrders(activeTab, role);
+      setOrders(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch orders", error);
+      setOrders([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeTab, role]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  // 2. STOMP WebSocket Live Updates Subscription
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const socket = new SockJS('/ws');
+    const stompClient = Stomp.over(socket);
+    stompClient.debug = () => {};
+
+    stompClient.connect({}, () => {
+      stompClient.subscribe(`/topic/orders/${user.id}`, (message) => {
+        if (message.body) {
+          fetchOrders(); // Live refresh
+        }
+      });
+    });
+
+    return () => {
+      if (stompClient.connected) stompClient.disconnect();
+    };
+  }, [user?.id, fetchOrders]);
+
+  // 3. Live Delivery Tracker Hydration
+  useEffect(() => {
+    const fetchLiveRoute = async () => {
+      const activeTracking = orders.filter(o => ['PROCESSING', 'OUT_FOR_DELIVERY'].includes(o.status));
+      if (activeTracking.length > 0) {
+        setIsLoadingRoute(true);
+        try {
+          const response = await orderApi.getDeliveryRoute(activeTracking[0].id); 
+          const formattedRoute = (response.data || []).map(stop => ({
+            id: stop.orderId,
+            companyName: stop.buyerName,
+            status: stop.status,
+            time: stop.time,
+            isPast: stop.status === 'DELIVERED',
+            isActive: stop.status === 'OUT_FOR_DELIVERY' || stop.status === 'PROCESSING' 
+          }));
+          setLiveRoute(formattedRoute);
+        } catch (error) {
+          console.error("Failed to load live route", error);
+        } finally {
+          setIsLoadingRoute(false);
+        }
+      } else {
+        setLiveRoute([]);
+      }
+    };
+
+    if (!isLoading) fetchLiveRoute();
+  }, [orders, isLoading]);
+
+  // 4. Compute Hybrid Bottom Section (Quick Reorder / Discovery)
+  useEffect(() => {
+    const buildBottomSection = async () => {
+      let cards = [];
+      const delivered = orders.filter(o => o.status === 'DELIVERED');
+      cards = delivered.map(o => ({ type: 'REORDER', data: o }));
+
+      if (cards.length < 3) {
+        try {
+          // Wrap in try-catch in case networkApi is not fully defined yet, fail gracefully
+          if (networkApi && networkApi.getNearbySellers) {
+            const res = await networkApi.getNearbySellers({}); 
+            const networkData = res.data?.data || [];
+            const needed = 3 - cards.length;
+            const networkCards = networkData.slice(0, needed).map(n => ({ type: 'DISCOVERY', data: n }));
+            cards = [...cards, ...networkCards];
+          }
+        } catch (e) {
+          console.error("Failed to fetch suggestions", e);
+        }
+      }
+      setBottomCards(cards.slice(0, 3));
+    };
+    if (!isLoading) buildBottomSection();
+  }, [orders, isLoading]);
+
+  // Actions
+  const handleAcceptSubmit = async () => {
+    if (!scheduledDate) return alert("Please select a delivery date");
+    try {
+      await orderApi.acceptAndSchedule(acceptModalOrder.id, scheduledDate);
+      setAcceptModalOrder(null);
+      fetchOrders();
+    } catch (error) {
+      alert("Failed to accept order");
+    }
+  };
+
+  const handleRejectSubmit = async () => {
+    if (!rejectionReason) return alert("Please specify rejection reason");
+    try {
+      await orderApi.rejectOrder(rejectModalOrder.id, rejectionReason);
+      setRejectModalOrder(null);
+      setRejectionReason("");
+      fetchOrders();
+    } catch (error) {
+      alert("Failed to reject order");
+    }
+  };
+
+  const handleOpenRouteBuilder = async () => {
+    if (!scheduledDate) return;
+    try {
+      const res = await orderApi.getOrdersByDate(scheduledDate);
+      setRouteOrders(res.data || []);
+      setRouteBuilderModalOpen(true);
+    } catch (error) {
+      alert("Failed to fetch route orders");
+    }
+  };
+
+  const moveRouteItem = (dragIndex, hoverIndex) => {
+    const updated = [...routeOrders];
+    const [moved] = updated.splice(dragIndex, 1);
+    updated.splice(hoverIndex, 0, moved);
+    setRouteOrders(updated);
+  };
+
+  const handleSaveRouteSequence = async () => {
+    setIsSavingRoute(true);
+    try {
+      const orderedIds = routeOrders.map(o => o.id);
+      await orderApi.updateRouteSequence(scheduledDate, orderedIds);
+      setRouteBuilderModalOpen(false);
+      fetchOrders();
+    } catch (error) {
+      alert("Failed to save route sequence");
+    } finally {
+      setIsSavingRoute(false);
+    }
+  };
+
+  const handleMarkDelivered = async (orderId) => {
+    try {
+      await orderApi.markDelivered(orderId);
+      fetchOrders();
+    } catch (error) {
+      alert("Failed to update status to DELIVERED");
+    }
+  };
+
+  let displayOrders = orders.filter(o => o.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
-      className="min-h-screen bg-[#F8FAFC] ps-4 py-2"
-    >
-      {/* Hero */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
-        <div>
-          <h1 className="text-[24px] font-[800] leading-[28px] tracking-[-0.02em] text-slate-900">
-            My Orders
-          </h1>
-          <p className="text-[15px] font-[400] leading-[22px] text-slate-500 mt-0.5">
-            Track and manage all your wholesale orders
-          </p>
-        </div>
-        <div className="flex items-center gap-2 rounded-xl bg-white border border-slate-200/80 shadow-[0_8px_24px_rgba(0,0,0,0.05)] px-3 py-2 w-full md:w-[280px]">
-          <Search size={16} className="text-slate-400 shrink-0" />
-          <input
-            type="text"
-            placeholder="Search orders, suppliers..."
-            className="w-full text-[15px] font-[500] leading-[22px] text-slate-900 placeholder:text-[15px] placeholder:font-[400] placeholder:text-slate-400 outline-none bg-transparent"
-          />
-        </div>
-      </div>
+    <>
+      <style dangerouslySetInnerHTML={{__html: `
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+      `}} />
 
-      {/* Tabs + filter/sort row */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 mb-6 pb-0">
-        <div className="flex items-center gap-5 overflow-x-auto">
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className="relative flex items-center gap-1.5 pb-2.5 whitespace-nowrap"
-            >
-              <span
-                className={`transition-colors ${
-                  activeTab === tab.key
-                    ? "text-[15px] font-[600] leading-[22px] text-rose-500"
-                    : "text-[15px] font-[500] leading-[22px] text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                {tab.label}
-              </span>
-              {tab.count !== null && (
-                <span
-                  className={`text-[13px] font-[600] leading-[20px] px-1.5 py-0.5 rounded-md ${
-                    activeTab === tab.key
-                      ? "bg-rose-50 text-rose-500"
-                      : "bg-slate-100 text-slate-500"
-                  }`}
-                >
-                  {tab.count}
-                </span>
-              )}
-              {activeTab === tab.key && (
-                <motion.div
-                  layoutId="tab-indicator"
-                  className="absolute -bottom-px left-0 right-0 h-[2px] bg-rose-500 rounded-full"
-                />
-              )}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-2.5 pb-2.5 sm:pb-2.5">
-          <SortDropdown />
-          <FilterDropdown />
-        </div>
-      </div>
-
-      {/* Main content grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-5 items-start">
-        {/* Orders list — 75% */}
-        <div className="space-y-3.5">
-          {ORDERS.map((order, i) => (
-            <OrderCard key={order.id} order={order} index={i} onViewMore={setModalOrder} />
-          ))}
-        </div>
-
-        {/* Buy Again — 25% */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[18px] font-[700] leading-[26px] tracking-[-0.02em] text-slate-900">Buy Again</h2>
-            <button className="text-[15px] font-[500] leading-[22px] text-rose-500 hover:text-rose-600">
-              View All
-            </button>
-          </div>
-          <div className="space-y-2.5">
-            {BUY_AGAIN.map((item, i) => (
-              <BuyAgainCard key={i} item={item} index={i} />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Recently Viewed Suppliers */}
-<div className="mt-10">
-  {/* Header */}
-  <div className="flex items-center justify-between mb-5">
-    <div>
-      <h2 className="text-[22px] font-[700] tracking-[-0.03em] text-slate-900">
-        Recently Viewed Suppliers
-      </h2>
-
-      <p className="text-[15px] text-slate-500 mt-1">
-        Continue exploring suppliers you've recently visited.
-      </p>
-    </div>
-
-    <button
-      className="
-      h-10
-      px-4
-      rounded-xl
-      border
-      border-slate-200
-      bg-white
-      text-[14px]
-      font-[600]
-      text-slate-700
-      hover:bg-slate-50
-      hover:shadow-md
-      transition-all
-    "
-    >
-      View All
-    </button>
-  </div>
-
-  {/* Cards */}
-  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-    {RECENT_SUPPLIERS.slice(0, 4).map((s, i) => (
-      <motion.div
-        key={i}
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{
-          duration: 0.45,
-          delay: i * 0.08,
-        }}
-        whileHover={{
-          y: -6,
-        }}
-        className="
-          group
-          relative
-          overflow-hidden
-          rounded-3xl
-          border
-          border-slate-200/70
-          bg-gradient-to-br
-          from-white
-          via-white
-          to-slate-50
-          p-5
-          shadow-[0_8px_30px_rgba(15,23,42,0.05)]
-          hover:shadow-[0_20px_60px_rgba(15,23,42,0.12)]
-          transition-all
-          duration-300
-          cursor-pointer
-        "
-      >
-
-          <div className="min-w-0">
-              <h3 className="truncate text-[18px] font-[700] tracking-[-0.02em] text-slate-900">
-                {s.name}
-              </h3>
-
-              <p className="mt-1 truncate text-[14px] text-slate-500">
-                📍 {s.location}
-              </p>
-
-              <p className="mt-3 text-[14px] font-[500] text-slate-600">
-                {s.products}
+      <div className="min-h-screen bg-[#F8FAFC] font-['Inter',_sans-serif] text-[#0F1626] p-4 md:p-8 pb-24">
+        <div className="max-w-[1400px] mx-auto flex flex-col gap-6">
+          
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <h1 className="font-['Manrope',_sans-serif] text-[28px] font-extrabold tracking-tight text-slate-900">
+                {role === 'WHOLESALER' ? 'Incoming Procurement Requests' : 'My Orders'}
+              </h1>
+              <p className="text-[14px] font-medium text-slate-500 mt-1">
+                {role === 'WHOLESALER' ? 'Review, schedule delivery routes, and confirm shopkeeper orders.' : 'Track live deliveries, view tax invoices, and review procurement history.'}
               </p>
             </div>
+            <div className="relative w-full md:w-[320px]">
+              <Search className="absolute left-3.5 top-2.5 text-slate-400" size={18} strokeWidth={2} />
+              <input type="text" placeholder="Search order ID..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[14px] font-medium focus:border-slate-900 outline-none transition-all shadow-sm" />
+            </div>
+          </div>
 
-        {/* Bottom Divider */}
-        <div className=" border-t border-slate-100 pt-4 flex items-center justify-between">
-          <span className="text-[13px] text-slate-400">
-            Viewed Recently
-          </span>
+          {/* Tabs */}
+          <div className="flex items-center gap-8 border-b border-slate-200 overflow-x-auto">
+            {TABS.map(tab => (
+              <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`pb-3 text-[14px] font-bold whitespace-nowrap transition-all border-b-2 ${activeTab === tab.key ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-          <span className="text-[13px] font-[600] text-rose-500 group-hover:text-rose-600">
-            Open Supplier →
-          </span>
+          {/* Main Grid: Orders & Tracker */}
+          <div className="grid grid-cols-1 xl:grid-cols-[2.5fr_1fr] gap-6 items-start">
+            
+            {/* LEFT COLUMN: Orders List */}
+            <div className="space-y-4">
+              {isLoading ? (
+                <div className="flex items-center justify-center min-h-[450px] bg-white border border-slate-200 rounded-[20px] shadow-sm">
+                  <Loader2 className="w-8 h-8 animate-spin text-slate-900" />
+                </div>
+              ) : displayOrders.length === 0 ? (
+                <div className="bg-white border border-slate-200 rounded-[20px] min-h-[450px] flex flex-col items-center justify-center text-center shadow-sm p-8">
+                  <div className="w-16 h-16 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mb-6">
+                    <ShoppingCart size={24} className="text-slate-300" />
+                  </div>
+                  <h3 className="font-['Manrope',_sans-serif] text-[20px] font-bold text-slate-900 mb-2">No orders found</h3>
+                  <p className="font-['Inter',_sans-serif] text-[14px] font-medium text-slate-500 max-w-[320px] mb-8">
+                    {role === 'WHOLESALER' ? 'No incoming requests in this view right now.' : "You haven't placed any wholesale orders yet. Find the best nearby sellers to discover products and start procuring."}
+                  </p>
+                  {role !== 'WHOLESALER' && (
+                    <button onClick={() => navigate('/nearbyseller')} className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold text-[14px] hover:bg-black transition-colors shadow-md active:scale-95">
+                      Explore Nearby Sellers
+                    </button>
+                  )}
+                </div>
+              ) : (
+                displayOrders.map((order, i) => (
+                  <div key={order.id} className="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm hover:border-slate-300 hover:shadow-md transition-all">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4 mb-4">
+                      <div>
+                        <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                          {order.orderNumber}
+                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-md border ${STATUS_STYLES[order.status] || "bg-slate-100"}`}>
+                            {order.status.replace(/_/g, ' ')}
+                          </span>
+                        </h3>
+                        <p className="text-[13px] text-slate-500 mt-1 font-medium">Placed: {new Date(order.placedAt).toLocaleString('en-IN')}</p>
+                        {order.deliveryDate && <p className="text-[13px] font-bold text-emerald-700 mt-1">Scheduled Delivery: {order.deliveryDate}</p>}
+                        {order.rejectionReason && <p className="text-[13px] font-bold text-rose-600 mt-1">Reason: {order.rejectionReason}</p>}
+                      </div>
+                      <div className="text-left md:text-right">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Total Amount</span>
+                        <span className="font-['Manrope',_sans-serif] text-[20px] font-extrabold text-slate-900">{formatINR(order.totalAmount)}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="text-[14px] font-semibold text-slate-700 flex items-center gap-2">
+                        <ShieldCheck size={18} className="text-emerald-600"/> {role === 'WHOLESALER' ? order.buyerName : order.sellerName} <span className="text-slate-300 mx-1">•</span> {order.totalItems} Items
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        {role === 'WHOLESALER' && order.status === 'PENDING' && (
+                          <>
+                            <button onClick={() => setRejectModalOrder(order)} className="flex-1 md:flex-none px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-[13px] font-bold rounded-xl hover:bg-slate-50 transition-colors shadow-sm">Reject</button>
+                            <button onClick={() => setAcceptModalOrder(order)} className="flex-1 md:flex-none px-5 py-2.5 bg-slate-900 text-white text-[13px] font-bold rounded-xl hover:bg-black transition-colors shadow-sm">Accept Order</button>
+                          </>
+                        )}
+                        {role === 'WHOLESALER' && order.status === 'OUT_FOR_DELIVERY' && (
+                          <button onClick={() => handleMarkDelivered(order.id)} className="flex-1 md:flex-none px-5 py-2.5 bg-slate-900 text-white text-[13px] font-bold rounded-xl hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-sm">
+                            <CheckCircle2 size={16}/> Mark Delivered
+                          </button>
+                        )}
+                        {(role !== 'WHOLESALER' || !['PENDING', 'OUT_FOR_DELIVERY'].includes(order.status)) && (
+                           <button onClick={() => setModalOrder(order)} className="flex-1 md:flex-none px-6 py-2.5 bg-slate-900 text-white text-[13px] font-bold rounded-xl hover:bg-black transition-colors shadow-sm">View Details</button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* RIGHT COLUMN: Live Delivery Tracker Sidebar */}
+            <div className="bg-white border border-slate-200 rounded-[20px] p-6 shadow-sm sticky top-6 min-h-[450px]">
+              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
+                <Truck size={20} className="text-[#EC4899]" />
+                <h3 className="font-['Manrope',_sans-serif] text-[18px] font-extrabold text-slate-900">
+                  Live Delivery Route
+                </h3>
+              </div>
+
+              {isLoadingRoute ? (
+                <div className="py-12 flex justify-center"><Loader2 size={24} className="animate-spin text-slate-900"/></div>
+              ) : liveRoute.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center h-full mt-24">
+                  <MapPin size={32} className="text-slate-200 mb-4" />
+                  <p className="text-[13px] font-medium text-slate-500">No active deliveries on route right now.</p>
+                </div>
+              ) : (
+                <div className="relative pl-4 space-y-6">
+                  <div className="absolute left-[23px] top-2 bottom-2 w-0.5 bg-slate-100" />
+                  {liveRoute.map((stop) => (
+                    <div key={stop.id} className="relative z-10 flex items-center gap-4">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center border-2 bg-white shrink-0 ${stop.isPast ? 'border-[#17B26A]' : stop.isActive ? 'border-[#EC4899]' : 'border-slate-200'}`}>
+                        {stop.isPast && <CheckCircle2 size={14} className="text-[#17B26A]"/>}
+                        {stop.isActive && <span className="w-2 h-2 bg-[#EC4899] rounded-full animate-pulse"/>}
+                      </div>
+                      <div className="flex flex-col">
+                        <p className={`text-[14px] font-bold ${stop.companyName.includes('(You)') ? 'text-[#EC4899]' : 'text-slate-900'}`}>{stop.companyName}</p>
+                        <p className="text-[11px] text-slate-400 font-semibold mt-0.5">{stop.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          {/* BOTTOM SECTION: Quick Reorder / Discovery */}
+          {role !== 'WHOLESALER' && bottomCards.length > 0 && (
+            <div className="mt-8 pt-8 border-t border-slate-200">
+              <h2 className="font-['Manrope',_sans-serif] text-[22px] font-extrabold text-slate-900 mb-6">Quick Reorder</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {bottomCards.map((card, i) => {
+                  if (card.type === 'REORDER') {
+                    const o = card.data;
+                    return (
+                      <div key={`reorder-${i}`} className="bg-white border border-slate-200 rounded-[20px] p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between h-full">
+                        <div>
+                          <div className="flex justify-between items-start mb-5">
+                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+                              Delivered {new Date(o.deliveredAt).toLocaleDateString('en-IN', {month:'short', day:'numeric'})}
+                            </span>
+                            <span className="text-[18px] font-extrabold text-slate-900 font-['Manrope',_sans-serif]">{formatINR(o.totalAmount)}</span>
+                          </div>
+                          <h3 className="text-[16px] font-bold text-slate-900 leading-tight">{o.sellerName}</h3>
+                          <p className="text-[13px] font-medium text-slate-500 mt-1.5">{o.totalItems} Items Included</p>
+                        </div>
+                        <button onClick={() => navigate(`/storefront/${o.sellerId}`)} className="mt-6 w-full py-3 bg-slate-900 text-white text-[13px] font-bold rounded-xl hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-sm">
+                          <RotateCcw size={16} /> Reorder Now
+                        </button>
+                      </div>
+                    );
+                  } else {
+                    const n = card.data;
+                    return (
+                      <div key={`discover-${i}`} className="bg-white border border-slate-200 rounded-[20px] p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between h-full">
+                        <div>
+                          <div className="flex items-center gap-3 mb-5">
+                            <div className="w-10 h-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center font-extrabold text-slate-600 font-['Manrope',_sans-serif] text-lg">
+                              {n.name?.charAt(0) || 'S'}
+                            </div>
+                            <span className="text-[10px] font-bold text-[#067647] uppercase tracking-widest bg-[#ECFDF3] border border-[#DCFAE6] px-2.5 py-1 rounded-md">Nearby Option</span>
+                          </div>
+                          <h3 className="text-[16px] font-bold text-slate-900 leading-tight">{n.name}</h3>
+                          <p className="text-[13px] font-medium text-slate-500 mt-1.5 flex items-center gap-1.5"><MapPin size={14}/> {n.location}</p>
+                        </div>
+                        <button onClick={() => navigate(`/storefront/${n.businessProfileId || n.id}`)} className="mt-6 w-full py-3 bg-white border border-slate-200 text-slate-900 text-[13px] font-bold rounded-xl hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 shadow-sm">
+                          Order Now
+                        </button>
+                      </div>
+                    );
+                  }
+                })}
+              </div>
+            </div>
+          )}
+
         </div>
-      </motion.div>
-    ))}
-  </div>
-</div>
+      </div>
 
-      {/* Order Details Modal triggered by View Details */}
-      <AnimatePresence>
-        {modalOrder && <OrderDetailsModal order={modalOrder} onClose={() => setModalOrder(null)} />}
-      </AnimatePresence>
-    </motion.div>
+      {/* MODALS */}
+
+      {/* 1. WHolesaler ACCEPT & SCHEDULE MODAL */}
+      {acceptModalOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+          <div className="bg-white rounded-[24px] max-w-md w-full p-8 shadow-2xl space-y-6">
+            <div>
+              <h3 className="font-['Manrope',_sans-serif] font-extrabold text-xl text-slate-900">Schedule Delivery</h3>
+              <p className="text-[13px] font-medium text-slate-500 mt-1">Pick the planned delivery date for <b>{acceptModalOrder.buyerName}</b>.</p>
+            </div>
+            
+            <input type="date" value={scheduledDate} onChange={e => setScheduledDate(e.target.value)} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[14px] font-bold text-slate-900 outline-none focus:border-slate-900 transition-colors" />
+
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setAcceptModalOrder(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 text-[13px] font-bold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
+              <button onClick={handleOpenRouteBuilder} className="flex-1 py-3 bg-indigo-50 text-indigo-700 text-[13px] font-bold rounded-xl hover:bg-indigo-100 transition-colors border border-indigo-100">Route Map</button>
+              <button onClick={handleAcceptSubmit} className="flex-1 py-3 bg-slate-900 text-white text-[13px] font-bold rounded-xl hover:bg-black transition-colors shadow-sm">Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. WHOLESALER ROUTE SEQUENCING DRAG & DROP MODAL */}
+      {routeBuilderModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]">
+          <div className="bg-white rounded-[24px] max-w-lg w-full p-8 shadow-2xl space-y-6">
+            <div>
+              <h3 className="font-['Manrope',_sans-serif] font-extrabold text-xl text-slate-900">Arrange Route Sequence</h3>
+              <p className="text-[13px] font-medium text-slate-500 mt-1">Re-order stops in physical delivery sequence for <b>{scheduledDate}</b>.</p>
+            </div>
+
+            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+              {routeOrders.map((ro, index) => (
+                <div key={ro.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="w-7 h-7 rounded-full bg-white border border-slate-200 text-slate-700 font-bold text-[13px] flex items-center justify-center shadow-sm">{index + 1}</span>
+                    <span className="text-[14px] font-bold text-slate-900">{ro.buyerName}</span>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button disabled={index === 0} onClick={() => moveRouteItem(index, index - 1)} className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 font-bold hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40 shadow-sm transition-colors">↑</button>
+                    <button disabled={index === routeOrders.length - 1} onClick={() => moveRouteItem(index, index + 1)} className="p-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 font-bold hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40 shadow-sm transition-colors">↓</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-3 pt-2 border-t border-slate-100 mt-4">
+              <button onClick={() => setRouteBuilderModalOpen(false)} className="flex-1 py-3 bg-slate-100 text-slate-700 text-[13px] font-bold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
+              <button onClick={handleSaveRouteSequence} disabled={isSavingRoute} className="flex-1 py-3 bg-slate-900 text-white text-[13px] font-bold rounded-xl hover:bg-black transition-colors shadow-sm">
+                {isSavingRoute ? <Loader2 size={16} className="animate-spin mx-auto"/> : "Save Route Order"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. WHOLESALER REJECT MODAL */}
+      {rejectModalOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+          <div className="bg-white rounded-[24px] max-w-md w-full p-8 shadow-2xl space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center"><AlertCircle size={24}/></div>
+              <h3 className="font-['Manrope',_sans-serif] font-extrabold text-xl text-slate-900">Reject Request</h3>
+            </div>
+            <textarea placeholder="Enter specific reason for rejection..." value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-[13px] font-medium outline-none focus:border-slate-900 transition-colors h-28 resize-none" />
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setRejectModalOrder(null)} className="flex-1 py-3 bg-slate-100 text-slate-700 text-[13px] font-bold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
+              <button onClick={handleRejectSubmit} className="flex-1 py-3 bg-slate-900 text-white text-[13px] font-bold rounded-xl hover:bg-black transition-colors shadow-sm">Confirm Rejection</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. ORDER DETAILS MANIFEST MODAL */}
+      {modalOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+          <div className="bg-white rounded-[24px] max-w-2xl w-full p-8 shadow-2xl max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-5 mb-5 shrink-0">
+              <h3 className="font-['Manrope',_sans-serif] font-extrabold text-xl text-slate-900">Order Manifest <span className="text-slate-400 font-medium">#{modalOrder.orderNumber}</span></h3>
+              <button onClick={() => setModalOrder(null)} className="p-1.5 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"><X size={20}/></button>
+            </div>
+            
+            <div className="overflow-y-auto flex-1 pr-2 space-y-1">
+              <div className="grid grid-cols-[3fr_1fr] gap-4 pb-3 mb-2 border-b border-slate-100 text-[11px] font-bold tracking-widest uppercase text-slate-400">
+                <span>Item & Quantity</span>
+                <span className="text-right">Line Total</span>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {modalOrder.items?.map((item, idx) => (
+                  <div key={idx} className="py-4 flex justify-between items-center">
+                    <div>
+                      <p className="text-[14px] font-bold text-slate-900">{item.productName}</p>
+                      <p className="text-[13px] font-medium text-slate-500 mt-0.5">{item.quantity} × {item.packageSize} {item.unit}</p>
+                    </div>
+                    <p className="text-[15px] font-extrabold text-slate-900">{formatINR(item.lineTotal)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="pt-6 border-t border-slate-100 mt-4 shrink-0 bg-slate-50 p-5 rounded-2xl border flex justify-between items-center">
+              <span className="text-[14px] font-bold text-slate-600 uppercase tracking-widest">Total Amount Payable</span>
+              <span className="font-['Manrope',_sans-serif] text-[24px] font-extrabold text-slate-900">{formatINR(modalOrder.totalAmount)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

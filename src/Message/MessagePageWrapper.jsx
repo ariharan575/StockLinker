@@ -1,7 +1,7 @@
 // MessagePageWrapper.js (Alternative - Override approach)
 import React from "react";
 import MainLayout from "../Layout/MainLayout";
-import MessagePage from "./MessagePage";
+import MessagePage from "./pages/Messenger";
 import { C } from "../HomePage/common";
 
 export default function MessagePageWrapper() {

@@ -1,5 +1,4 @@
-// SettingsRoute.js (updated with MainLayout)
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import MainLayout from "../Layout/MainLayout";
 import SettingsPage from "./SettingsPage";
@@ -8,28 +7,23 @@ export default function SettingsRoute() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Determine which settings section is active based on URL
   const getActiveSettingsSection = () => {
     const path = location.pathname;
     if (path.includes('/settings/account')) return 'account';
     if (path.includes('/settings/business')) return 'business';
     if (path.includes('/settings/delivery')) return 'delivery';
     if (path.includes('/settings/inventory')) return 'inventory';
-    if (path.includes('/settings/team')) return 'team';
-    if (path.includes('/settings')) return 'account';
     return 'account';
   };
 
   const activeSettingsSection = getActiveSettingsSection();
 
-  // Handle settings section change
   const handleSettingsSectionChange = (section) => {
     const sectionPaths = {
       account: '/settings/account',
       business: '/settings/business',
       delivery: '/settings/delivery',
       inventory: '/settings/inventory',
-      team: '/settings/team',
     };
     navigate(sectionPaths[section]);
   };

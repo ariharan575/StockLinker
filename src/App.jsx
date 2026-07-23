@@ -34,6 +34,8 @@ import DashboardHome from './WholeSaler/pages/DashboardHome';
 import ProductListPage from './src/components/ProductListPage';
 import NewLanding from './Profile/NewLanding';
 import WholesalerHomePageWrapper from './WholeSaler/pages/WholesalerHomePageWrapper'
+import ProductListWrapper from './src/ProductListWrapper'
+import SupplierStorefront from './src/pages/SupplierStorefront';
 
 
 function App() {
@@ -80,9 +82,9 @@ function App() {
           {/* Authentication & Onboarding Flows */}
           <Route path="/role-selection" element={<PrivateRoute><RoleSelectionPage /></PrivateRoute>} />
           <Route path="/onboarding" element={
-            // <PrivateRoute>
+             <PrivateRoute>
               <StockLinkerEnterpriseOnboarding />
-            // </PrivateRoute> *
+             </PrivateRoute> 
             } />
 
           {/* Main Application Routes */}
@@ -93,29 +95,36 @@ function App() {
           <Route path="/nearby" element={<PrivateRoute><NearbySellerWrapper /></PrivateRoute>} />
           <Route path="/message" element={<PrivateRoute><MessagePageWrapper /></PrivateRoute>} />
           <Route path="/category" element={
-            // <PrivateRoute>
+            <PrivateRoute>
               <ProductCategoryWrapper />
-              // </PrivateRoute>
+              </PrivateRoute>
             } />
           <Route path="/orders" element={<PrivateRoute><OrdersWrapper /></PrivateRoute>} />
           <Route path="/saved" element={<PrivateRoute><ConnectedSupplierWrapper /></PrivateRoute>} />
-          <Route path="/product" element={<PrivateRoute><ProductListPage /></PrivateRoute>} />
+          <Route path="/product" element={<PrivateRoute><ProductListWrapper /></PrivateRoute>} />
           <Route path="/language" element={<PrivateRoute><PremiumLanguageSelector /></PrivateRoute>} />
+
+          <Route path="/storefront/:businessProfileId" element={<SupplierStorefront />} />          
           
           {/* Settings & Profile */}
           <Route path="/settings/:section" element={
-            // <PrivateRoute>
+            <PrivateRoute>
               <SettingsRoute />
-              // </PrivateRoute> 
+              </PrivateRoute> 
               } />
-          <Route path="/pro" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+          <Route path="/pro" element={
+           // <PrivateRoute>
+              <ProfilePage />
+            //  </PrivateRoute>
+            } />
           
           {/* Miscellaneous Internal Routes */}
-          <Route path="/ex" element={
-            // <PrivateRoute>
+          <Route path="/add" element={
+            <PrivateRoute>
               <WholesalerHomePageWrapper />
-              // </PrivateRoute>
+               </PrivateRoute>
             } />
+
           <Route path="/sam" element={<PrivateRoute><StockLinkerLanding /></PrivateRoute>} />
           <Route path="/same" element={<PrivateRoute><StockLinkerLandingPage /></PrivateRoute>} />
           <Route path="/landing" element={<PrivateRoute><NewLanding /></PrivateRoute>} />

@@ -1,26 +1,27 @@
+// ProductCategoryWrapper.js
 import React from "react";
 import MainLayout from "../Layout/MainLayout";
-import SettingsPage from "./SettingsPage";
+import ProductListPage from "./components/ProductListPage";
 
-export default function SettingsWrapper() {
+export default function ProductCategoryWrapper() {
   const breadcrumbItems = [
     { label: "Home", path: "/" },
-    { label: "Settings", path: "/settings" },
-    { label: "Account", isCurrent: true }
+    { label: "Nearbyseller", path: "/nearbyseller" },
+    { label: "Compare Prices", isCurrent: true }
   ];
 
   return (
     <MainLayout 
-      activeNav="settings"
+      activeNav="categories"
       breadcrumbItems={breadcrumbItems}
       maxWidth={1500}
       pageBackground="#F8FAFC"
       breadcrumbBackground="#F8FAFC"
       breadcrumbBorder="#e2e8f0"
-      contentPadding="px-4 md:px-8 py-1.5"
+      contentPadding="md:ps-4"
       customStyles={{ backgroundColor: "#F8FAFC" }}
     >
-      <SettingsPage />
+      <ProductListPage/>
     </MainLayout>
   );
 }

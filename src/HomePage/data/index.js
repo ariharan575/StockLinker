@@ -17,6 +17,8 @@ export const NAV_ITEMS = [
   { id: 'orders', label: 'My Orders', Icon: ShoppingCart, path: '/orders' },
   { id: 'messages', label: 'Messages', Icon: MessageSquare, badge: 3, path: '/message' },
   { id: 'saved', label: 'Saved Suppliers', Icon: Bookmark, path: '/saved' },
+  { id: 'add', label: 'Add Products', Icon: Bookmark, path: '/add' },
+  { id: 'product', label: 'Inventary', Icon: Bookmark, path: '/product' },
   { 
     id: 'settings', 
     label: 'Settings', 
@@ -26,7 +28,6 @@ export const NAV_ITEMS = [
       { id: 'business', label: 'Business', Icon: Briefcase, path: '/settings/business' },
       { id: 'delivery', label: 'Store & Delivery', Icon: Truck, path: '/settings/delivery' },
       { id: 'inventory', label: 'Products', Icon: Package, path: '/settings/inventory' },
-      { id: 'team', label: 'Team Details', Icon: Users, path: '/settings/team' }
     ]
   },
   { id: 'help', label: 'Help & Support', Icon: HelpCircle, path: '/help' },
