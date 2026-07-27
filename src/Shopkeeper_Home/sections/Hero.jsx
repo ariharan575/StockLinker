@@ -4,7 +4,7 @@ import { Search, Loader2, Package, LayoutGrid, Store, ChevronRight } from 'lucid
 import { useNavigate } from 'react-router-dom';
 import { C, EASE } from '../common/constants';
 import HeroImges from '../../assets/Store.png';
-import { dashboardApi } from '../services/api';
+import { dashboardApi } from '../Services/api';
 
 export default function Hero() {
   const navigate = useNavigate();
