@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import MainLayout from "../Layout/MainLayout";
 import SettingsPage from "./SettingsPage";
 
-export default function SettingsRoute() {
+export default function SettingsRouter() {
   const location = useLocation();
   const navigate = useNavigate();
 

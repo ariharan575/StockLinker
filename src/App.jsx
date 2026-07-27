@@ -21,7 +21,6 @@ import ProfilePage from './Profile/ProfilePage';
 import EnterpriseNavbar from './Components/EnterpriseNavbar';
 import StockLinkerLanding from './Profile/StockLinkerLanding';
 import StockLinkerLandingPage from './Profile/StockLinkerLandingPage';
-import SettingsRoute from "./Settings/SettingsRoute";
 import StockLinkerHomepage from './Shopkeeper_Home/pages/StockLinkerHomepage';
 import ConnectedSupplierWrapper from './BusinessConnection/ConnectedSupplierWrapper';
 import ProductCategoryWrapper from './ProductCatagories/ProductCategoryWrapper';
@@ -36,6 +35,7 @@ import ProductListWrapper from './Seller_Profile/ProductListWrapper'
 import SupplierStorefront from './Seller_Profile/pages/SupplierStorefront';
 
 import ComparePageWrapper from './Compare_Price/wrapper/ComparePageWrapper';
+import SettingsRouter from './Settings/SettingsRouter';
 
 function App() {
   return (
@@ -105,7 +105,7 @@ function App() {
           <Route path="/storefront/:businessProfileId" element={<SupplierStorefront />} />          
           
           {/* Settings & Profile */}
-          <Route path="/settings/:section" element={<PrivateRoute><SettingsRoute /></PrivateRoute>} />
+          <Route path="/settings/:section" element={<PrivateRoute><SettingsRouter /></PrivateRoute>} />
                     
           {/* Miscellaneous Internal Routes */}
           <Route path="/add" element={<PrivateRoute><WholesalerHomePageWrapper /></PrivateRoute>} />
