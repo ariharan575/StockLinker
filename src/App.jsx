@@ -22,7 +22,6 @@ import EnterpriseNavbar from './Components/EnterpriseNavbar';
 import StockLinkerLanding from './Profile/StockLinkerLanding';
 import StockLinkerLandingPage from './Profile/StockLinkerLandingPage';
 import StockLinkerHomepage from './Shopkeeper_Home/pages/StockLinkerHomepage';
-import { AccountSection } from './Settings/sections/AccountSection';
 import SettingsRoute from './Settings/SettingsRoute';
 import ConnectedSupplierWrapper from './BusinessConnection/ConnectedSupplierWrapper';
 import ProductCategoryWrapper from './ProductCatagories/ProductCategoryWrapper';
@@ -81,6 +80,7 @@ function App() {
 
           {/* Authentication & Onboarding Flows */}
           <Route path="/role-selection" element={<PrivateRoute><RoleSelectionPage /></PrivateRoute>} />
+          
           <Route path="/onboarding" element={
              <PrivateRoute>
               <StockLinkerEnterpriseOnboarding />
@@ -90,8 +90,6 @@ function App() {
           {/* Main Application Routes */}
           <Route path="/dashboard" element={<PrivateRoute><StockLinkerHomepage /></PrivateRoute>} />
           
-          {/* Features & Modules */}
-          {/* ⬇️ FIXED: Restored PrivateRoute security wrapper for Compare */}
           <Route path="/Compare" element={<PrivateRoute><ComparePageWrapper /></PrivateRoute>} />
           
           <Route path="/nearby" element={<PrivateRoute><NearbySellerWrapper /></PrivateRoute>} />
@@ -103,21 +101,14 @@ function App() {
           <Route path="/orders" element={<PrivateRoute><OrdersWrapper /></PrivateRoute>} />
           <Route path="/saved" element={<PrivateRoute><ConnectedSupplierWrapper /></PrivateRoute>} />
           <Route path="/product" element={<PrivateRoute><ProductListWrapper /></PrivateRoute>} />
-          <Route path="/language" element={<PrivateRoute><PremiumLanguageSelector /></PrivateRoute>} />
 
           <Route path="/storefront/:businessProfileId" element={<SupplierStorefront />} />          
           
           {/* Settings & Profile */}
           <Route path="/settings/:section" element={<PrivateRoute><SettingsRoute /></PrivateRoute>} />
-          
-          {/* ⬇️ FIXED: Restored PrivateRoute security wrapper for Profile */}
-          <Route path="/pro" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
-          
+                    
           {/* Miscellaneous Internal Routes */}
           <Route path="/add" element={<PrivateRoute><WholesalerHomePageWrapper /></PrivateRoute>} />
-          <Route path="/sam" element={<PrivateRoute><StockLinkerLanding /></PrivateRoute>} />
-          <Route path="/same" element={<PrivateRoute><StockLinkerLandingPage /></PrivateRoute>} />
-          <Route path="/landing" element={<PrivateRoute><NewLanding /></PrivateRoute>} />
 
 
           {/* ========================================================= */}
