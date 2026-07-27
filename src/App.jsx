@@ -35,7 +35,7 @@ import ProductListWrapper from './Seller_Profile/ProductListWrapper'
 import SupplierStorefront from './Seller_Profile/pages/SupplierStorefront';
 
 import ComparePageWrapper from './Compare_Price/wrapper/ComparePageWrapper';
-import SettingsRouter from './Settings/SettingsRouter';
+import SettingsRouter from './settings/SettingsRouter';
 
 function App() {
   return (
