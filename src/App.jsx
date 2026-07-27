@@ -13,7 +13,7 @@ import RoleSelectionPage from './Authentication/pages/RoleSelection';
 import StockLinkerEnterpriseOnboarding from './Onboarding/StockLinkerEnterpriseOnboarding';
 
 // --- Public/Landing Pages ---
-import { LandingPage } from './LandingPage/Pages/LandingPage';
+import { LandingPage } from './Landing/Pages/LandingPage';
 
 // --- Application Pages ---
 import PremiumLanguageSelector from './Components/PremiumLanguageSelector';
@@ -21,22 +21,22 @@ import ProfilePage from './Profile/ProfilePage';
 import EnterpriseNavbar from './Components/EnterpriseNavbar';
 import StockLinkerLanding from './Profile/StockLinkerLanding';
 import StockLinkerLandingPage from './Profile/StockLinkerLandingPage';
-import ComparePageWrapper from './ComparePage/ComparePageWrapper';
-import StockLinkerHomepage from './HomePage/pages/StockLinkerHomepage';
-import { AccountSection } from './settings/sections/AccountSection';
-import SettingsRoute from './settings/SettingsRoute';
-import ConnectedSupplierWrapper from './Saved Supplier/ConnectedSupplierWrapper';
+import StockLinkerHomepage from './Shopkeeper_Home/pages/StockLinkerHomepage';
+import { AccountSection } from './Settings/sections/AccountSection';
+import SettingsRoute from './Settings/SettingsRoute';
+import ConnectedSupplierWrapper from './BusinessConnection/ConnectedSupplierWrapper';
 import ProductCategoryWrapper from './ProductCatagories/ProductCategoryWrapper';
 import OrdersWrapper from './Order/OrdersWrapper';
 import MessagePageWrapper from './Message/MessagePageWrapper';
-import NearbySellerWrapper from './NearBySeller/NearbySellerWrapper';
-import DashboardHome from './WholeSaler/pages/DashboardHome';
-import ProductListPage from './src/components/ProductListPage';
+import NearbySellerWrapper from './NearBy/NearbySellerWrapper';
+import DashboardHome from './WholeSaler_Home/pages/DashboardHome';
+import ProductListPage from './Seller_Profile/components/ProductListPage';
 import NewLanding from './Profile/NewLanding';
-import WholesalerHomePageWrapper from './WholeSaler/pages/WholesalerHomePageWrapper'
-import ProductListWrapper from './src/ProductListWrapper'
-import SupplierStorefront from './src/pages/SupplierStorefront';
+import WholesalerHomePageWrapper from './WholeSaler_Home/pages/WholesalerHomePageWrapper'
+import ProductListWrapper from './Seller_Profile/ProductListWrapper'
+import SupplierStorefront from './Seller_Profile/pages/SupplierStorefront';
 
+import ComparePageWrapper from './Compare_Price/wrapper/ComparePageWrapper';
 
 function App() {
   return (
@@ -91,14 +91,15 @@ function App() {
           <Route path="/dashboard" element={<PrivateRoute><StockLinkerHomepage /></PrivateRoute>} />
           
           {/* Features & Modules */}
+          {/* ⬇️ FIXED: Restored PrivateRoute security wrapper for Compare */}
           <Route path="/Compare" element={<PrivateRoute><ComparePageWrapper /></PrivateRoute>} />
+          
           <Route path="/nearby" element={<PrivateRoute><NearbySellerWrapper /></PrivateRoute>} />
           <Route path="/message" element={<PrivateRoute><MessagePageWrapper /></PrivateRoute>} />
-          <Route path="/category" element={
-            <PrivateRoute>
-              <ProductCategoryWrapper />
-              </PrivateRoute>
-            } />
+          
+          {/* ⬇️ THIS IS CORRECT: React Router handles ?id= automatically here */}
+          <Route path="/category" element={<PrivateRoute><ProductCategoryWrapper /></PrivateRoute>} />
+          
           <Route path="/orders" element={<PrivateRoute><OrdersWrapper /></PrivateRoute>} />
           <Route path="/saved" element={<PrivateRoute><ConnectedSupplierWrapper /></PrivateRoute>} />
           <Route path="/product" element={<PrivateRoute><ProductListWrapper /></PrivateRoute>} />
@@ -107,24 +108,13 @@ function App() {
           <Route path="/storefront/:businessProfileId" element={<SupplierStorefront />} />          
           
           {/* Settings & Profile */}
-          <Route path="/settings/:section" element={
-            <PrivateRoute>
-              <SettingsRoute />
-              </PrivateRoute> 
-              } />
-          <Route path="/pro" element={
-           // <PrivateRoute>
-              <ProfilePage />
-            //  </PrivateRoute>
-            } />
+          <Route path="/settings/:section" element={<PrivateRoute><SettingsRoute /></PrivateRoute>} />
+          
+          {/* ⬇️ FIXED: Restored PrivateRoute security wrapper for Profile */}
+          <Route path="/pro" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
           
           {/* Miscellaneous Internal Routes */}
-          <Route path="/add" element={
-            <PrivateRoute>
-              <WholesalerHomePageWrapper />
-               </PrivateRoute>
-            } />
-
+          <Route path="/add" element={<PrivateRoute><WholesalerHomePageWrapper /></PrivateRoute>} />
           <Route path="/sam" element={<PrivateRoute><StockLinkerLanding /></PrivateRoute>} />
           <Route path="/same" element={<PrivateRoute><StockLinkerLandingPage /></PrivateRoute>} />
           <Route path="/landing" element={<PrivateRoute><NewLanding /></PrivateRoute>} />

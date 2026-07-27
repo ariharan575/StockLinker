@@ -49,12 +49,6 @@ export const networkApi = {
   announceArrival: () => axiosInstance.post('/v1/network/announce') // Call this right after onboarding
 };
 
-export const inventoryApi = {
-  getProducts: (params) => axiosInstance.get('/v1/inventory', { params }),
-  getFilters: () => axiosInstance.get('/v1/inventory/filters'),
-  deleteProduct: (id) => axiosInstance.delete(`/v1/inventory/${id}`),
-  exportCsv: () => axiosInstance.get('/v1/inventory/export', { responseType: 'blob' })
-};
 
 export const storefrontApi = {
   getProfile: (businessProfileId) => 

@@ -2,7 +2,7 @@
 import React from "react";
 import MainLayout from "../Layout/MainLayout";
 import MessagePage from "./pages/Messenger";
-import { C } from "../HomePage/common";
+import { C } from "../Shopkeeper_Home/common";
 
 export default function MessagePageWrapper() {
   const breadcrumbItems = [

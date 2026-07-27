@@ -83,7 +83,7 @@ import {
 } from "lucide-react";
 
 import { FaFacebook,FaInstagram, FaTwitter, FaLinkedin } from "react-icons/fa";
-import HeroSection from "../LandingPage/Sections/HeroSection";
+import HeroSection from "../Landing/Sections/Hero";
 
 const translations = {
   en: {

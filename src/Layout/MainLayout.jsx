@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 
-import { Header, Sidebar } from "../HomePage/layout";
-import { C, FONT_BODY } from "../HomePage/common";
+import { Header, Sidebar } from "../Shopkeeper_Home/layout";
+import { C, FONT_BODY } from "../Shopkeeper_Home/common";
 
 export default function MainLayout({ 
   children, 
