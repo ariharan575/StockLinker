@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import * as FiIcons from "react-icons/fi";
-import { useLocation } from 'react-router-dom'; // ⬇️ using useLocation instead of useSearchParams
+import { useLocation } from 'react-router-dom';
 import { 
-  FiSearch, FiX, FiChevronRight, FiAlertCircle, FiLoader
+  FiSearch, FiX, FiChevronRight, FiAlertCircle, FiChevronDown, FiMenu
 } from "react-icons/fi";
 import { categoryApi } from "../Shopkeeper_Home/Services/api";
 
@@ -10,12 +10,12 @@ import { categoryApi } from "../Shopkeeper_Home/Services/api";
 // CONFIGURATION & UTILS
 // ============================================================
 const GRADIENTS = [
-  ["#FF4D6D", "#FF8A3D"], 
-  ["#0B1220", "#334155"], 
-  ["#2563EB", "#38BDF8"], 
-  ["#7C3AED", "#C026D3"], 
-  ["#059669", "#84CC16"], 
-  ["#EA580C", "#FACC15"], 
+  ["#111827", "#4B5563"], // Black -> Gray
+  ["#EC4899", "#E11D48"], // Pink -> Rose
+  ["#F43F5E", "#EA580C"], // Rose -> Orange
+  ["#1F2937", "#6B7280"], // Gray -> Gray
+  ["#DB2777", "#F43F5E"], // Pink -> Rose
+  ["#000000", "#374151"], // Black -> Gray
 ];
 
 const getGradient = (i) => GRADIENTS[i % GRADIENTS.length];
@@ -39,14 +39,14 @@ const Scrollbar = React.forwardRef(function Scrollbar({ className = "", children
   return (
     <div
       ref={ref}
-      className={`overflow-y-auto overflow-x-hidden
+      className={`overflow-y-auto overflow-x-auto
         [&::-webkit-scrollbar]:w-1.5
+        [&::-webkit-scrollbar]:h-1.5
         [&::-webkit-scrollbar-track]:bg-transparent
         [&::-webkit-scrollbar-thumb]:rounded-full
-        [&::-webkit-scrollbar-thumb]:bg-[#0B1220]/10
-        hover:[&::-webkit-scrollbar-thumb]:bg-[#0B1220]/20
-        [scrollbar-width:thin]
-        [scrollbar-color:rgba(11,18,32,0.12)_transparent]
+        [&::-webkit-scrollbar-thumb]:bg-gray-200
+        hover:[&::-webkit-scrollbar-thumb]:bg-gray-300
+        transition-colors duration-200
         ${className}`}
       {...rest}
     >
@@ -57,120 +57,109 @@ const Scrollbar = React.forwardRef(function Scrollbar({ className = "", children
 
 function SearchBar({ value, onChange, resultCount, placeholder }) {
   return (
-    <div className="w-full max-w-2xl">
-      <div className="flex items-center gap-3 rounded-2xl border border-[#E6E8EE] bg-white px-4 py-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)] focus-within:border-[#0B1220] focus-within:ring-4 focus-within:ring-[#0B1220]/5 transition-all duration-200">
-        <FiSearch className="h-5 w-5 shrink-0 text-[#94A3B8]" aria-hidden="true" />
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder || "Search categories, subcategories..."}
-          aria-label="Search categories, subcategories"
-          className="min-w-0 flex-1 bg-transparent text-[15px] text-[#0B1220] placeholder:text-[#94A3B8] outline-none"
-        />
-        {value && (
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            aria-label="Clear search"
-            className="shrink-0 rounded-full p-1 text-[#94A3B8] hover:bg-[#F1F2F5] hover:text-[#0B1220] transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1220]/30"
-          >
-            <FiX className="h-4 w-4" />
-          </button>
-        )}
+    <div className="w-full">
+      <div className="group relative flex w-full items-center">
+        <div className="absolute inset-0 rounded-[16px] bg-white transition-all duration-300 group-focus-within:shadow-[0_0_24px_-4px_rgba(236,72,153,0.15)]"></div>
+        <div className="relative flex w-full items-center gap-3 rounded-[13px] border border-gray-200 bg-white/60 backdrop-blur-xl px-4 h-[48px] lg:h-[46px] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.02)] transition-all duration-300 ease-out focus-within:border-pink-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-pink-500/10 hover:border-gray-300">
+          <FiSearch className="h-4 w-4 shrink-0 text-gray-400 transition-colors duration-200 group-focus-within:text-pink-500" aria-hidden="true" />
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder || "Search products Catagory..."}
+            aria-label="Search categories"
+            className="min-w-0 flex-1 bg-transparent text-[14px] font-medium text-gray-900 placeholder:text-gray-400 outline-none"
+          />
+          {value && (
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className="shrink-0 rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-150 outline-none"
+            >
+              <FiX className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
       {value && (
-        <p className="mt-2 pl-1 text-[13px] text-[#64748B]" role="status" aria-live="polite">
-          {resultCount === 0
-            ? `No matches for "${value}"`
-            : `${resultCount} result${resultCount === 1 ? "" : "s"} for "${value}"`}
+        <p className="absolute mt-1.5 pl-2 text-[12px] font-medium text-gray-500">
+          {resultCount === 0 ? "No matches" : `${resultCount} matches found`}
         </p>
       )}
     </div>
   );
 }
 
-function HeroSection({ searchTerm, onSearchChange, resultCount }) {
+function PageHeader({ searchTerm, onSearchChange, resultCount }) {
   return (
-    <header className="px-1 pb-6 flex items-center justify-between sm:px-8">
-      <div>
-        <h1 className="text-[26px] font-extrabold tracking-tight text-[#0B1220] sm:text-[34px]">
-          Product Categories
-        </h1>
-        <p className="mt-1 max-w-2xl text-[15px] text-[#64748B]">
-          Browse all wholesale categories and discover suppliers faster.
-        </p>
-      </div>
-      <div className="mt-5">
-        <SearchBar
-          value={searchTerm}
-          onChange={onSearchChange}
-          resultCount={resultCount}
-          placeholder="Search for subcategories..."
-        />
+    // Header background dynamically matches the main container (#FAFAFA)
+    <header className="relative w-full bg-[#FAFAFA] pt-6 pb-2 ps-1 lg:pt-6 lg:pb-3">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex w-full flex-col">
+          <h1 className="text-[24px] sm:text-[32px] font-extrabold tracking-tight text-gray-900">
+            Product Categories
+          </h1>
+          <p className="mt-1.5 text-[14px] leading-relaxed text-gray-500">
+            Browse wholesale product categories and discover suppliers.
+          </p>
+        </div>
+        
+        {/* Tablet & Mobile ONLY: SearchBar resides in the header area */}
+        <div className="block lg:hidden w-full mt-2">
+          <SearchBar
+            value={searchTerm}
+            onChange={onSearchChange}
+            resultCount={resultCount}
+          />
+        </div>
       </div>
     </header>
   );
 }
 
-function CategoryItem({ category, isActive, onSelect, matchCount, hasSearch }) {
+// ------------------------------------------------------------
+// Desktop Category Panel Component
+// ------------------------------------------------------------
+function DesktopCategoryItem({ category, isActive, onSelect, matchCount, hasSearch }) {
   const Icon = FiIcons[category.icon] || FiIcons.FiGrid;
   return (
-    <li role="none">
+    <li>
       <button
         type="button"
-        role="tab"
-        aria-selected={isActive}
-        id={`category-tab-${category.id}`}
-        aria-controls={`category-panel-${category.id}`}
         onClick={() => onSelect(category.id)}
-        className={`group flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1220]/40 ${isActive ? "bg-gray-300" : "hover:bg-[#F1F2F5]"}`}
+        className={`group relative flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all duration-200 outline-none
+          ${isActive 
+            ? "bg-white border border-pink-200 shadow-[0_4px_16px_-4px_rgba(236,72,153,0.12)]" 
+            : "border border-transparent hover:bg-gray-100/80"}`}
       >
-        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-200 ${isActive ? "" : "bg-[#F1F2F5] text-[#334155] group-hover:bg-white"}`}>
-          <Icon className="h-4 w-4" aria-hidden="true" />
+        {isActive && (
+          <div className="absolute left-0 top-1/2 h-[60%] w-[3px] -translate-y-1/2 rounded-r-full bg-gradient-to-b from-pink-500 to-rose-500"></div>
+        )}
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-200 
+          ${isActive ? "bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-sm" : "bg-gray-100 text-gray-500 group-hover:bg-white group-hover:shadow-sm"}`}>
+          <Icon className="h-4 w-4" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className={`block truncate text-[14px] font-medium transition-colors duration-200 ${isActive ? "" : "text-[#0B1220]"}`}>
+          <span className={`block truncate text-[14px] transition-colors duration-200 
+            ${isActive ? "font-bold text-gray-900" : "font-medium text-gray-600 group-hover:text-gray-900"}`}>
             {category.name}
           </span>
           {hasSearch && (
-            <span className={`block text-[11px] ${isActive ? "text-gray-600" : "text-[#94A3B8]"}`}>
+            <span className={`block text-[11px] font-medium mt-0.5 ${isActive ? "text-pink-600" : "text-gray-400"}`}>
               {matchCount} match{matchCount === 1 ? "" : "es"}
             </span>
           )}
         </span>
         <FiChevronRight
-          className={`h-4 w-4 shrink-0 transition-all duration-200 ${isActive ? "translate-x-0 text-gray-700" : "-translate-x-0.5 text-[#CBD2DB] group-hover:translate-x-0 group-hover:text-[#64748B]"}`}
-          aria-hidden="true"
+          className={`h-4 w-4 shrink-0 transition-all duration-200 
+            ${isActive ? "translate-x-0 text-pink-400 opacity-100" : "-translate-x-1 text-gray-300 opacity-0 group-hover:translate-x-0 group-hover:opacity-100"}`}
         />
       </button>
     </li>
   );
 }
 
-function CategorySidebar({ categories, activeId, onSelect, searchTerm, matchCounts }) {
-  const hasSearch = Boolean(searchTerm);
-  return (
-    <div className="w-[210px] shrink-0 border-l border-[#EEF0F3] bg-white lg:w-[270px]">
-      <Scrollbar className="h-full md:px-1.5 py-4">
-        <ul role="tablist" className="space-y-0.5">
-          {categories.map((category) => (
-            <CategoryItem
-              key={category.id}
-              category={category}
-              isActive={category.id === activeId}
-              onSelect={onSelect}
-              matchCount={matchCounts[category.id] || 0}
-              hasSearch={hasSearch}
-            />
-          ))}
-        </ul>
-      </Scrollbar>
-    </div>
-  );
-}
-
-function CategoryCard({ subcategory, gradient, onClick }) {
+function ProductCard({ subcategory, gradient, onClick }) {
   const { name, imageName } = subcategory;
   const [imgError, setImgError] = useState(false);
   const initials = name ? name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() : "CT";
@@ -181,54 +170,48 @@ function CategoryCard({ subcategory, gradient, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      aria-label={`Browse ${name}`}
-      className="group flex flex-col items-center gap-3 rounded-2xl border border-[#EEF0F3] bg-white p-4 text-center transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#E6E8EE] hover:shadow-[0_16px_32px_-12px_rgba(11,18,32,0.18)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B1220]/40"
+      className="group flex flex-col items-center gap-2.5 lg:gap-4 lg:rounded-[20px] lg:border lg:border-gray-200/60 lg:bg-white lg:p-4 text-center transition-all duration-300 ease-out lg:hover:-translate-y-1 lg:hover:border-pink-200 lg:hover:shadow-[0_12px_24px_-8px_rgba(236,72,153,0.12)] focus:outline-none"
     >
-      <span className="relative flex h-23 w-25 items-center justify-center">
-        <span
-          className="absolute inset-[-4px] rounded-full opacity-0 blur-[1px] transition-opacity duration-300 ease-out group-hover:opacity-100 group-hover:animate-[spin_3s_linear_infinite]"
-          style={{ background: `conic-gradient(from 0deg, ${from}, ${to}, transparent 60%)` }}
-          aria-hidden="true"
-        />
+      <span className="relative flex h-[85px] w-[100px] sm:h-20 sm:w-20 lg:h-24 lg:w-24 items-center justify-center">
         {imageUrl && !imgError ? (
           <img
             src={imageUrl}
             onError={() => setImgError(true)}
-            className="relative h-[90px] w-[200px] rounded-full object-cover shadow-[0_6px_16px_-6px_rgba(11,18,32,0.35)] transition-transform duration-300 ease-out group-hover:scale-[1.06] bg-white"
+            className="h-full w-full rounded-[16px] lg:rounded-2xl object-cover shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] lg:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.08)] transition-transform duration-300 ease-out group-hover:scale-[1.05] bg-gray-50 border border-gray-100"
             alt={name}
           />
         ) : (
           <span
-            className="relative flex h-[72px] w-[72px] items-center justify-center rounded-full text-[15px] font-bold text-white shadow-[0_6px_16px_-6px_rgba(11,18,32,0.35)] transition-transform duration-300 ease-out group-hover:scale-[1.06]"
+            className="flex h-full w-full items-center justify-center rounded-[16px] lg:rounded-2xl text-[15px] lg:text-xl font-bold text-white shadow-sm transition-transform duration-300 ease-out group-hover:scale-[1.05]"
             style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}
           >
             {initials}
           </span>
         )}
       </span>
-      <span className="line-clamp-2 text-[13px] font-medium leading-snug text-[#334155] transition-colors duration-300 group-hover:text-[#0B1220]">
+      {/* Name styling for both mobile (no container) and desktop (container) */}
+      <span className="line-clamp-2 text-[12px] sm:text-[13px] lg:text-[14px] font-semibold leading-snug tracking-tight text-gray-800 lg:text-gray-900 transition-colors duration-200 group-hover:text-pink-600 px-1">
         {name}
       </span>
     </button>
   );
 }
 
-function CategoryGrid({ subcategories, gradient, onSelectSubcategory }) {
+function ProductGrid({ subcategories, gradient, onSelectSubcategory }) {
   if (!subcategories || subcategories.length === 0) {
     return (
-      <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-2 text-center">
-        <p className="text-[15px] font-medium text-[#334155]">No subcategories found</p>
-        <p className="max-w-xs text-[13px] text-[#94A3B8]">
-          Try a different search term or pick another category.
-        </p>
+      <div className="flex w-full flex-col items-center justify-center py-20 text-center rounded-[20px] border border-dashed border-gray-200 bg-gray-50/50">
+        <FiSearch className="h-8 w-8 text-gray-300 mb-3" />
+        <h3 className="text-[15px] font-bold text-gray-900">No products found</h3>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+    // Responsive grid updated: added md:grid-cols-5 for perfect tablet/laptop transition bridging
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-5">
       {subcategories.map((sub) => (
-        <CategoryCard
+        <ProductCard
           key={sub.id}
           subcategory={sub}
           gradient={gradient}
@@ -239,34 +222,41 @@ function CategoryGrid({ subcategories, gradient, onSelectSubcategory }) {
   );
 }
 
-function CategoryContent({ category, subcategories, searchTerm, onSelectSubcategory }) {
-  if (!category) {
-    return (
-      <div className="flex flex-1 items-center justify-center p-8 bg-[#FAFBFC]">
-        <p className="text-[15px] text-[#64748B]">No category selected or found</p>
-      </div>
-    );
-  }
+function MainContentArea({ category, subcategories, searchTerm, setSearchTerm, resultCount, onSelectSubcategory }) {
+  if (!category) return null;
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#FAFBFC]">
-      <div className="flex items-center justify-between border-b border-[#EEF0F3] px-6 py-4">
+    <div className="flex flex-1 lg:h-[565px] flex-col w-full min-w-0">
+      {/* DESKTOP ONLY: Container-styled header mimicking the Right-Side Category Header */}
+      <div className="ps-5 pb-2 lg:px-6 lg:py-4 lg:border-b lg:border-gray-100 lg:bg-gray-50/50 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-2 lg:mb-0">
         <div>
-          <h2 id={`category-panel-${category.id}`} className="text-[17px] font-bold text-[#0B1220]">
+          <h3 className="text-xl lg:text-[18px] font-extrabold tracking-tight text-slate-800">
             {category.name}
-          </h2>
-          <p className="text-[13px] text-[#64748B]">
-            {subcategories?.length || 0} subcategories • {category.sellerCount || 0} active suppliers
+          </h3>
+          <p className=" ps-1 mt-1 flex items-center gap-2 text-[13px] font-medium text-gray-500">
+            <span>{subcategories?.length || 0} items Available</span>
+            {category.sellerCount > 0 && (
+              <>
+                <span className="h-1 w-1 rounded-full bg-gray-300"></span>
+                <span>{category.sellerCount} suppliers</span>
+              </>
+            )}
           </p>
         </div>
-        {searchTerm && subcategories.length > 0 && (
-          <span className="rounded-full bg-[#0B1220]/5 px-3 py-1 text-[12px] font-medium text-[#334155]">
-            {subcategories.length} search results
-          </span>
-        )}
+        
+        {/* Desktop Search */}
+        <div className="hidden lg:block w-full max-w-[320px]">
+          <SearchBar 
+            value={searchTerm} 
+            onChange={setSearchTerm} 
+            resultCount={resultCount}
+          />
+        </div>
       </div>
-      <Scrollbar className="flex-1 p-6">
-        <CategoryGrid
+      
+      {/* Added Scrollbar perfectly matching the Right-Side height constraints on Desktop */}
+      <Scrollbar className="px-3 pb-8 lg:px-6 lg:py-5 lg:h-[520px] lg:max-h-[calc(100vh-140px)]">
+        <ProductGrid
           subcategories={subcategories}
           gradient={category.gradient}
           onSelectSubcategory={onSelectSubcategory}
@@ -276,11 +266,95 @@ function CategoryContent({ category, subcategories, searchTerm, onSelectSubcateg
   );
 }
 
+// ------------------------------------------------------------
+// Mobile Bottom Sheet Component
+// ------------------------------------------------------------
+function MobileCategorySheet({ isOpen, onClose, categories, activeId, onSelect, matchCounts, hasSearch }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col justify-end lg:hidden">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      ></div>
+      
+      {/* Sheet */}
+      <div className="relative w-full h-[70vh] bg-white rounded-t-[24px] shadow-2xl flex flex-col transform transition-transform duration-300 ease-out translate-y-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h3 className="text-[16px] font-bold text-gray-900">All Categories</h3>
+          <button onClick={onClose} className="p-2 rounded-full bg-gray-50 text-gray-500 hover:bg-gray-100">
+            <FiX className="h-5 w-5" />
+          </button>
+        </div>
+        
+        <Scrollbar className="flex-1 px-4 py-3">
+          <ul className="flex flex-col space-y-1 pb-10">
+            {categories.map(category => {
+              const Icon = FiIcons[category.icon] || FiIcons.FiGrid;
+              const isActive = category.id === activeId;
+              const matchCount = matchCounts[category.id] || 0;
+              
+              return (
+                <li key={category.id}>
+                  <button
+                    onClick={() => {
+                      onSelect(category.id);
+                      onClose();
+                    }}
+                    className={`flex w-full items-center gap-4 rounded-xl p-3 text-left transition-colors ${isActive ? 'bg-pink-50' : 'active:bg-gray-50'}`}
+                  >
+                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isActive ? 'bg-pink-500 text-white shadow-md' : 'bg-gray-100 text-gray-500'}`}>
+                      <Icon className="h-[18px] w-[18px]" />
+                    </span>
+                    <span className="flex-1">
+                      <span className={`block text-[15px] ${isActive ? 'font-bold text-gray-900' : 'font-semibold text-gray-700'}`}>
+                        {category.name}
+                      </span>
+                      {hasSearch && (
+                        <span className="block text-[12px] font-medium text-pink-600 mt-0.5">
+                          {matchCount} match{matchCount === 1 ? "" : "es"}
+                        </span>
+                      )}
+                    </span>
+                    {isActive && <FiChevronRight className="h-5 w-5 text-pink-500" />}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </Scrollbar>
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------
+// Loading Skeleton
+// ------------------------------------------------------------
+function LoadingSkeleton() {
+  return (
+    <div className="mx-auto w-full max-w-[1920px] px-4 py-6 lg:px-8 lg:py-8 animate-pulse bg-[#FAFAFA]">
+      <div className="h-10 w-64 bg-gray-200 rounded-lg mb-8"></div>
+      <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex-1">
+          <div className="h-8 w-48 bg-gray-200 rounded-md mb-6"></div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="aspect-square rounded-2xl bg-gray-200"></div>
+            ))}
+          </div>
+        </div>
+        <div className="hidden lg:block w-[300px] h-[600px] rounded-[24px] bg-gray-200"></div>
+      </div>
+    </div>
+  );
+}
+
 // ============================================================
 // MAIN PAGE COMPONENT
 // ============================================================
-export default function ProductCategoriesPage({ headerOffset = 72 }) {
-  // ⬇️ Read the silent state passed from the Homepage navigation
+export default function ProductCategoriesPage() {
   const location = useLocation();
 
   const [categoriesData, setCategoriesData] = useState([]);
@@ -289,12 +363,13 @@ export default function ProductCategoriesPage({ headerOffset = 72 }) {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategoryId, setActiveCategoryId] = useState(null);
+  
+  // Mobile sheet state
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
-  // 1. Fetch Data from Backend API - ONLY RUNS ONCE ON MOUNT
+  // 1. Fetch Data
   useEffect(() => {
     let isMounted = true;
-    
-    // Read the passed hidden state (this comes from navigate('/category', { state: { selectedCategoryId: ... } }))
     const initialRequestedId = location.state?.selectedCategoryId;
 
     const fetchCategories = async () => {
@@ -312,14 +387,8 @@ export default function ProductCategoriesPage({ headerOffset = 72 }) {
           setCategoriesData(enrichedData);
           
           if (enrichedData.length > 0) {
-            // Check if we passed a category ID silently through React Router state
             const matchingCategory = enrichedData.find(c => c.id === initialRequestedId);
-            if (matchingCategory) {
-              setActiveCategoryId(matchingCategory.id);
-            } else {
-              // Default to the first category if no state was passed
-              setActiveCategoryId(enrichedData[0].id);
-            }
+            setActiveCategoryId(matchingCategory ? matchingCategory.id : enrichedData[0].id);
           }
         }
       } catch (err) {
@@ -331,7 +400,7 @@ export default function ProductCategoriesPage({ headerOffset = 72 }) {
 
     fetchCategories();
     return () => { isMounted = false; };
-  }, []); // <--- EMPTY DEPENDENCY ARRAY ensures we never re-fetch and shake the UI
+  }, [location.state?.selectedCategoryId]);
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
 
@@ -368,9 +437,8 @@ export default function ProductCategoriesPage({ headerOffset = 72 }) {
   const totalResultCount = useMemo(() => {
     if (!searchIndex) return 0;
     return Object.values(matchCounts).reduce((sum, n) => sum + n, 0);
-  }, [searchIndex, matchCounts]);
+  }, [matchCounts, searchIndex]);
 
-  // Keep active category synced if user searches and current active gets filtered out
   useEffect(() => {
     if (visibleCategories.length === 0) return;
     const stillVisible = visibleCategories.some((c) => c.id === activeCategoryId);
@@ -392,70 +460,134 @@ export default function ProductCategoriesPage({ headerOffset = 72 }) {
     return entry.matchingSubs.length > 0 ? entry.matchingSubs : (activeCategory.subcategories || []);
   }, [activeCategory, searchIndex]);
 
-  // Change tabs instantly in UI, with absolutely no URL changes or re-renders
   const handleSelectCategory = useCallback((id) => {
     setActiveCategoryId(id);
   }, []);
 
   const handleSelectSubcategory = useCallback((sub) => {
-    console.log(`Navigating to: /categories/${activeCategory.slug}/${sub.slug}`);
-  }, [activeCategory]);
-
-  const containerHeightStyle = {
-    height: `calc(100vh - ${headerOffset}px - 128px)`,
-    minHeight: "420px",
-  };
+    console.log(`Navigating to subcategory: ${sub.slug || sub.id}`);
+  }, []);
 
   if (isLoading) {
-    return (
-      <div className="flex h-[80vh] items-center justify-center flex-col gap-3">
-        <FiLoader className="h-8 w-8 animate-spin text-[#0B1220]" />
-        <p className="text-[15px] font-medium text-[#64748B]">Loading Categories...</p>
-      </div>
-    );
+    return <LoadingSkeleton />;
   }
 
   if (error) {
     return (
-      <div className="flex h-[80vh] items-center justify-center flex-col gap-3 text-red-500">
-        <FiAlertCircle className="h-10 w-10" />
-        <p className="text-[16px] font-semibold">{error}</p>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="mt-2 rounded-lg bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100"
-        >
-          Try Again
-        </button>
+      <div className="flex min-h-[80vh] items-center justify-center flex-col bg-[#FAFAFA] p-6">
+        <div className="flex flex-col items-center justify-center rounded-[24px] border border-red-200 bg-white p-10 text-center shadow-lg max-w-md w-full">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50 mb-4">
+            <FiAlertCircle className="h-8 w-8 text-red-500" />
+          </div>
+          <h2 className="text-[18px] font-bold text-gray-900 mb-2">Failed to load</h2>
+          <p className="text-[14px] text-gray-500 mb-6">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="rounded-xl bg-gray-900 px-6 py-3 text-[14px] font-semibold text-white transition-all hover:bg-gray-800 w-full"
+          >
+            Retry Connection
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col bg-[#F6F7F9]">
-      <HeroSection
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        resultCount={totalResultCount}
-      />
-      <div
-        style={containerHeightStyle}
-        className="flex overflow-hidden rounded-3xl border mx-3 border-[#EEF0F3] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03),0_20px_40px_-24px_rgba(15,23,42,0.12)]"
-      >
-        <CategoryContent
-          category={activeCategory}
-          subcategories={visibleSubcategories}
+    <div className="flex flex-col min-h-screen bg-[#FAFAFA]">
+      <div className="mx-auto w-full max-w-[1920px] px-4 flex flex-col gap-4 lg:gap-8">
+        
+        {/* PREMIUM UNIFIED HEADER */}
+        <PageHeader
           searchTerm={searchTerm}
-          onSelectSubcategory={handleSelectSubcategory}
+          onSearchChange={setSearchTerm}
+          resultCount={totalResultCount}
         />
-        <CategorySidebar
-          categories={visibleCategories}
-          activeId={activeCategoryId}
-          onSelect={handleSelectCategory}
-          searchTerm={normalizedSearch}
-          matchCounts={matchCounts}
-        />
+
+        {/* =========================================
+            MOBILE/TABLET: Horizontal Scroll Tabs 
+        ============================================= */}
+        <div className="block lg:hidden w-full sticky top-[60px] z-20 bg-[#FAFAFA] border-b border-gray-200 -mx-4 px-4 sm:-mx-6 sm:px-6">
+          <div className="flex items-center w-full">
+            {/* Scrollable Categories without Scrollbar */}
+            <div className="flex-1 overflow-x-auto [&::-webkit-scrollbar]:hidden flex space-x-5 py-2.5">
+              {visibleCategories.map(cat => {
+                const isActive = cat.id === activeCategoryId;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleSelectCategory(cat.id)}
+                    className={`whitespace-nowrap text-[14px] px-1 pb-1 border-b-2 transition-all ${
+                      isActive 
+                        ? 'border-gray-900 text-gray-900 font-bold' 
+                        : 'border-transparent text-gray-500 font-medium'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                );
+              })}
+            </div>
+            
+            {/* Dropdown Bottom-Sheet Trigger Button */}
+            <button 
+              onClick={() => setIsMobileSheetOpen(true)}
+              className="ml-3 pl-3 py-2 border-l border-gray-200 text-gray-600 bg-[#FAFAFA] shadow-[-12px_0_15px_-5px_rgba(250,250,250,1)] flex items-center gap-1"
+            >
+               <FiMenu className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* MAIN LAYOUT: Products Left, Categories Right (Desktop Only) */}
+        <div className="flex flex-col lg:flex-row gap-8 relative items-start pb-12">
+          
+          {/* MAIN PRODUCTS AREA (LEFT ON DESKTOP) */}
+          {/* Updated Desktop Container styling to exactly match Right aside */}
+          <main className="flex-1 w-full min-w-0 mt-4 lg:mt-0 lg:bg-white lg:rounded-[24px] lg:border lg:border-gray-200/80 lg:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.04)] lg:overflow-hidden">
+            <MainContentArea
+              category={activeCategory}
+              subcategories={visibleSubcategories}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              resultCount={totalResultCount}
+              onSelectSubcategory={handleSelectSubcategory}
+            />
+          </main>
+
+          {/* CATEGORY PANEL (RIGHT ON DESKTOP) */}
+          <aside className="hidden lg:block w-[300px] xl:w-[320px] shrink-0 sticky top-8 z-10 bg-white rounded-[24px] border border-gray-200/80 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.04)] overflow-hidden">
+            <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/50">
+              <h3 className="text-[13px] font-bold uppercase tracking-wider text-gray-500">Categories</h3>
+            </div>
+            <Scrollbar className="w-full lg:h-[520px] px-3 py-3 max-h-[calc(100vh-140px)]">
+              <ul className="flex flex-col space-y-1.5">
+                {visibleCategories.map((category) => (
+                  <DesktopCategoryItem
+                    key={category.id}
+                    category={category}
+                    isActive={category.id === activeCategoryId}
+                    onSelect={handleSelectCategory}
+                    matchCount={matchCounts[category.id] || 0}
+                    hasSearch={Boolean(searchTerm)}
+                  />
+                ))}
+              </ul>
+            </Scrollbar>
+          </aside>
+          
+        </div>
       </div>
-      <div className="h-4 shrink-0 sm:h-6" aria-hidden="true" />
+
+      {/* MOBILE CATEGORY BOTTOM SHEET */}
+      <MobileCategorySheet
+        isOpen={isMobileSheetOpen}
+        onClose={() => setIsMobileSheetOpen(false)}
+        categories={visibleCategories}
+        activeId={activeCategoryId}
+        onSelect={handleSelectCategory}
+        matchCounts={matchCounts}
+        hasSearch={Boolean(searchTerm)}
+      />
     </div>
   );
 }

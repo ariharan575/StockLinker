@@ -1,10 +1,5 @@
-// components/AnimatedCounter.jsx
 import React, { useEffect, useRef, useState } from "react";
 
-/**
- * Counts up from 0 to `value` using requestAnimationFrame.
- * Pure CSS/Tailwind + React per the "no animation libraries" constraint.
- */
 function AnimatedCounter({ value, duration = 900, prefix = "", suffix = "" }) {
   const [display, setDisplay] = useState(0);
   const frame = useRef(null);
@@ -15,7 +10,6 @@ function AnimatedCounter({ value, duration = 900, prefix = "", suffix = "" }) {
 
     const tick = (now) => {
       const progress = Math.min((now - start) / duration, 1);
-      // ease-out-quad for a natural deceleration
       const eased = 1 - (1 - progress) * (1 - progress);
       setDisplay(Math.round(from + (value - from) * eased));
       if (progress < 1) {
@@ -28,7 +22,7 @@ function AnimatedCounter({ value, duration = 900, prefix = "", suffix = "" }) {
   }, [value, duration]);
 
   return (
-    <span>
+    <span className="font-sora">
       {prefix}
       {display.toLocaleString("en-IN")}
       {suffix}

@@ -1,34 +1,18 @@
-// components/EmptyState.jsx
 import React from "react";
+import { Inbox } from "lucide-react";
 
-export default function EmptyState() {
+export default function EmptyState({ title = "No active records", description = "New data will appear here once available.", icon }) {
   return (
-    <div className="flex w-full flex-col items-center justify-center rounded-[28px] border border-dashed border-slate-200 bg-slate-50/50 py-24 px-6 text-center transition-colors hover:border-slate-300 hover:bg-slate-50">
-      
-      <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-900/5">
-        <svg 
-          className="h-7 w-7 text-indigo-500" 
-          fill="none" 
-          viewBox="0 0 24 24" 
-          stroke="currentColor" 
-          strokeWidth="1.5"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V13.5zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V18zm2.498-6.75h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V13.5zm0 2.25h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V18zm2.504-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V18zm2.498-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5zM8.25 6h7.5v2.25h-7.5V6zM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 002.25 2.25h10.5a2.25 2.25 0 002.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0012 2.25z" />
-        </svg>
+    <div className="flex w-full flex-col items-center justify-center border-y border-dashed border-gray-200 py-16 sm:py-24 text-center font-inter">
+      <div className="mb-4 sm:mb-5 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl bg-gray-50 border border-gray-100">
+        {icon || <Inbox className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400" strokeWidth={1.5} />}
       </div>
-      
-      <h3 className="mb-2 text-[20px] font-semibold tracking-tight text-slate-900">
-        No active requests
+      <h3 className="font-sora mb-1 sm:mb-2 text-[16px] sm:text-[18px] font-semibold text-gray-900">
+        {title}
       </h3>
-      
-      <p className="mb-8 max-w-sm text-[15px] leading-relaxed text-slate-500">
-        When buyers in your area search for your products, their business opportunities will appear right here.
+      <p className="max-w-sm text-[13px] sm:text-[14px] text-gray-500 leading-relaxed">
+        {description}
       </p>
-      
-      <button className="rounded-full bg-slate-900 px-6 py-2.5 text-[14px] font-semibold text-white shadow-sm transition-all hover:bg-slate-800 hover:shadow-md hover:-translate-y-0.5">
-        Optimize Profile
-      </button>
-
     </div>
   );
 }

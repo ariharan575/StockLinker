@@ -99,11 +99,11 @@ export default function ComparePrice() {
         {errorPopup.show && <ErrorPopup isOpen={errorPopup.show} message={errorPopup.message} onClose={() => setErrorPopup({ show: false, message: "" })} />}
       </AnimatePresence>
 
-      <div className="min-h-screen font-inter antialiased selection:bg-pink-100 selection:text-pink-900 flex flex-col w-full overflow-x-hidden relative">
+      <div className="font-inter antialiased selection:bg-pink-100 selection:text-pink-900 flex flex-col w-full mx-2 overflow-x-hidden relative">
         <ProductSearchModal isOpen={searchModalOpen} onClose={() => setSearchModalOpen(false)} onSearch={handleProductSearch} />
 
         {masterProductId && data && (
-          <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="w-full max-w-[1440px] mx-auto sm:px-4 lg:px-6 space-y-6 pt-4">
+          <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="w-full max-w-[1440px] mx-auto">
             
             <ProductHeader qty={qty} setQty={setQty} metrics={data.headerMetrics} boundaries={data.marketBoundaries} onNewSearch={() => setSearchModalOpen(true)} onShowError={showErrorPopup} />
 

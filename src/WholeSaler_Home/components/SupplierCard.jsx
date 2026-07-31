@@ -1,14 +1,12 @@
-// components/SupplierCard.jsx
 import React from "react";
 import ActionButton from "./ActionButton";
-import { StarIcon, MapPinIcon } from "./Icons";
+import { Star, MapPin } from "lucide-react";
 
 const LOGO_COLORS = [
-  "from-slate-100 to-slate-200 text-slate-700",
-  "from-indigo-50 to-indigo-100 text-indigo-700",
-  "from-gray-50 to-gray-200 text-gray-700",
-  "from-slate-50 to-slate-100 text-slate-800",
-  "from-indigo-50/50 to-slate-100 text-indigo-800",
+  "from-gray-100 to-gray-200 text-gray-800",
+  "from-rose-50 to-rose-100 text-rose-800",
+  "from-stone-50 to-stone-200 text-stone-800",
+  "from-zinc-100 to-zinc-200 text-zinc-800",
 ];
 
 function SupplierCard({ supplier, index = 0 }) {
@@ -17,54 +15,43 @@ function SupplierCard({ supplier, index = 0 }) {
   return (
     <div
       style={{ animationDelay: `${index * 70}ms` }}
-      className="group relative flex w-[260px] shrink-0 animate-[fadeUp_0.5s_ease-out_both] snap-start flex-col overflow-hidden rounded-3xl border border-slate-200/60 bg-white p-5 text-left shadow-sm transition-all duration-[350ms] ease-out hover:-translate-y-2 hover:border-indigo-100 hover:shadow-2xl"
+      className="group relative flex w-[240px] sm:w-[260px] shrink-0 animate-[fadeUp_0.5s_ease-out_both] snap-start flex-col overflow-hidden rounded-2xl sm:rounded-3xl border border-gray-200 bg-white p-4 sm:p-5 text-left shadow-sm transition-all duration-[350ms] ease-out hover:-translate-y-2 hover:border-gray-300 hover:shadow-2xl font-inter"
     >
-      {/* Background Layers */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-slate-50/50 to-transparent" />
-      <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-indigo-50/60 blur-2xl transition-opacity duration-[350ms] group-hover:opacity-100" />
-      <div className="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-slate-100/40 blur-xl opacity-50" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-gray-50/50 to-transparent" />
+      <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-rose-50/60 blur-2xl transition-opacity duration-[350ms] group-hover:opacity-100" />
+      <div className="pointer-events-none absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-gray-100/40 blur-xl opacity-50" />
       
-      {/* Subtle Hover Glow */}
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-[350ms] group-hover:opacity-100" style={{
-        background: "linear-gradient(135deg, rgba(79,70,229,0.04), transparent)",
-      }} />
-
       <div className="relative z-10 flex h-full flex-col">
-        {/* Top Header Row: Profile Logo Left, Location Distance Right */}
         <div className="flex items-start justify-between gap-2">
           <div
-            className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br border border-white/80 text-sm font-bold shadow-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition-all duration-[350ms] ease-out group-hover:scale-110 group-hover:rotate-2 ${color}`}
+            className={`font-sora flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-gradient-to-br border border-white/80 text-[12px] sm:text-[14px] font-bold shadow-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition-all duration-[350ms] ease-out group-hover:scale-110 group-hover:rotate-2 ${color}`}
           >
             {supplier.initials}
           </div>
           
-          <p className="inline-flex items-center gap-1 rounded-full border border-slate-100 bg-slate-50/90 px-2.5 py-0.5 text-[11px] font-medium text-slate-500 mt-1 transition-colors duration-300 group-hover:border-slate-200 group-hover:bg-slate-100">
-            <MapPinIcon className="h-3 w-3 text-slate-400" /> {supplier.distance}
+          <p className="inline-flex items-center gap-1 rounded-full border border-gray-100 bg-gray-50/90 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[11px] font-medium text-gray-500 mt-1 transition-colors duration-300 group-hover:border-gray-200 group-hover:bg-gray-100">
+            <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-400" /> {supplier.distance}
           </p>
         </div>
         
-        {/* Company Name */}
-        <h3 className="mt-4 text-[16px] font-bold leading-tight tracking-tight text-slate-900">
+        <h3 className="font-sora mt-4 text-[14px] sm:text-[16px] font-bold leading-tight tracking-tight text-gray-900">
           {supplier.name}
         </h3>
         
-        {/* Badges Layout */}
-        <div className="mt-4 flex flex-col items-start gap-2">
-          <span className="inline-flex items-center rounded-full bg-slate-100/80 px-2.5 py-1 text-[11px] font-medium tracking-wide text-slate-600">
+        <div className="mt-3 sm:mt-4 flex flex-col items-start gap-2">
+          <span className="inline-flex items-center rounded-full bg-gray-100 px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-semibold tracking-wide text-gray-700">
             {supplier.category}
           </span>
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-100/50 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
-            <StarIcon className="h-3.5 w-3.5 text-amber-500" /> {supplier.rating}
+          <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white shadow-sm px-2 py-1 text-[10px] sm:text-[11px] font-bold text-gray-800">
+            <Star className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-gray-800 fill-current" /> {supplier.rating}
           </span>
         </div>
 
-        {/* Spacer */}
-        <div className="mt-5 flex-grow" />
+        <div className="mt-4 sm:mt-5 flex-grow" />
 
-        {/* Button */}
         <ActionButton 
           variant="secondary" 
-          className="h-[42px] w-full rounded-xl border border-slate-200/60 bg-slate-50 font-medium text-slate-700 shadow-sm transition-all duration-[350ms] hover:-translate-y-0.5 hover:border-slate-800 hover:bg-slate-900 hover:text-white hover:shadow-md"
+          className="h-[38px] sm:h-[42px] w-full rounded-xl border border-gray-200 bg-gray-50 text-[12px] sm:text-[13px] font-bold text-gray-700 shadow-sm transition-all duration-[350ms] hover:-translate-y-0.5 hover:border-black hover:bg-black hover:text-white hover:shadow-md"
         >
           View Profile
         </ActionButton>

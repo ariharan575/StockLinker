@@ -1,29 +1,45 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* THIS LINE IS CRITICAL - It makes Tailwind work! */
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
+/* Tailwind v4 setup to make Inter the default font everywhere */
+@theme {
+  --font-sans: "Inter", sans-serif;
+  --dark-mode: class;
+}
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --dark-mode: class;
+@layer base {
+  body {
+    @apply bg-[#F8FAFC] antialiased text-slate-900;
+  }
+}
+
+@layer utilities {
+  .font-sora { font-family: 'Sora', sans-serif; }
+  .font-inter { font-family: 'Inter', sans-serif; }
+  
+  /* Hide scrollbar for clean UI */
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 body {
   margin: 0;
-
-  font-family: "Inter", sans-serif;
-
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
   box-sizing: border-box;
-  -webkit-font-smoothing: antialiased;
-
 }
 
 ::selection {
@@ -52,6 +68,23 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #DB2777;
+}
+
+/* Premium Utilities */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .text-gradient-premium {
+    background: linear-gradient(135deg, #f43f5e 0%, #d946ef 50%, #f97316 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
 /* Reduced motion */

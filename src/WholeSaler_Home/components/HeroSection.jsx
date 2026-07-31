@@ -31,26 +31,22 @@ const WholesalerHero = ({ userName = "Boomathi", kpis = [] }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      className="relative w-full overflow-hidden rounded-[32px] bg-white border border-[#F1F1F4] shadow-[0_30px_70px_rgba(15,23,42,0.06)] h-[320px] "
+      className="relative w-full overflow-hidden rounded-[32px] my-5 border border-[#F1F1F4] shadow-[0_30px_70px_rgba(15,23,42,0.06)] h-[320px] "
     >
-      {/* Ambient Aura Background */}
-      <div className="absolute -top-40 -right-20 w-[450px] h-[450px] rounded-full blur-[100px] opacity-[0.12] pointer-events-none bg-[#FF4D8D]" />
-      <div className="absolute -bottom-32 -left-20 w-[350px] h-[350px] rounded-full blur-[100px] opacity-[0.10] pointer-events-none bg-[#FF7A59]" />
-
       <div className="relative z-10 flex h-full w-full">
         {/* Left Content */}
-        <div className="w-full lg:w-[55%] h-full px-8 lg:px-12 flex flex-col justify-center">
+        <div className="w-full lg:w-[55%] h-full px-8 lg:px-8 flex flex-col justify-center">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <h2 className="text-[12px] font-bold tracking-[0.25em] uppercase text-[#8CA3BA] ">
+            <h2 className="text-[14px] font-bold tracking-[0.25em] uppercase text-[#8CA3BA] ">
               WELCOME BACK,
             </h2>
-            <h1 className="text-[48px] font-black text-[#111827] leading-[1.1] tracking-[-0.025em]">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#FF4D8D] to-[#FF7A59]" style={{fontFamily:'"Clash Display","Satoshi","Plus Jakarta Sans","Inter",sans-serif'}} >
-                {userName} 
+            <h1 className="text-[42px] sm:text-[48px] lg:text-[54px] ps-0.5 font-black leading-[1.05] tracking-[-0.025em] select-none" style={{fontFamily:'"Clash Display","Satoshi","Plus Jakarta Sans","Inter",sans-serif'}}>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#FF3D81] via-[#FF5C7A] to-[#FF9A5C] drop-shadow-[0_6px_18px_rgba(255,77,141,0.18)]">
+                {userName}
               </span>
             </h1>
             <p className="mt-4 text-[15px] text-[#6B7280] font-medium leading-relaxed max-w-[480px]">

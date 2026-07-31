@@ -311,7 +311,6 @@ export default function StockLinkerEnterpriseOnboarding() {
                     </motion.button>
                     
                     <motion.button whileHover={apiLoading ? {} : { scale: 1.03, boxShadow: "0 0 30px rgba(236,72,153,0.35)" }} whileTap={apiLoading ? {} : { scale: 0.97 }} onClick={handleNextStep} disabled={apiLoading} className="relative overflow-hidden h-12 px-9 rounded-lg bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-80">
-                      {!apiLoading && <motion.div animate={{ x: ["-120%", "220%"] }} transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }} className="absolute inset-y-0 left-0 w-20 bg-white/20 skew-x-12" />}
                       {apiLoading ? <><Loader2 className="w-5 h-5 animate-spin relative z-10" /><span className="relative z-10">Saving...</span></> : <><span className="relative z-10">Save & Continue</span><ArrowRight size={16} className="relative z-10" /></>}
                     </motion.button>
                   </motion.div>

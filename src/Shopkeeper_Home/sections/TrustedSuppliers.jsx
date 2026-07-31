@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Phone, MessageSquare, ShieldCheck, AlertCircle, Users } from 'lucide-react';
-import { SectionHead } from '../common';
+import { SectionHead } from '../../Layout/common';
 import { networkApi } from '../Services/api';
-import { CTA_GRAD, C, SHADOW } from '../common/constants';
+import { CTA_GRAD, C, SHADOW } from '../../Layout/common/constants';
 
 export default function TrustedSuppliers() {
   const navigate = useNavigate();

@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { SectionHead } from '../common';
+import { SectionHead } from '../../Layout/common';
 import { QUICK_ACTIONS } from '../data';
-import { fadeUp, C } from '../common/constants';
+import { fadeUp, C } from '../../Layout/common/constants';
 
 export default function QuickActions() {
   const navigate = useNavigate();

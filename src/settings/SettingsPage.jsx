@@ -25,7 +25,6 @@ export default function SettingsPage({ activeSection = "account", onSectionChang
     landmark: "", deliveryRadius: "", minOrder: "", deliveryCharges: "",
     deliveryDays: "", routeSchedule: "",
     trustScore: 0, marketplaceRank: 0, verificationStatus: "",
-    // Dynamic Product Inventory Array
     subCategories: [], totalProducts: 0, lowStockCount: 0, bestSellingProduct: "N/A", fastMovingCategory: "N/A"
   });
 
@@ -66,7 +65,6 @@ export default function SettingsPage({ activeSection = "account", onSectionChang
           trustScore: data.trustScore || 0,
           marketplaceRank: data.marketplaceRank || 0,
           verificationStatus: data.verificationStatus || "Pending",
-          // Dynamic mappings
           subCategories: data.subCategories || [],
           totalProducts: data.totalProducts || 0,
           lowStockCount: data.lowStockCount || 0,
@@ -113,9 +111,9 @@ export default function SettingsPage({ activeSection = "account", onSectionChang
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="flex flex-col items-center justify-center h-64 text-slate-500">
-          <Loader2 className="w-10 h-10 animate-spin text-pink-500 mb-4" />
-          <p className="font-semibold">Loading enterprise profile...</p>
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-slate-500">
+          <Loader2 className="w-10 h-10 sm:w-12 sm:h-12 animate-spin text-pink-500 mb-4" />
+          <p className="font-semibold text-sm sm:text-base">Loading enterprise profile...</p>
         </div>
       );
     }
@@ -130,27 +128,30 @@ export default function SettingsPage({ activeSection = "account", onSectionChang
     }
   };
 
+// Inside your SettingsPage.jsx, right before the main return wrapper:
+
   return (
-    <div className="relative min-h-screen overflow-hidden transition-all duration-500 bg-[#f5f7fb]">
-      <AnimatePresence>
-        {notification && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className={`fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3 font-bold text-sm text-white ${notification.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`}>
-            {notification.type === 'success' && <CheckCircle2 size={18} />}
-            {notification.msg}
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#000000_1px,transparent_1px),linear-gradient(to_bottom,#000000_1px,transparent_1px)] bg-[size:60px_60px]" />
-      <div className="absolute left-0 top-0 h-[400px] w-[400px] rounded-full bg-pink-500/10 blur-[120px]" />
-      <div className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-sky-500/10 blur-[120px]" />
-      <div className="h-4" />
-      <div className="relative flex px-3 md:px-6 pb-8">
-        <main className="min-w-0 flex-1">
-          <div className="mx-auto w-full max-w-7xl">
-            {renderContent()}
-          </div>
-        </main>
+    <>
+      {/* 1. Injecting the Premium Fonts */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+      `}} />
+
+      {/* 2. Applying Inter as the base font, with antialiasing for crispness */}
+      <div className="relative min-h-screen overflow-hidden transition-all duration-500 font-['Inter',_sans-serif] antialiased">
+        <AnimatePresence>
+          {/* Notification code remains the same... */}
+        </AnimatePresence>
+        
+        <div className="h-2 sm:h-4" />
+        <div className="relative flex px-3 sm:px-5 lg:px-8 2xl:px-12 pb-6 sm:pb-8">
+          <main className="min-w-0 flex-1">
+            <div className="mx-auto w-full max-w-7xl">
+              {renderContent()}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

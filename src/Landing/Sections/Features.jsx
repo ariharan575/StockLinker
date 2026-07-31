@@ -152,7 +152,7 @@ export default function FeaturesSection() {
                 <div className="relative h-full bg-white border border-slate-200/70 p-8 rounded-[24px] shadow-[0_4px_24px_rgba(15,23,42,0.05)] transition-all duration-500 group-hover:shadow-[0_24px_60px_-12px_rgba(15,23,42,0.08)] group-hover:-translate-y-1 overflow-hidden flex flex-col transform-gpu bg-clip-padding">
                   
                   {/* Icon Container Morphing into vibrant gradient */}
-                  <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mb-6 transition-all duration-500 group-hover:scale-110 group-hover:border-transparent origin-left relative z-10 overflow-hidden transform-gpu shadow-sm group-hover:shadow-md">
+                  <div className="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center mb-4 transition-all duration-500 group-hover:scale-110 group-hover:border-transparent origin-left relative z-10 overflow-hidden transform-gpu shadow-sm group-hover:shadow-md">
                     <div className={`absolute inset-0 bg-gradient-to-tr ${item.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
                     <item.icon size={24} className="text-slate-600 transition-colors duration-500 group-hover:text-white relative z-10" />
                   </div>
@@ -161,11 +161,11 @@ export default function FeaturesSection() {
                     <h3 className={`text-xl font-bold text-slate-900 mb-3 tracking-tight transition-colors duration-300 ${item.textColor}`}>
                       {item.title}
                     </h3>
-                    <p className="text-sm text-slate-500 leading-[1.7] font-medium flex-1">
+                    <p className="text-[15.5px] text-slate-500 leading-[1.7] font-medium flex-1">
                       {item.description}
                     </p>
                     
-                    <div className={`mt-8 flex items-center gap-2 text-sm font-semibold text-slate-900 opacity-100 transition-all duration-300 group-hover:translate-x-1 transform-gpu ${item.textColor}`}>
+                    <div className={`mt-6 flex items-center gap-2 text-sm font-semibold text-slate-900 opacity-100 transition-all duration-300 group-hover:translate-x-1 transform-gpu ${item.textColor}`}>
                       Explore Capability
                       <ArrowRight size={16} />
                     </div>

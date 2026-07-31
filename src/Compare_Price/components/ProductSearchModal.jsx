@@ -164,7 +164,7 @@ export default function ProductSearchModal({ isOpen, onClose, onSearch }) {
 
             <div className={`transition-opacity duration-300 ${selectedProduct ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
               <label className="block text-[11px] font-semibold text-[#94A3B8] uppercase tracking-[0.08em] mb-2">2. Required Quantity</label>
-              <div className="flex items-center w-full h-[52px] rounded-[14px] border border-slate-200 bg-white px-2">
+              <div className="flex items-center w-[75%] h-[48px] rounded-[14px] border border-slate-200 bg-white px-2">
                 <button onClick={() => { setQuantity(Math.max(1, quantity - 1)); setErrorMessage(""); }} className="w-10 h-10 flex items-center justify-center rounded-[10px] text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"><Minus size={18} /></button>
                 <div className="flex-1 flex items-center justify-center px-3 border-x border-slate-100 mx-2 h-full">
                   <Package size={16} className="text-[#94A3B8] mr-2" />

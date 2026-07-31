@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, MessageSquare, Phone, ChevronDown, AlertCircle } from 'lucide-react';
-import { SectionHead } from '../common';
+import { SectionHead } from '../../Layout/common';
 import { compareApi } from '../Services/api';
-import { CTA_GRAD, C, FONT_MONO } from '../common/constants';
+import { CTA_GRAD, C, FONT_MONO } from '../../Layout/common/constants';
 import Surf from '../../assets/SurfExcel.jpg'; // Fallback/Placeholder image
 
 export default function PriceComparison() {

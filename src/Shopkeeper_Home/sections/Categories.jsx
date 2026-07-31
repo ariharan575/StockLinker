@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { LayoutGrid, AlertCircle } from 'lucide-react';
-import { SectionHead } from '../common';
+import { SectionHead } from '../../Layout/common';
 import { categoryApi } from '../Services/api';
 
 // Dynamically import local images as a fallback if you are using local assets

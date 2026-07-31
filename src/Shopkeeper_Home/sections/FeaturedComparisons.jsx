@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, TrendingUp } from 'lucide-react';
-import { SectionHead } from '../common';
+import { SectionHead } from '../../Layout/common';
 import { compareApi } from '../Services/api';
-import { CTA_GRAD, C, FONT_MONO } from '../common/constants';
+import { CTA_GRAD, C, FONT_MONO } from '../../Layout/common/constants';
 import Surf from '../../assets/SurfExcel.jpg'; // Placeholder image
 
 export default function FeaturedComparisons() {

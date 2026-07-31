@@ -1,5 +1,4 @@
-// components/InquirySection.jsx
-import React, { useRef, useCallback, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import SectionHeader from "./SectionHeader";
 import InquiryCard from "./InquiryCard";
 import InquiryModal from "./InquiryModal";
@@ -31,40 +30,36 @@ export default function InquirySection() {
   const handleAcceptOrder = async (enquiryId) => {
     try {
       await enquiryApi.acceptEnquiry(enquiryId);
-      // Remove it from the UI immediately
       setEnquiries(prev => prev.filter(e => e.id !== enquiryId));
-      setSelectedEnquiry(null); // Close modal
-      alert("Order accepted successfully! It is now processing.");
+      setSelectedEnquiry(null);
     } catch (error) {
-      alert("Failed to accept order. It may have been closed.");
+      alert("Failed to accept order.");
     }
   };
 
   return (
-    <section className="relative flex p-6 flex-col w-full bg-white rounded-[32px] border border-slate-200/40 shadow-[0_12px_50px_rgb(0,0,0,0.06)]">
+    <div className="w-full font-inter">
       <SectionHeader 
-        title="New Buyer Requests" 
+        title="Buyer Requests" 
         subtitle="Real-time opportunities for your products"
       />
 
       {isLoading ? (
-        <div className="mt-8 flex gap-6 overflow-hidden">
-           <div className="w-[420px] h-[280px] bg-slate-100 rounded-[28px] animate-pulse shrink-0" />
-           <div className="w-[420px] h-[280px] bg-slate-100 rounded-[28px] animate-pulse shrink-0" />
+        <div className="mt-6 flex gap-4 sm:gap-6 overflow-hidden pb-4">
+           <div className="w-[280px] sm:w-[380px] h-[260px] bg-gray-50 rounded-2xl animate-pulse shrink-0 border border-gray-100" />
+           <div className="w-[280px] sm:w-[380px] h-[260px] bg-gray-50 rounded-2xl animate-pulse shrink-0 border border-gray-100 hidden md:block" />
         </div>
       ) : enquiries.length === 0 ? (
-        <div className="mt-8">
+        <div className="mt-6">
           <EmptyState />
         </div>
       ) : (
-        <div className="relative group/section mt-6">
+        <div className="mt-6 relative">
           <div 
             ref={scrollContainerRef}
-            className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-6 pt-2 px-2 -mx-2"
+            className="flex snap-x snap-mandatory gap-4 sm:gap-6 overflow-x-auto pb-4 no-scrollbar"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            <style dangerouslySetInnerHTML={{__html: `div::-webkit-scrollbar { display: none; }`}} />
-            
             {enquiries.map((enquiry) => (
               <InquiryCard 
                 key={enquiry.id} 
@@ -77,13 +72,12 @@ export default function InquirySection() {
         </div>
       )}
 
-      {/* CENTERED POPUP MODAL */}
       <InquiryModal 
         enquiry={selectedEnquiry} 
         isOpen={!!selectedEnquiry} 
         onClose={() => setSelectedEnquiry(null)} 
         onAccept={handleAcceptOrder}
       />
-    </section>
+    </div>
   );
 }

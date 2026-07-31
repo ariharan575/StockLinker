@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -11,7 +11,9 @@ import {
   Star, Clock, Award, Package, SlidersHorizontal, 
   Truck, CheckCircle2, Building2, Loader2, AlertCircle, Bell, MessageSquare
 } from 'lucide-react';
+import {typographyStyles} from '../Compare_Price/config/constants'
 import { networkApi } from '../Authentication/services/api';
+import { useAuth } from '../Authentication/context/AuthContext';
 
 export const CTA_GRAD = 'linear-gradient(to right, #EC4899, #F43F5E, #F97316)';
 
@@ -24,18 +26,32 @@ const DISTRICT_CENTERS = {
   "Thiruvarur": [10.7725, 79.6363]
 };
 
+// 🛡️ BULLETPROOF COORDINATE SANITIZER (Catches nulls and empty strings)
+const getSafeCenter = (coord) => {
+  if (Array.isArray(coord) && coord.length >= 2) {
+    const lat = parseFloat(coord[0]);
+    const lng = parseFloat(coord[1]);
+    if (!isNaN(lat) && !isNaN(lng)) {
+      return [lat, lng];
+    }
+  }
+  return [13.0827, 80.2707]; // Fallback to Chennai
+};
+
 function LiveToast({ notification, onClose }) {
   if (!notification) return null;
   return (
-    <motion.div initial={{ opacity: 0, y: -50, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] bg-white border border-emerald-200 shadow-2xl rounded-2xl p-4 flex items-center gap-4 min-w-[300px]">
-      <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+    <motion.div initial={{ opacity: 0, y: -50, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] bg-white border border-slate-200 shadow-2xl rounded-[20px] p-4 flex items-center gap-4 min-w-[300px] w-[90%] max-w-[400px]">
+      <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center flex-shrink-0">
         <Bell size={20} className="animate-bounce" />
       </div>
-      <div className="flex-1">
-        <h4 className="text-sm font-bold text-zinc-900">{notification.type === 'NEW_NEARBY_USER' ? 'Live Radar Update' : 'Network Update'}</h4>
-        <p className="text-xs text-zinc-500">{notification.message}</p>
+      <div className="flex-1 min-w-0">
+        <h4 className="font-['Manrope',_sans-serif] text-[15px] font-extrabold text-black truncate">{notification.type === 'NEW_NEARBY_USER' ? 'Live Radar Update' : 'Network Update'}</h4>
+        <p className="font-['Inter',_sans-serif] text-[13px] font-medium text-slate-500 truncate">{notification.message}</p>
       </div>
-      <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600">×</button>
+      <button onClick={onClose} className="text-slate-400 hover:text-black transition-colors flex-shrink-0 p-1 bg-slate-50 hover:bg-slate-100 rounded-full">
+        <X size={16} />
+      </button>
     </motion.div>
   );
 }
@@ -44,7 +60,7 @@ const createCustomIcon = (supplier) => {
   const initial = supplier.name ? supplier.name.charAt(0).toUpperCase() : "S";
   return L.divIcon({
     className: 'bg-transparent border-none',
-    html: `<div class="relative group cursor-pointer transition-transform hover:scale-105 duration-300 z-50"><div class="w-10 h-10 rounded-md border-2 border-[#F43F5E] overflow-hidden bg-white shadow-lg flex items-center justify-center font-black text-lg text-white" style="background: ${CTA_GRAD}">${initial}</div></div>`,
+    html: `<div class="relative group cursor-pointer transition-transform hover:scale-105 duration-300 z-50"><div class="w-10 h-10 rounded-xl border border-pink-200 overflow-hidden bg-white shadow-lg flex items-center justify-center font-['Manrope',_sans-serif] font-extrabold text-lg text-white" style="background: ${CTA_GRAD}">${initial}</div></div>`,
     iconSize: [40, 40],
     iconAnchor: [20, 40],
     popupAnchor: [0, -45]
@@ -61,7 +77,8 @@ const userIcon = L.divIcon({
 const MapController = ({ center }) => {
   const map = useMap();
   useEffect(() => { 
-    if (center && !isNaN(center[0]) && !isNaN(center[1])) map.flyTo(center, 13, { duration: 1.5 }); 
+    const safeCoords = getSafeCenter(center);
+    map.flyTo(safeCoords, 13, { duration: 1.5 }); 
   }, [center, map]);
   return null;
 };
@@ -70,11 +87,11 @@ const fadeUp = (delay = 0) => ({ initial: { opacity: 0, y: 15 }, animate: { opac
 
 const FilterDropdown = ({ label, options, value, onChange }) => (
   <div className="relative inline-block flex-shrink-0">
-    <select value={value} onChange={(e) => onChange(e.target.value)} className={`appearance-none pl-3 pr-8 py-1.5 border text-sm font-medium rounded-md shadow-sm outline-none cursor-pointer transition-all ${value ? 'bg-[#FDF2F8] border-[#FBCFE8] text-[#E11D48]' : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50'}`}>
+    <select value={value} onChange={(e) => onChange(e.target.value)} className={`appearance-none pl-2.5 pr-6 py-2 border border-[1px] border-slate-300 text-[14px] font-sora rounded-xl shadow-sm outline-none cursor-pointer transition-all ${value ? 'bg-pink-50 border-pink-200 text-pink-600 focus:ring-2 focus:ring-pink-500/20' : 'bg-white text-slate-600 hover:bg-slate-100'}`}>
       <option value="">{label}</option>
       {options.map((opt, i) => <option key={i} value={opt.value}>{opt.label}</option>)}
     </select>
-    <ChevronDown className={`absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${value ? 'text-[#E11D48]' : 'text-zinc-400'}`} size={14} />
+    <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${value ? 'text-pink-600' : 'text-slate-400'}`} size={14} />
   </div>
 );
 
@@ -123,73 +140,91 @@ const SellerCard = ({ supplier, index }) => {
   const remainingCount = (supplier.totalSubCategories || 0) - displaySubs.length;
 
   return (
-    <motion.div {...fadeUp(index * 0.05)} whileHover={{ scale: 1.002, borderColor: "#FBCFE8", boxShadow: "0 8px 20px -6px rgba(244, 63, 94, 0.12)" }} className="bg-white border border-zinc-200 rounded-lg p-4 md:p-5 shadow-sm mb-4 flex flex-col gap-3.5 relative overflow-hidden group transition-all duration-300">
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-        <div className="flex items-start gap-3 md:gap-4">
-          <div className="relative flex-shrink-0">
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-md shadow-sm flex items-center justify-center font-black text-xl text-white" style={{ background: CTA_GRAD }}>{initial}</div>
-            {verified && <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-px shadow-sm"><CheckCircle2 size={12} className="text-emerald-500 fill-emerald-100" /></div>}
-          </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-0.5">
-              <h3 className="text-base font-bold text-zinc-900 leading-tight group-hover:text-[#E11D48] transition-colors">{name}</h3>
-              {supplier.readyStock && <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold border rounded-md bg-amber-50 text-amber-700 border-amber-200 uppercase tracking-wide">Ready Stock</span>}
-              {connectStatus === 'CONNECTED' && <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold border rounded-md bg-emerald-50 text-emerald-700 border-emerald-200 uppercase tracking-wide">Connected</span>}
-            </div>
-            <p className="text-xs text-zinc-500 font-medium mb-1.5">{supplier.category || "General Business"}</p>
-            <div className="flex flex-wrap items-center gap-y-1.5 gap-x-2 text-xs">
-              <span className="flex items-center gap-1 text-zinc-600"><MapPin size={12} className="text-zinc-400"/> {supplier.location} ({supplier.distance})</span>
-              <span className="text-zinc-300 hidden sm:inline">•</span>
-              <span className="flex items-center gap-1 text-zinc-900 font-semibold"><Star size={12} className="fill-amber-400 text-amber-400" /> {supplier.rating > 0 ? supplier.rating : "New"} <span className="text-zinc-500 font-normal">({supplier.reviews || 0})</span></span>
-              <span className="text-zinc-300 hidden sm:inline">•</span>
-              <div className="flex gap-2">{verified && <span className="flex items-center gap-1 text-blue-700 font-medium"><ShieldCheck size={12} /> Business Verified</span>}</div>
-            </div>
-          </div>
+    <motion.div {...fadeUp(index * 0.05)} className="bg-white border border-slate-200 rounded-[20px] p-3 md:p-4 shadow-sm hover:shadow-md hover:border-slate-300 mb-4 flex flex-col gap-4 relative overflow-hidden group transition-all duration-300 cursor-pointer">
+      
+      <div className="flex items-start gap-4 md:gap-5 w-full">
+        <div className="relative flex-shrink-0">
+          <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl shadow-sm flex items-center justify-center font-['Manrope',_sans-serif] font-extrabold text-2xl text-white border border-pink-100" style={{ background: CTA_GRAD }}>{initial}</div>
+          {verified && <div className="absolute -bottom-1.5 -right-1.5 bg-white rounded-full p-0.5 shadow-sm border border-slate-100"><CheckCircle2 size={16} className="text-[#17B26A] fill-[#ECFDF3]" /></div>}
         </div>
-        <div className="text-left sm:text-right flex-shrink-0 mt-1 sm:mt-0">
-          <p className="text-[11px] font-semibold text-emerald-600 mb-0.5 flex items-center sm:justify-end gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>{supplier.status || "Active"}</p>
-          <p className="text-[11px] text-zinc-500 flex items-center sm:justify-end gap-1"><Clock size={10}/> Replies in {supplier.responseTime || "< 1 hr"}</p>
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-start gap-2 w-full mb-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-zora text-[16px] sm:text-[18px] font-extrabold text-gray-700 leading-tight  transition-colors">{name}</h3>
+              {supplier.readyStock && <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-extrabold border rounded-md bg-amber-50 text-amber-700 border-amber-200 uppercase tracking-widest flex-shrink-0">Ready Stock</span>}
+              {connectStatus === 'CONNECTED' && <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-extrabold border rounded-md bg-[#ECFDF3] text-[#067647] border-[#DCFAE6] uppercase tracking-widest flex-shrink-0">Connected</span>}
+            </div>
+            
+            <div className="flex-shrink-0 text-right mt-0.5 hidden sm:block">
+              <p className="text-[12px] font-sora font-medium text-slate-500 flex items-center justify-end gap-1.5 whitespace-nowrap">
+                <Clock size={12} className="text-slate-500"/> Replies in {supplier.responseTime || "< 1 hr"}
+              </p>
+            </div>
+          </div>
+          
+          <p className="text-[13px] text-slate-500 font-sora font-medium mb-2">{supplier.category || "General Business"}</p>
+          <div className="flex flex-wrap items-center gap-y-1.5 gap-x-2.5 text-[13px]">
+            <span className="flex items-center gap-1 font-sora font-medium text-slate-600"><MapPin size={14} className="text-slate-400"/> {supplier.location} ({supplier.distance})</span>
+            <span className="text-slate-300 hidden sm:inline">•</span>
+            <span className="flex items-center gap-1 text-black font-extrabold"><Star size={14} className="fill-amber-400 text-amber-400" /> {supplier.rating > 0 ? supplier.rating : "New"} <span className="text-slate-400 font-medium font-['Inter',_sans-serif]">({supplier.reviews || 0})</span></span>
+            <span className="text-slate-300 hidden sm:inline">•</span>
+            <div className="hidden md:flex gap-2">{verified && <span className="flex items-center gap-1.5 text-[#17B26A] font-bold"><ShieldCheck size={14} /> Business Verified</span>}</div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 py-3 border-y border-zinc-100">
-        <div className="flex flex-col gap-0.5"><span className="text-[11px] text-zinc-500 flex items-center gap-1 font-medium"><Award size={12} className="text-zinc-400"/> Experience</span><span className="text-sm font-semibold text-zinc-900">{supplier.experience || "New"}</span></div>
-        <div className="flex flex-col gap-0.5"><span className="text-[11px] text-zinc-500 flex items-center gap-1 font-medium"><Package size={12} className="text-zinc-400"/> Orders Fulfilled</span><span className="text-sm font-semibold text-zinc-900">{supplier.orders || "New"}</span></div>
-        <div className="flex flex-col gap-0.5"><span className="text-[11px] text-zinc-500 flex items-center gap-1 font-medium"><MapPin size={12} className="text-zinc-400"/> Delivery Radius</span><span className="text-sm font-semibold text-zinc-900">{supplier.deliveryRadius || "Not Set"}</span></div>
-        <div className="flex flex-col gap-0.5"><span className="text-[11px] text-zinc-500 flex items-center gap-1 font-medium"><Truck size={12} className="text-zinc-400"/> Est. Delivery</span><span className="text-sm font-semibold text-zinc-900">{supplier.deliveryEstimate || "Standard"}</span></div>
+      <div className="flex flex-row 2xl:mx-[20px] overflow-x-auto no-scrollbar md:grid md:grid-cols-4 gap-5 md:gap-4 py-4 border-y border-slate-100 w-full items-center">
+        <div className="flex flex-col gap-1 flex-shrink-0 min-w-max">
+          <span className="text-[10px] sm:text-[11px] font-sora font-semibold text-slate-500 uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap"><Award size={12} className="hidden md:block"/> Experience</span>
+          <span className="text-[14px] sm:text-[15px] font-sora font-semibold">{supplier.experience || "New"}</span>
+        </div>
+        <div className="flex flex-col gap-1 flex-shrink-0 min-w-max">
+          <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap"><Package size={12} className="hidden md:block"/> Orders</span>
+          <span className="font-['Manrope',_sans-serif] text-[14px] sm:text-[15px] font-sora font-semibold">{supplier.orders || "New"}</span>
+        </div>
+        <div className="flex flex-col gap-1 flex-shrink-0 min-w-max">
+          <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap"><MapPin size={12} className="hidden md:block"/> Delivery Radius</span>
+          <span className="font-['Manrope',_sans-serif] text-[14px] sm:text-[15px] font-sora font-semibold">{supplier.deliveryRadius || "Not Set"}</span>
+        </div>
+        <div className="flex flex-col gap-1 flex-shrink-0 min-w-max pr-2 md:pr-0">
+          <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5 whitespace-nowrap"><Truck size={12} className="hidden md:block"/> Est. Delivery</span>
+          <span className="font-['Manrope',_sans-serif] text-[14px] sm:text-[15px] font-sora font-semibold">{supplier.deliveryEstimate || "Standard"}</span>
+        </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 mt-0.5">
-        <div className="flex gap-2 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0 no-scrollbar items-center">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <div className="flex gap-2.5 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0 no-scrollbar items-center">
           {displaySubs.map((sub, idx) => (
-            <motion.div key={idx} whileHover={{ y: -2, scale: 1.05 }} className="relative border border-zinc-200 rounded-md overflow-hidden w-12 h-12 flex-shrink-0 group/prod cursor-pointer">
+            <motion.div key={idx} whileHover={{ y: -2 }} className="relative border border-slate-200 rounded-xl overflow-hidden w-12 h-12 flex-shrink-0 group/prod cursor-pointer shadow-sm">
               <img src={sub.image} alt={sub.name} className="w-full h-full object-cover transition-transform duration-300 group-hover/prod:scale-110" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover/prod:opacity-100 transition-opacity duration-200 flex items-center justify-center p-1">
-                <span className="text-[8px] text-white font-bold text-center leading-tight drop-shadow-md">{sub.name}</span>
+                <span className="text-[9px] text-white font-bold text-center leading-tight drop-shadow-md">{sub.name}</span>
               </div>
             </motion.div>
           ))}
-          {remainingCount > 0 && <div className="border border-dashed border-zinc-300 rounded-md w-12 h-12 flex items-center justify-center text-xs text-zinc-500 font-bold bg-zinc-50 flex-shrink-0 cursor-default">+{remainingCount}</div>}
-          {(!displaySubs || displaySubs.length === 0) && <span className="text-xs text-zinc-400 font-medium italic">No categories linked</span>}
+          {remainingCount > 0 && <div className="border border-dashed border-slate-300 rounded-xl w-12 h-12 flex items-center justify-center text-[12px] text-slate-500 font-extrabold bg-slate-50 flex-shrink-0 cursor-default">+{remainingCount}</div>}
+          {(!displaySubs || displaySubs.length === 0) && <span className="text-[12px] text-slate-400 font-medium italic">No categories linked</span>}
         </div>
-        <div className="flex items-center gap-2 w-full lg:w-auto">
+        
+        <div className="flex items-center gap-3 w-full lg:w-auto">
           <button 
             onClick={handleViewProfile}
-            className="flex-1 lg:flex-none inline-flex items-center justify-center px-4 py-2 bg-white text-zinc-700 text-sm font-medium rounded-md border border-zinc-200 shadow-sm hover:bg-zinc-50 transition-all duration-200"
+            className="flex-1 lg:flex-none inline-flex items-center justify-center px-5 py-2.5 bg-white text-[14px] font-sora font-medium rounded-xl border border-slate-200 shadow-sm hover:bg-slate-0 transition-all duration-200 active:scale-95 whitespace-nowrap "
           >
             View Profile
           </button>
           
           {connectStatus === 'PENDING' ? (
-            <button disabled className="flex-1 lg:flex-none inline-flex items-center justify-center px-4 py-2 bg-slate-100 text-slate-500 text-sm font-semibold rounded-md border border-slate-200 shadow-inner cursor-not-allowed">Requested</button>
+            <button disabled className="flex-1 lg:flex-none inline-flex items-center justify-center px-6 py-2.5 bg-slate-100 text-slate-500 text-[13px] font-bold rounded-xl border border-slate-200 shadow-inner cursor-not-allowed whitespace-nowrap">Requested</button>
           ) : connectStatus === 'CONNECTED' ? (
             <button 
               onClick={handleMessageClick}
-              className="flex-1 lg:flex-none inline-flex items-center justify-center px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-200 text-sm font-semibold rounded-md shadow-sm transition-all hover:bg-emerald-100">
+              className="flex-1 lg:flex-none inline-flex items-center justify-center px-6 py-2.5 bg-[#ECFDF3] text-[#067647] border border-[#DCFAE6] text-[13px] font-bold rounded-xl shadow-sm transition-all hover:bg-[#d1fadf] active:scale-95 whitespace-nowrap">
               <MessageSquare size={16} className="mr-2"/> Message
             </button>
           ) : (
-            <button onClick={handleConnect} disabled={isConnecting} style={{ background: CTA_GRAD }} className="flex-1 lg:flex-none inline-flex items-center justify-center px-4 py-2 text-white text-sm font-semibold rounded-md shadow-[0_2px_10px_0_rgb(244,63,94,0.2)] hover:shadow-[0_4px_15px_rgba(244,63,94,0.3)] transition-all disabled:opacity-70">
+            <button onClick={handleConnect} disabled={isConnecting} className="flex-1 lg:flex-none inline-flex items-center justify-center px-6 py-2.5 bg-black text-white text-[13px] font-bold rounded-xl shadow-md hover:bg-slate-800 transition-all active:scale-95 disabled:opacity-70 whitespace-nowrap">
               {isConnecting ? <Loader2 size={16} className="animate-spin" /> : "Connect"}
             </button>
           )}
@@ -200,37 +235,52 @@ const SellerCard = ({ supplier, index }) => {
 };
 
 const StickySellerMap = React.memo(({ center, sellers }) => {
+  const safeCenter = getSafeCenter(center);
+  const centerLat = safeCenter[0];
+  const centerLng = safeCenter[1];
+
+  // 🛡️ MOBILE CRASH FIX: Checks screen size and completely prevents Leaflet from mounting if hidden
+  const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // If on mobile/tablet, do not render Leaflet (solves 0x0 display:none NaN crash)
+  if (!isDesktop) return null;
+
   return (
-    <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }} className="w-full h-[calc(100vh-140px)] rounded-lg overflow-hidden border border-zinc-200 shadow-sm relative sticky top-[120px] group">
-      <MapContainer center={center} zoom={12} className="w-full h-full z-0" zoomControl={false} attributionControl={false}>
+    <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }} className="w-full h-[calc(100vh-140px)] rounded-[24px] overflow-hidden border border-slate-200 shadow-sm relative sticky top-[120px] group">
+      <MapContainer center={safeCenter} zoom={12} className="w-full h-full z-0" zoomControl={false} attributionControl={false}>
         <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-        <Marker position={center} icon={userIcon} />
-        <Circle center={center} radius={4000} pathOptions={{ color: '#2563EB', fillColor: '#2563EB', fillOpacity: 0.04, weight: 1.5 }} />
+        <Marker position={safeCenter} icon={userIcon} />
+        <Circle center={safeCenter} radius={4000} pathOptions={{ color: '#000000', fillColor: '#000000', fillOpacity: 0.04, weight: 1.5 }} />
         {sellers.map((seller, index) => {
-          const safeCenterLat = isNaN(center[0]) ? 13.0827 : center[0];
-          const safeCenterLng = isNaN(center[1]) ? 80.2707 : center[1];
-          const lat = safeCenterLat + (Math.sin(index) * 0.03);
-          const lng = safeCenterLng + (Math.cos(index) * 0.03);
+          // Guaranteed safe numbers
+          const lat = centerLat + (Math.sin(index) * 0.03);
+          const lng = centerLng + (Math.cos(index) * 0.03);
           
           return (
             <Marker key={seller.id} position={[lat, lng]} icon={createCustomIcon(seller)}>
-              <Popup className="rounded-md shadow-md border-none custom-popup-b2b">
-                <div className="p-2 min-w-[180px]">
-                  <h4 className="text-sm font-bold text-zinc-900 mb-0.5">{seller.name || "Business"}</h4>
-                  <p className="text-[11px] text-zinc-500 font-medium mb-2">{seller.category || "General"}</p>
-                  <div className="flex items-center justify-between border-t border-zinc-100 pt-2">
-                    <span className="text-xs font-semibold text-zinc-900">{seller.distance}</span>
-                    <span className="text-xs font-bold text-zinc-900 flex items-center gap-1"><Star size={10} className="fill-amber-400 text-amber-400" /> {seller.rating > 0 ? seller.rating : "New"}</span>
+              <Popup className="rounded-xl shadow-xl border-none custom-popup-b2b">
+                <div className="p-3 min-w-[200px]">
+                  <h4 className="font-['Manrope',_sans-serif] text-[15px] font-extrabold text-black mb-1 leading-tight">{seller.name || "Business"}</h4>
+                  <p className="font-['Inter',_sans-serif] text-[12px] text-slate-500 font-medium mb-3">{seller.category || "General"}</p>
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
+                    <span className="font-['Inter',_sans-serif] text-[12px] font-bold text-slate-600">{seller.distance}</span>
+                    <span className="font-['Inter',_sans-serif] text-[12px] font-bold text-black flex items-center gap-1.5"><Star size={12} className="fill-amber-400 text-amber-400" /> {seller.rating > 0 ? seller.rating : "New"}</span>
                   </div>
                 </div>
               </Popup>
             </Marker>
           );
         })}
-        <MapController center={center} />
+        <MapController center={safeCenter} />
       </MapContainer>
-      <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-md shadow-sm border border-zinc-200 transition-transform group-hover:scale-[1.02]">
-        <p className="text-xs font-semibold text-zinc-900 flex items-center gap-2"><span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>Live District Radar</p>
+      <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-xl shadow-md border border-slate-100 transition-transform group-hover:scale-[1.02]">
+        <p className="font-['Manrope',_sans-serif] text-[13px] font-extrabold text-black flex items-center gap-2.5"><span className="relative flex h-2.5 w-2.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#17B26A]"></span></span>Live District Radar</p>
       </div>
     </motion.div>
   );
@@ -248,10 +298,12 @@ export default function NearbySellerDiscoveryPage() {
   const [responseFilter, setResponseFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [currentDistrict, setCurrentDistrict] = useState("Chennai");
+  const [userRole, setUserRole] = useState("SHOPKEEPER");
 
   const [liveToast, setLiveToast] = useState(null);
 
   const mapCenter = useMemo(() => DISTRICT_CENTERS[currentDistrict] || DISTRICT_CENTERS["Chennai"], [currentDistrict]);
+
 
   useEffect(() => {
     fetchSellers();
@@ -298,7 +350,10 @@ export default function NearbySellerDiscoveryPage() {
 
       const response = await networkApi.getNearbySellers(params);
       let fetchedData = response.data?.data || [];
-      
+      const fetchedRole = response.data.userRole || 'SHOPKEEPER';
+
+      setUserRole(response.data.userRole);
+
       setSuppliers(fetchedData);
       
       if (fetchedData.length > 0) {
@@ -310,71 +365,98 @@ export default function NearbySellerDiscoveryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]" style={{ fontFamily: "'Inter', sans-serif" }}>
-      <AnimatePresence>
-        <LiveToast notification={liveToast} onClose={() => setLiveToast(null)} />
-      </AnimatePresence>
-
-      <div className="pb-4 md:pb-5 w-full flex flex-col md:flex-row md:items-end justify-between gap-3 md:gap-4 border-b border-zinc-200 bg-white px-4 md:px-6">
-        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4 }}>
-          <h1 className="text-xl md:text-2xl font-bold text-zinc-900 tracking-tight flex items-center gap-2"><Building2 size={24} className="text-[#F43F5E]" /> District Discovery Network</h1>
-          <div className="flex flex-wrap items-center gap-2 mt-2 text-xs md:text-sm text-zinc-500 font-medium"><span className="flex items-center gap-1"><MapPin size={14} className="text-[#F43F5E]" /> {currentDistrict} Zone</span><span className="hidden md:inline">•</span><span className="bg-zinc-50 px-2 py-0.5 border border-zinc-100 rounded-md">Smart Proximity</span><span className="hidden md:inline">•</span><span className="text-zinc-700 font-semibold">{suppliers.length} Partners</span></div>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.1 }} className="flex flex-wrap items-center gap-2">
-          {["Electronics", "Packaging", "Hardware", "Textiles"].map((cat) => (
-            <span key={cat} onClick={() => setCategoryFilter(cat)} className="px-3 py-1 bg-zinc-50 border border-zinc-200 text-zinc-600 text-xs font-medium rounded-full cursor-pointer hover:bg-[#FDF2F8] hover:text-[#F43F5E] hover:border-[#FBCFE8] transition-all duration-200 shadow-sm">{cat}</span>
-          ))}
-        </motion.div>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-3 items-center justify-between py-3 px-4 md:px-6 bg-white border-b border-zinc-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/90">
-        <div className="relative w-full lg:max-w-md flex-shrink-0 group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-[#F43F5E] transition-colors" size={16} />
-          <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search sellers, products, categories..." className="w-full pl-9 pr-4 py-2 bg-zinc-50 border border-zinc-200 rounded-md text-sm text-zinc-900 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#F43F5E] focus:border-[#F43F5E] transition-all shadow-inner" />
-        </div>
-        
-        {/* 🚀 FILTERS RESTORED HERE */}
-        <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto overflow-x-auto no-scrollbar pb-1 lg:pb-0">
-          <button className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 text-white text-sm font-medium rounded-md shadow-sm hover:bg-zinc-800 flex-shrink-0 transition-colors">
-            <SlidersHorizontal size={14} /> Filters
-          </button>
-          <div className="h-5 w-px bg-zinc-200 hidden lg:block mx-1"></div>
-          <FilterDropdown label="Category" value={categoryFilter} onChange={setCategoryFilter} options={[{value:'Electronics', label:'Electronics'}, {value:'Packaging', label:'Packaging'}, {value:'Groceries', label:'Groceries'}]} />
-          <FilterDropdown label="Distance" value={distanceFilter} onChange={setDistanceFilter} options={[{value:'10', label:'< 10 km'}, {value:'25', label:'< 25 km'}, {value:'50', label:'< 50 km'}]} />
-          <FilterDropdown label="Verified" value={verifiedFilter} onChange={setVerifiedFilter} options={[{value:'yes', label:'Verified Only'}]} />
-          <FilterDropdown label="Rating" value={ratingFilter} onChange={setRatingFilter} options={[{value:'4', label:'4.0+ Rating'}, {value:'4.5', label:'4.5+ Rating'}]} />
-          <FilterDropdown label="Response Time" value={responseFilter} onChange={setResponseFilter} options={[{value:'< 1 hr', label:'< 1 Hour'}, {value:'< 24 hrs', label:'< 24 Hours'}]} />
-        </div>
-      </div>
-
-      <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-4 md:py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="w-full lg:w-[65%] xl:w-[70%]">
-            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <h2 className="text-lg font-bold text-zinc-900 flex items-center gap-1.5">Found <span className="text-[#F43F5E]">{suppliers.length}</span> partners</h2>
-            </div>
-            
-            <div className="flex flex-col relative min-h-[300px]">
-              {isLoading ? (
-                <div className="absolute inset-0 z-10 bg-[#FAFAFA]/80 backdrop-blur-sm flex items-center justify-center"><Loader2 className="w-10 h-10 text-[#F43F5E] animate-spin" /></div>
-              ) : error ? (
-                <div className="flex items-center justify-center py-20 text-red-500"><AlertCircle className="mr-2"/> {error}</div>
-              ) : null}
-              
-              <AnimatePresence>
-                {suppliers.map((supplier, index) => (
-                  <SellerCard key={supplier.id} supplier={supplier} index={index} />
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
-          <div className="hidden lg:block lg:w-[35%] xl:w-[30%] relative">
-            <StickySellerMap center={mapCenter} sellers={suppliers} />
-          </div>
-        </div>
-      </div>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: typographyStyles }} />
       
-      <style dangerouslySetInnerHTML={{__html: `.custom-popup-b2b .leaflet-popup-content-wrapper { border-radius: 8px; padding: 0; box-shadow: 0 4px 12px -2px rgba(0,0,0,0.1); border: 1px solid #E4E4E7; overflow: hidden; } .custom-popup-b2b .leaflet-popup-content { margin: 0; font-family: 'Inter', sans-serif; } .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}} />
-    </div>
+      <div className="bg-[#FAFAFA] font-['Inter',_sans-serif] text-[#0F1626] min-h-screen pb-24">
+        <AnimatePresence>
+          <LiveToast notification={liveToast} onClose={() => setLiveToast(null)} />
+        </AnimatePresence>
+
+        <div className="py-5  md:py-4 w-full flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 bg-white px-4 md:px-5">
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+       <h1 className="flex items-center gap-3 text-[24px] sm:text-[32px] font-extrabold tracking-tight text-gray-900">
+         {userRole === "SHOPKEEPER"
+           ? "Nearby Suppliers"
+           : "Nearby Buyers"}
+       </h1>
+       
+       <p className="mt-1 text-[13px] sm:text-[15px] font-medium text-slate-500">
+         {userRole === "SHOPKEEPER"
+           ? "Discover verified wholesalers and distributors near your location."
+           : "Connect with verified shopkeepers in your region."}
+       </p>
+        </motion.div>
+          <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.1 }} className="flex flex-wrap items-center gap-2.5">
+            {["Electronics", "Packaging", "Hardware", "Textiles"].map((cat) => (
+              <span key={cat} onClick={() => setCategoryFilter(cat)} className={`hidden lg:block px-4 py-1.5 border text-[13px] font-sora rounded-full cursor-pointer transition-all duration-200 shadow-sm ${categoryFilter === cat ? 'bg-black text-white border-black' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-black'}`}>
+                {cat}
+              </span>
+            ))}
+          </motion.div>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-4 items-center justify-between py-4 px-4 md:px-6 bg-white border-b border-slate-200">
+          <div className="relative w-full lg:max-w-md flex-shrink-0 group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-black transition-colors" size={18} strokeWidth={2} />
+            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search sellers, products, categories..." className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[14px] font-sora text-black placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-all shadow-sm" />
+          </div>
+          
+          <div className="flex items-center gap-2 md:gap-3 w-full lg:w-auto overflow-x-auto no-scrollbar pb-1 lg:pb-0">
+            <button className="flex items-center gap-2 px-4 py-2 bg-black text-white text-[14px] font-sora rounded-xl shadow-md hover:bg-slate-800 flex-shrink-0 transition-colors active:scale-95">
+              <SlidersHorizontal size={14} /> Filters
+            </button>
+            <FilterDropdown label="Category" value={categoryFilter} onChange={setCategoryFilter} options={[{value:'Electronics', label:'Electronics'}, {value:'Packaging', label:'Packaging'}, {value:'Groceries', label:'Groceries'}]} />
+            <FilterDropdown label="Distance" value={distanceFilter} onChange={setDistanceFilter} options={[{value:'10', label:'< 10 km'}, {value:'25', label:'< 25 km'}, {value:'50', label:'< 50 km'}]} />
+            <FilterDropdown label="Verified" value={verifiedFilter} onChange={setVerifiedFilter} options={[{value:'yes', label:'Verified Only'}]} />
+            <FilterDropdown label="Rating" value={ratingFilter} onChange={setRatingFilter} options={[{value:'4', label:'4.0+ Rating'}, {value:'4.5', label:'4.5+ Rating'}]} />
+            <FilterDropdown label="Response" value={responseFilter} onChange={setResponseFilter} options={[{value:'< 1 hr', label:'< 1 Hour'}, {value:'< 24 hrs', label:'< 24 Hours'}]} />
+          </div>
+        </div>
+
+        <div className="max-w-[1440px] mx-auto px-4 md:px-6 py-3 sm:py-3">
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-5">
+            <div className="w-full lg:w-[60%] xl:w-[70%]">
+              <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h2 className="text-[18px] sm:text-[20px] font-sora font-medium text-slate-800 flex items-center gap-1.5">
+                  Found <span className="text-black text-[20px]">{suppliers.length}</span> partners
+                </h2>
+              </div>
+              
+              <div className="flex flex-col relative min-h-[300px]">
+                {isLoading ? (
+                  <div className="absolute inset-0 z-10 bg-[#FAFAFA]/80 backdrop-blur-sm flex items-center justify-center rounded-[24px]"><Loader2 className="w-10 h-10 text-black animate-spin" /></div>
+                ) : error ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-rose-500 bg-white border border-rose-200 rounded-[24px] shadow-sm p-8 text-center">
+                    <AlertCircle className="w-12 h-12 mb-4"/> 
+                    <h3 className="font-['Manrope',_sans-serif] text-[18px] font-extrabold text-black mb-2">Connection Error</h3>
+                    <p className="text-[14px] text-slate-500 font-medium">{error}</p>
+                  </div>
+                ) : suppliers.length === 0 ? (
+                   <div className="flex flex-col items-center justify-center py-20 bg-white border border-slate-200 rounded-[24px] shadow-sm p-8 text-center">
+                    <Search className="w-12 h-12 mb-4 text-slate-300"/> 
+                    <h3 className="font-['Manrope',_sans-serif] text-[18px] font-extrabold text-black mb-2">No partners found</h3>
+                    <p className="text-[14px] text-slate-500 font-medium">Try adjusting your filters or searching a different area.</p>
+                  </div>
+                ) : null}
+                
+                <AnimatePresence>
+                  {suppliers.map((supplier, index) => (
+                    <SellerCard key={supplier.id} supplier={supplier} index={index} />
+                  ))}
+                </AnimatePresence>
+              </div>
+            </div>
+            <div className="hidden lg:block lg:w-[40%] xl:w-[30%] relative">
+              <StickySellerMap center={mapCenter} sellers={suppliers} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

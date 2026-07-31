@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { WHY_FEATURES } from '../data';
-import { fadeUp, lift, SHADOW, C, FONT_DISPLAY } from '../common/constants';
+import { fadeUp, lift, SHADOW, C, FONT_DISPLAY } from '../../Layout/common/constants';
 
 export default function WhyStockLinkers() {
   return (

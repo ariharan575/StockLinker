@@ -96,7 +96,7 @@ export default function ProductShowcasePlaceholder() {
   const handleMouseMove = useCallback((e) => {
     // Disable on touch devices to prevent lag
     if (window.innerWidth < 1024) return;
-    
+  
     // Throttle updates via RequestAnimationFrame
     if (requestRef.current) return;
     

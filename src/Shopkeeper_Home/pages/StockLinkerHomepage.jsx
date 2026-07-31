@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Header, Sidebar, Footer } from '../layout';
+import React from 'react';
+import MainLayout from '../../Layout/MainLayout'; // Adjust the import path if necessary
 import {
   Hero,
   QuickActions,
@@ -11,41 +11,40 @@ import {
   TrustedSuppliers,
   WhyStockLinkers
 } from '../sections';
-import { C, FONT_BODY } from '../common/constants';
+import Footer from '../../Layout/Footer';
 
 export default function StockLinkerHomepage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeNav, setActiveNav] = useState('home');
-
   return (
-    <div style={{ backgroundColor: C.page, minHeight: '100vh', fontFamily: FONT_BODY, color: C.body }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
-        * { -webkit-font-smoothing: antialiased; }
-        ::selection { background: ${C.bLight}; color: ${C.brand}; }
-        :focus-visible { outline: none }
-        @media (prefers-reduced-motion: reduce) {
-          *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-        }
-      `}</style>
 
-      <Header open={sidebarOpen} setOpen={setSidebarOpen} />
-      <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} active={activeNav} setActive={setActiveNav} />
-
-      <div className="pt-16 lg:pl-60">
-        <main className="px-4 md:px-6 lg:px-8 py-3.5" style={{ maxWidth: 1400, margin: '0 auto' }}>
-          <Hero />
-          <QuickActions />
-          <Categories />
-          <PriceComparison />
-          <FeaturedComparisons />
-          <NearbySellers />
-          <ReorderSection />
-          <TrustedSuppliers />
-          <WhyStockLinkers />
-        </main>
-        <Footer />
+    <>
+            <style>{`
+              @import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+              * { -webkit-font-smoothing: antialiased; }
+              :focus-visible { outline: none }
+              @media (prefers-reduced-motion: reduce) {
+                *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+              }
+            `}</style>
+   
+    <MainLayout 
+      activeNav="home"
+      maxWidth={1400}
+      contentPadding="px-3 py-3.5"
+    >
+      <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+        <Hero />
+        <QuickActions />
+        <Categories />
+        <PriceComparison />
+        <FeaturedComparisons />
+        <NearbySellers />
+        <ReorderSection />
+        <TrustedSuppliers />
+        <WhyStockLinkers />
+        <Footer/>
       </div>
-    </div>
+    </MainLayout>
+
+   </> 
   );
 }

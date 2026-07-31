@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Store, Camera, ShieldCheck, Pencil, Save, Monitor, TabletSmartphone, CheckCircle2, Loader2 } from "lucide-react";
+import { Store, ShieldCheck, Pencil, Save, Monitor, TabletSmartphone, CheckCircle2, Loader2 } from "lucide-react";
 import { SectionBox } from "../components/layout/SectionBox";
 import { DetailItem } from "../components/cards/DetailItem";
 import { EditableDetailItem } from "../components/cards/EditableDetailItem";
@@ -14,14 +14,19 @@ export function AccountSection({ editedData, handleFieldChange, isEditing, isSav
       </motion.button>
     }>
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative">
-            <div className="flex h-28 w-28 items-center justify-center rounded-[30px] bg-gradient-to-br from-sky-500 via-pink-500 to-rose-500 text-white shadow-[0_30px_60px_rgba(236,72,153,0.35)]"><Store size={40} /></div>
-            <button className="absolute -bottom-2 -right-2 flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-zinc-900 cursor-pointer hover:scale-105 transition-transform shadow-sm"><Camera size={17} /></button>
+        {/* Updated Layout: Flex-row forces text to the right on all screens */}
+        <div className="flex flex-row items-center gap-4 sm:gap-5">
+          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative shrink-0">
+            {/* Updated Dimensions & Colors: Size 18 on mobile, 28 on desktop, soft black background */}
+            <div className="flex h-18 w-18 md:h-28 md:w-28 items-center justify-center rounded-[20px] md:rounded-[30px] bg-zinc-800 text-white shadow-[0_20px_40px_rgba(39,39,42,0.3)]">
+              <Store className="h-8 w-8 md:h-10 md:w-10" />
+            </div>
           </motion.div>
           <div>
-            <div className="flex flex-wrap items-center gap-3"><h2 className="text-3xl md:text-4xl font-black text-zinc-900">{editedData.companyName || "Your Business"}</h2></div>
-             <p className="mt-2 text-sm text-zinc-500 capitalize">Premium {editedData.role?.toLowerCase() || "user"} Partner</p> 
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-2xl md:text-[31px] font-black text-zinc-800">{editedData.companyName || "Your Business"}</h2>
+            </div>
+             <p className="mt-1 md:mt-2 text-sm text-zinc-500 capitalize">Premium {editedData.role?.toLowerCase() || "user"} Partner</p> 
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -57,4 +62,4 @@ export function AccountSection({ editedData, handleFieldChange, isEditing, isSav
       </div>
     </SectionBox>
   );
-}
+} 

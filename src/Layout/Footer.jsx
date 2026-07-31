@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaGithub, FaLinkedin, FaInstagram } from 'react-icons/fa';
-import { SKY_300 } from '../common/constants';
+import { SKY_300 } from './common/constants';
 
 const FOOTER_COLS = [
   { head: 'Categories', links: ['Grocery','Beverages','Dairy','Hardware','Medical','Packaging'] },

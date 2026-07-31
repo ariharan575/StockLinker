@@ -2,21 +2,14 @@
 import React from "react";
 import MainLayout from "../Layout/MainLayout";
 import MessagePage from "./pages/Messenger";
-import { C } from "../Shopkeeper_Home/common";
+import { C } from "../Layout/common/constants";
 
 export default function MessagePageWrapper() {
-  const breadcrumbItems = [
-    { label: "Home", path: "/" },
-    { label: "Messages", path: "/messages" },
-    { label: "Inbox", isCurrent: true }
-  ];
 
   return (
     <MainLayout 
       activeNav="messages"
-      breadcrumbItems={breadcrumbItems}
-      showBreadcrumb={true}
-      contentPadding="px-0 py-4" 
+      contentPadding="px-0" 
       maxWidth="100%" // Full width
       customStyles={{
         overflow: "hidden",
@@ -35,7 +28,7 @@ export default function MessagePageWrapper() {
           margin: "0 auto",
           display: "flex",
           flexDirection: "column",
-          padding: "8px 1px",
+          padding: "5px",
           // On larger screens, add padding
           paddingLeft: "calc(16px + 0rem)",
           paddingRight: "calc(16px + 0rem)",

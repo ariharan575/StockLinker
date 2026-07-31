@@ -153,7 +153,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 30, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 1.2, ease: easePremium, delay: 0.1 }}
-            className="text-[44px] sm:text-[60px] md:text-[72px] xl:text-[80px] font-black tracking-[-0.04em] text-[#0F172A] leading-[0.93] uppercase will-change-transform translate-z-0"
+            className="text-[44px] sm:text-[60px] md:text-[72px] xl:text-[72px] font-black tracking-[-0.02em] text-[#0F172A] leading-[0.93] uppercase will-change-transform translate-z-0"
           >
             Connect.<br/>
             Compare.<br/>

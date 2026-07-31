@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Star, Navigation, Phone, MessageSquare, Clock, CheckCircle, AlertCircle, MapPin, UserPlus } from 'lucide-react';
-import { SectionHead } from '../common';
+import { SectionHead } from '../../Layout/common';
 import { networkApi } from '../Services/api';
-import { fadeUp, CTA_GRAD, C } from '../common/constants';
+import { fadeUp, CTA_GRAD, C } from '../../Layout/common/constants';
 
 export default function NearbySellers() {
   const navigate = useNavigate();

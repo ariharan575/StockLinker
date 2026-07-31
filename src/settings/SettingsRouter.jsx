@@ -28,22 +28,15 @@ export default function SettingsRouter() {
     navigate(sectionPaths[section]);
   };
 
-  const breadcrumbItems = [
-    { label: "Home", path: "/" },
-    { label: "Settings", path: "/settings" },
-    { label: activeSettingsSection, isCurrent: true }
-  ];
-
   return (
     <MainLayout 
       activeNav="settings"
-      breadcrumbItems={breadcrumbItems}
       maxWidth={1500}
-      pageBackground="#F8FAFC"
-      breadcrumbBackground="#F8FAFC"
-      breadcrumbBorder="#e2e8f0"
+      pageBackground="#FAFAFA" /* Slightly softer premium white/gray */
+      breadcrumbBackground="#FAFAFA"
+      breadcrumbBorder="#F1F5F9" /* Lighter slate border */
       contentPadding=""
-      customStyles={{ backgroundColor: "#F8FAFC" }}
+      customStyles={{ backgroundColor: "#FAFAFA" }}
     >
       <SettingsPage 
         activeSection={activeSettingsSection}

@@ -7,7 +7,7 @@ import PrivateRoute from './Authentication/components/PrivateRoute'; // Adjust p
 import PublicRoute from './Authentication/components/PublicRoute';   // Adjust path if needed
 
 // --- Auth Pages ---
-import SaaSAuthUI from './Authentication/pages/Loginx';
+import Login from './Authentication/pages/Loginx';
 import OAuthSuccess from './Authentication/pages/OAuthSuccess';
 import RoleSelectionPage from './Authentication/pages/RoleSelection';
 import StockLinkerEnterpriseOnboarding from './Onboarding/StockLinkerEnterpriseOnboarding';
@@ -62,7 +62,7 @@ function App() {
             path="/login"
             element={
               <PublicRoute>
-                <SaaSAuthUI />
+                <Login />
               </PublicRoute>
             }
           />
@@ -78,7 +78,6 @@ function App() {
           {/* ✅ PRIVATE ROUTES (Accessible ONLY if logged in) */}
           {/* ========================================================= */}
 
-          {/* Authentication & Onboarding Flows */}
           <Route path="/role-selection" element={<PrivateRoute><RoleSelectionPage /></PrivateRoute>} />
           
           <Route path="/onboarding" element={
@@ -86,6 +85,8 @@ function App() {
               <StockLinkerEnterpriseOnboarding />
              </PrivateRoute> 
             } />
+
+
 
           {/* Main Application Routes */}
           <Route path="/dashboard" element={<PrivateRoute><StockLinkerHomepage /></PrivateRoute>} />
@@ -95,7 +96,6 @@ function App() {
           <Route path="/nearby" element={<PrivateRoute><NearbySellerWrapper /></PrivateRoute>} />
           <Route path="/message" element={<PrivateRoute><MessagePageWrapper /></PrivateRoute>} />
           
-          {/* ⬇️ THIS IS CORRECT: React Router handles ?id= automatically here */}
           <Route path="/category" element={<PrivateRoute><ProductCategoryWrapper /></PrivateRoute>} />
           
           <Route path="/orders" element={<PrivateRoute><OrdersWrapper /></PrivateRoute>} />

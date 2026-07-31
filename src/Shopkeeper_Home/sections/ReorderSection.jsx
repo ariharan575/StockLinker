@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
-import { SectionHead } from '../common';
+import { SectionHead } from '../../Layout/common';
 import { orderApi } from '../Services/api';
-import { fadeUp, EASE, CTA_GRAD } from '../common/constants';
+import { fadeUp, EASE, CTA_GRAD } from '../../Layout/common/constants';
 
 export default function ReorderSection() {
   const navigate = useNavigate();

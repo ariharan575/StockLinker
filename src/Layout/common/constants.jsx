@@ -1,19 +1,11 @@
 // ─── DESIGN TOKENS ──────────────────────────────────────────────────
 export const C = {
-  brand:   '#EC4899',   // Pink-500 — primary identity accent
-  brandH:  '#DB2777',   // Pink-600 hover
-  bLight:  '#FCE7F3',   // Pink-100 tint
-  bMid:    '#FBCFE8',   // Pink-200
-  green:   '#0EA5E9',   // Sky-500 — secondary accent
-  greenH:  '#0284C7',   // Sky-600 hover
-  gLight:  '#E0F2FE',   // Sky-100 tint
-  page:    '#FAFAFA',   // Outer page bg
-  card:    '#FFFFFF',   // Card / container
-  head:    '#121214',   // Heading text
-  body:    '#52525B',   // Body text
-  muted:   '#A1A1AA',   // Muted text
-  bdr:     '#E4E4E7',   // Border
-  sub:     '#F4F4F5',   // Section divider
+  body: '#1C1C1C', // Near Black
+  page: '#F9FAFB', // Primary Background (Soft Gray)
+  card: '#FFFFFF', // White
+  bdr: '#F3F4F6', // Very Light Gray
+  textSec: '#6B7280', // Secondary Text (Gray)
+  head: '#111827', // Near Black
 };
 
 // Primary CTA gradient
@@ -22,21 +14,27 @@ export const SIDEBAR_GRAD = 'linear-gradient(to bottom, #132238, #17304d, #1b1b3
 export const SKY_300 = '#7DD3FC';
 export const SKY_400 = '#38BDF8';
 
+
+export const FONT_BODY = "'Inter', system-ui, -apple-system, sans-serif";
+
+// export const CTA_GRAD = "linear-gradient(to right, #000000, #374151, #EC4899, #F97316)";
+export const ACTIVE_GRAD_CLASSES = "bg-gradient-to-br from-gray-900 via-gray-800 to-pink-500";
+export const TEXT_GRAD_CLASSES = "bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-700 to-pink-500";
+
+
 // ─── TYPE SYSTEM ─────────────────────────────────────────────────────
 export const FONT_DISPLAY = "'Sora', 'Inter', sans-serif";
-export const FONT_BODY    = "'Inter', sans-serif";
+// export const FONT_BODY    = "'Inter', sans-serif";
 export const FONT_MONO    = "'JetBrains Mono', 'Menlo', monospace";
 
 export const SMOOTH_EASE = [0.16, 1, 0.3, 1];
 
 // ─── ELEVATION SYSTEM ────────────────────────────────────────────────
-export const SHADOW = {
-  xs:   '0 1px 2px rgba(18,18,20,0.05)',
-  sm:   '0 2px 8px rgba(18,18,20,0.05), 0 1px 2px rgba(236,72,153,0.04)',
-  md:   '0 8px 24px rgba(18,18,20,0.07), 0 2px 8px rgba(236,72,153,0.05)',
-  lg:   '0 20px 48px rgba(18,18,20,0.12), 0 4px 16px rgba(236,72,153,0.08)',
-  glow: '0 10px 30px rgba(236,72,153,0.35), 0 4px 14px rgba(249,115,22,0.20)',
-  navy: '0 20px 50px rgba(19,34,56,0.35)',
+export const SHADOW = { 
+  sm: '0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+  md: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+  lg: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02)',
+  premium: '0 8px 30px rgba(0, 0, 0, 0.08)'
 };
 
 // ─── MOTION SYSTEM ────────────────────────────────────────────────────
