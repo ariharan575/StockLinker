@@ -96,14 +96,14 @@ export default function Hero() {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: EASE }}
-      className="relative w-full mb-4 sm:mb-6 md:mb-8 z-20 flex"
+      className="relative w-full mb-2 sm:mb-6 md:mb-8 z-20 flex"
     >
       {/* 
         Responsive Container 
         Mobile (< 768px): Transparent/White, NO borders, perfectly flat.
         Tablet & Desktop (md+): Fixed height, rounded bordered container with shadow.
       */}
-      <div className="relative w-full md:h-[260px] lg:h-[300px] md:bg-white md:rounded-[24px] lg:rounded-[32px] md:border border-slate-200 md:shadow-[0_8px_30px_rgba(15,23,42,0.04)] overflow-visible md:overflow-hidden flex">
+      <div className="relative w-full md:h-[260px] lg:h-[280px] md:bg-white md:rounded-[24px] lg:rounded-[32px] md:border border-slate-200 md:shadow-[0_8px_30px_rgba(15,23,42,0.04)] overflow-visible md:overflow-hidden flex">
         
         {/* RIGHT COLUMN IMAGE (Visible on Tablet and Desktop) */}
         <div className="hidden md:flex absolute right-0 top-0 w-[45%] h-full items-center justify-center p-3 sm:p-4 z-0 pointer-events-none overflow-hidden rounded-r-[24px] lg:rounded-r-[32px]">
@@ -120,13 +120,13 @@ export default function Hero() {
         </div>
 
         {/* FOREGROUND CONTENT */}
-        <div className="relative z-30 flex h-full w-full pointer-events-none px-2 sm:px-4 md:px-8 lg:px-12 py-2 sm:py-4 md:py-0">
+        <div className="relative z-30 flex h-full w-full pointer-events-none px-2 sm:px-4 md:px-8 lg:px-8 py-4 sm:py-2 md:py-0">
           
           {/* LEFT COLUMN: Text and Search */}
           <div className="w-full md:w-[65%] lg:w-[55%] h-full flex flex-col justify-center pointer-events-auto">
             
             {/* 1. INLINE GREETING & NAME */}
-            <h1 className="text-[22px] xs:text-[24px] sm:text-[28px] md:text-[32px] lg:text-[38px] font-sora font-bold text-slate-900 leading-tight flex items-center flex-wrap gap-x-1.5 sm:gap-x-2">
+            <h1 className="text-[23px] xs:text-[24px] sm:text-[28px] md:text-[30px] lg:text-[25px] xl:text-[36px] font-sora font-bold text-slate-900 leading-tight flex items-center flex-wrap gap-x-1.5 sm:gap-x-2">
               Welcome back,
               <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
                 {ownerName}
@@ -135,15 +135,14 @@ export default function Hero() {
             </h1>
 
             {/* 2. SINGLE LINE DESCRIPTION */}
-            <p className="mt-1 sm:mt-1.5 md:mt-2.5 text-[12px] sm:text-[13px] md:text-[14px] lg:text-[15px] text-slate-500 font-inter font-medium leading-relaxed max-w-[95%] md:max-w-[480px]">
-                Discover verified Wholesaler, Compare prices instanstly, and manage every purchase from one intelligent sourcing platform  
-            </p>
+            <p className="mt-1 sm:mt-1.5 md:mt-2.5 text-[13px] sm:text-[13px] md:text-[14px] lg:text-[15px] text-slate-500 font-inter font-medium leading-relaxed max-w-[95%] md:max-w-[480px]">
+                Discover verified Wholesaler, Compare prices instanstly, and track order and grow your business           </p>
 
             {/* 3. SEARCH BAR CONTAINER */}
             <div className="relative mt-5 sm:mt-6 md:mt-7 w-full max-w-full md:max-w-[480px] lg:max-w-[550px] z-50" ref={dropdownRef}>
               <motion.div 
                 whileHover={{ y: -1 }} 
-                className={`flex items-center w-full h-[48px] sm:h-[52px] md:h-[56px] rounded-[14px] sm:rounded-full bg-white border shadow-[0_4px_20px_rgb(0,0,0,0.05)] transition-all duration-300 relative z-50 ${showDropdown ? 'border-pink-300 ring-4 ring-pink-500/10' : 'border-slate-200 hover:border-pink-200'}`}
+                className={`flex items-center w-full h-[44px] sm:h-[52px] md:h-[56px] rounded-[14px] sm:rounded-full bg-white border shadow-[0_4px_20px_rgb(0,0,0,0.05)] transition-all duration-300 relative z-50 ${showDropdown ? 'border-pink-300 ring-4 ring-pink-500/10' : 'border-slate-200 hover:border-pink-200'}`}
               >
                 <Search className="ml-3 sm:ml-5 w-4 h-4 sm:w-[18px] sm:h-[18px] text-slate-400 shrink-0" strokeWidth={2.5}/>
                 <input 

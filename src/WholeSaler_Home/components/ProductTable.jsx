@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { productApi } from '../services/api';
-import { Search, ChevronDown, Trash2, Plus } from 'lucide-react';
+import { Search, ChevronDown, Trash2, Plus, Info } from 'lucide-react';
 import SectionHeader from "./SectionHeader";
 
 const UNITS = ["Kg", "Litre", "Gram", "Ml", "Bag", "Tin", "Piece", "Box", "Carton", "Dozen"];
@@ -19,12 +19,39 @@ const createEmptyRow = () => ({
 });
 
 export default function WholesaleProductWorkspace() {
-  const [products, setProducts] = useState([createEmptyRow(), createEmptyRow()]);
+  // Start with empty array, we will strictly enforce 1 or 3 rows on mount
+  const [products, setProducts] = useState([]);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [activeSearchRow, setActiveSearchRow] = useState(null);
   const workspaceRef = useRef(null);
+
+  // 🚀 STRICT ROW ENFORCEMENT ON MOUNT
+  // Laptop/Desktop (>= 1024px) gets 3 rows. Mobile/Tablet gets 1 row.
+  useEffect(() => {
+    const handleInitialRows = () => {
+      if (window.innerWidth >= 1024) {
+        setProducts([createEmptyRow(), createEmptyRow(), createEmptyRow()]);
+      } else {
+        setProducts([createEmptyRow()]);
+      }
+    };
+    
+    // Set initially
+    handleInitialRows();
+
+    // Optional: if you test by resizing the browser, this ensures it adjusts
+    // (Only triggers if the array is empty or hasn't been modified yet)
+    const handleResize = () => {
+      if (products.every(p => !p.productName && !p.brand)) {
+        handleInitialRows();
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleKeyDown = useCallback((e) => {
     if (e.key === "Enter") {
@@ -119,8 +146,15 @@ export default function WholesaleProductWorkspace() {
         price: Number(p.price), bulkDealQuantity: p.bulkQty ? Number(p.bulkQty) : null, bulkDealPrice: p.bulkPrice ? Number(p.bulkPrice) : null, availableStock: Number(p.stock)
       }));
       await productApi.saveBulkProducts(payload);
-      setProducts([createEmptyRow(), createEmptyRow()]);
-      alert("Catalog updated.");
+      
+      // Reset back to strict rules after save: 3 rows for desktop, 1 for mobile
+      if (window.innerWidth >= 1024) {
+        setProducts([createEmptyRow(), createEmptyRow(), createEmptyRow()]);
+      } else {
+        setProducts([createEmptyRow()]);
+      }
+      
+      alert("Catalog updated successfully.");
     } catch (error) {
       alert(`Error: ${error.message}`);
     } finally {
@@ -128,42 +162,73 @@ export default function WholesaleProductWorkspace() {
     }
   };
 
+  // Prevent render until initial rows are set
+  if (products.length === 0) return null;
+
   return (
     <div className="w-full font-inter" onKeyDown={handleKeyDown} ref={workspaceRef}>
-      <SectionHeader title="Inventory Updates" subtitle="Add or modify bulk products quickly" />
+      <div className="px-1 sm:px-2 md:px-0">
+        <SectionHeader title="Inventory Updates" subtitle="Add or modify bulk products quickly" />
+      </div>
 
-      <div className="mt-6 w-full overflow-x-auto no-scrollbar border border-gray-200 rounded-xl">
-        <div className="min-w-[900px]">
-          {/* Table Header */}
-          <div className="grid grid-cols-[2fr_1.2fr_1.2fr_1fr_1.5fr_1fr_60px] gap-0 bg-gray-50 border-b border-gray-200 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
-            <div className="py-3 px-4">Product Search</div>
-            <div className="py-3 px-4 border-l border-gray-200">Brand</div>
-            <div className="py-3 px-4 border-l border-gray-200">Min & Unit</div>
-            <div className="py-3 px-4 border-l border-gray-200">Rate (₹)</div>
-            <div className="py-3 px-4 border-l border-gray-200">Bulk Deal</div>
-            <div className="py-3 px-4 border-l border-gray-200">Stock</div>
-            <div className="py-3 px-4 border-l border-gray-200 text-center">Act</div>
+      <div className="mt-2 lg:mt-6 w-full mx-1 sm:mx-2 md:mx-0 pr-2 sm:pr-4 md:pr-0 mb-3">
+        <div className="bg-white border border-slate-300/50 rounded-[16px] lg:rounded-[5px] shadow-sm overflow-hidden flex flex-col">
+          
+          {/* ========================================================= */}
+          {/* DESKTOP TABLE HEADER (Hidden on Mobile/Tablet)            */}
+          {/* ========================================================= */}
+          <div className="hidden lg:grid grid-cols-[2.5fr_1.2fr_1.2fr_1fr_1.8fr_1fr_60px] bg-slate-100 border-b border-slate-200 text-[11px] font-sora font-bold uppercase tracking-widest text-slate-500">
+            <div className="py-3.5 px-5">Product Search</div>
+            <div className="py-3.5 px-4 border-l border-slate-200">Brand</div>
+            <div className="py-3.5 px-4 border-l border-slate-200">Min & Unit</div>
+            <div className="py-3.5 px-4 border-l border-slate-200">Rate (₹)</div>
+            <div className="py-3.5 px-4 border-l border-slate-200">Bulk Deal</div>
+            <div className="py-3.5 px-4 border-l border-slate-200">Stock</div>
+            <div className="py-3.5 px-0 border-l border-slate-200 text-center">Act</div>
           </div>
 
-          {/* Rows */}
-          <div className="divide-y divide-gray-100 bg-white">
-            {products.map((row) => (
-              <div key={row.id} className="grid grid-cols-[2fr_1.2fr_1.2fr_1fr_1.5fr_1fr_60px] gap-0 hover:bg-gray-50/50 transition-colors">
+          {/* ========================================================= */}
+          {/* ROWS CONTAINER                                            */}
+          {/* ========================================================= */}
+          <div className="divide-y divide-slate-100 bg-white">
+            {products.map((row, index) => (
+              <div 
+                key={row.id} 
+                className="relative grid grid-cols-2 gap-3 lg:grid-cols-[2.5fr_1.2fr_1.2fr_1fr_1.8fr_1fr_60px] lg:gap-0 p-4 pt-10 lg:p-0 transition-colors hover:bg-slate-50/40 group"
+              >
                 
-                {/* Search */}
-                <div className="relative p-2">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    value={row.productName}
-                    onChange={(e) => handleProductSearch(row.id, e.target.value)}
-                    placeholder="Search..."
-                    className={`w-full h-9 pl-8 pr-3 text-[13px] bg-transparent outline-none border rounded-md transition-all focus:ring-1 focus:ring-rose-500 focus:border-rose-500 ${errors[`${row.id}-productName`] ? "border-red-300" : "border-transparent hover:border-gray-300"}`}
-                  />
+                {/* Mobile Row Indicator & Trash */}
+                <div className="absolute top-3 left-4 lg:hidden text-[11px] font-sora font-bold text-slate-400 tracking-widest uppercase">
+                  Product Details
+                </div>
+                <button
+                  tabIndex="-1"
+                  type="button"
+                  onClick={() => handleRemove(row.id)}
+                  disabled={products.length === 1}
+                  className="absolute top-2 right-3 lg:hidden p-2 rounded-[8px] text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-30 shadow-sm border border-slate-100"
+                >
+                  <Trash2 className="w-4 h-4" strokeWidth={2.5} />
+                </button>
+
+                {/* 1. Product Search */}
+                <div className="col-span-2 lg:col-span-1 lg:border-r lg:border-slate-100 relative flex flex-col justify-center">
+                  <label className="text-[10px] font-sora font-bold text-slate-500 uppercase mb-1.5 lg:hidden">Product Name</label>
+                  <div className={`relative h-[42px] lg:h-[52px] bg-slate-50 lg:bg-transparent rounded-[10px] lg:rounded-none border lg:border-none focus-within:ring-2 focus-within:ring-inset focus-within:bg-white transition-all ${errors[`${row.id}-productName`] ? "border-rose-300 ring-1 ring-rose-100 bg-rose-50/30" : "border-slate-200 focus-within:ring-pink-200 focus-within:border-pink-300"}`}>
+                    <Search className="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 w-4 h-4 lg:w-[18px] lg:h-[18px] text-slate-400" />
+                    <input
+                      type="text"
+                      value={row.productName}
+                      onChange={(e) => handleProductSearch(row.id, e.target.value)}
+                      placeholder="Search global catalog..."
+                      className="w-full h-full pl-9 lg:pl-11 pr-3 text-[13px] lg:text-[14px] font-medium text-slate-900 bg-transparent outline-none placeholder:text-slate-400"
+                    />
+                  </div>
+                  {/* Dropdown */}
                   {activeSearchRow === row.id && suggestions.length > 0 && (
-                    <div className="absolute top-[44px] left-2 right-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                    <div className="absolute top-[calc(100%+4px)] lg:top-[48px] left-0 right-0 bg-white border border-slate-200 rounded-[12px] shadow-[0_12px_30px_rgba(0,0,0,0.12)] z-50 max-h-48 overflow-y-auto overflow-hidden">
                       {suggestions.map((sug) => (
-                        <div key={sug.id} onClick={() => selectSuggestion(row.id, sug)} className="px-3 py-2 text-[13px] text-gray-800 hover:bg-gray-50 cursor-pointer border-b border-gray-50 truncate">
+                        <div key={sug.id} onClick={() => selectSuggestion(row.id, sug)} className="px-4 py-2.5 text-[13px] font-medium text-slate-800 hover:bg-pink-50 hover:text-pink-600 cursor-pointer border-b border-slate-50 truncate transition-colors">
                           {sug.name}
                         </div>
                       ))}
@@ -171,90 +236,110 @@ export default function WholesaleProductWorkspace() {
                   )}
                 </div>
 
-                {/* Brand */}
-                <div className="p-2 border-l border-gray-100">
-                  <input
-                    type="text"
-                    value={row.brand}
-                    onChange={(e) => handleChange(row.id, "brand", e.target.value)}
-                    placeholder="Brand"
-                    className={`w-full h-9 px-3 text-[13px] bg-transparent outline-none border rounded-md transition-all focus:ring-1 focus:ring-rose-500 focus:border-rose-500 ${errors[`${row.id}-brand`] ? "border-red-300" : "border-transparent hover:border-gray-300"}`}
-                  />
-                </div>
-
-                {/* Min & Unit */}
-                <div className="p-2 border-l border-gray-100 flex items-center gap-1">
-                  <input
-                    type="number"
-                    value={row.minQty}
-                    onChange={(e) => handleChange(row.id, "minQty", e.target.value)}
-                    placeholder="Qty"
-                    className={`w-1/2 h-9 px-2 text-[13px] bg-transparent outline-none border rounded-md transition-all focus:ring-1 focus:ring-rose-500 focus:border-rose-500 ${errors[`${row.id}-minQty`] ? "border-red-300" : "border-transparent hover:border-gray-300"}`}
-                  />
-                  <div className="relative w-1/2 h-9">
-                    <select
-                      value={row.unit}
-                      onChange={(e) => handleChange(row.id, "unit", e.target.value)}
-                      className="w-full h-full pl-2 pr-6 text-[13px] bg-transparent outline-none appearance-none cursor-pointer border border-transparent hover:border-gray-300 rounded-md focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
-                    >
-                      {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                    </select>
-                    <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                {/* 2. Brand */}
+                <div className="col-span-1 lg:border-r lg:border-slate-100 flex flex-col justify-center">
+                  <label className="text-[10px] font-sora font-bold text-slate-500 uppercase mb-1.5 lg:hidden">Brand</label>
+                  <div className={`relative h-[42px] lg:h-[52px] bg-slate-50 lg:bg-transparent rounded-[10px] lg:rounded-none border lg:border-none focus-within:ring-2 focus-within:ring-inset focus-within:bg-white transition-all ${errors[`${row.id}-brand`] ? "border-rose-300 ring-1 ring-rose-100 bg-rose-50/30" : "border-slate-200 focus-within:ring-pink-200 focus-within:border-pink-300"}`}>
+                    <input
+                      type="text"
+                      value={row.brand}
+                      onChange={(e) => handleChange(row.id, "brand", e.target.value)}
+                      placeholder="e.g. Tata"
+                      className="w-full h-full px-3 lg:px-4 text-[13px] lg:text-[14px] font-medium text-slate-900 bg-transparent outline-none placeholder:text-slate-400"
+                    />
                   </div>
                 </div>
 
-                {/* Base Rate */}
-                <div className="p-2 border-l border-gray-100 relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[13px] text-gray-400">₹</span>
-                  <input
-                    type="number"
-                    value={row.price}
-                    onChange={(e) => handleChange(row.id, "price", e.target.value)}
-                    placeholder="Rate"
-                    className={`w-full h-9 pl-6 pr-2 text-[13px] bg-transparent outline-none border rounded-md transition-all focus:ring-1 focus:ring-rose-500 focus:border-rose-500 ${errors[`${row.id}-price`] ? "border-red-300" : "border-transparent hover:border-gray-300"}`}
-                  />
+                {/* 3. Min & Unit */}
+                <div className="col-span-1 lg:border-r lg:border-slate-100 flex flex-col justify-center">
+                  <label className="text-[10px] font-sora font-bold text-slate-500 uppercase mb-1.5 lg:hidden">Min Qty</label>
+                  <div className={`flex items-center h-[42px] lg:h-[52px] bg-slate-50 lg:bg-transparent rounded-[10px] lg:rounded-none border lg:border-none focus-within:ring-2 focus-within:ring-inset focus-within:bg-white transition-all overflow-hidden ${errors[`${row.id}-minQty`] ? "border-rose-300 ring-1 ring-rose-100 bg-rose-50/30" : "border-slate-200 focus-within:ring-pink-200 focus-within:border-pink-300"}`}>
+                    <input
+                      type="number"
+                      value={row.minQty}
+                      onChange={(e) => handleChange(row.id, "minQty", e.target.value)}
+                      placeholder="Qty"
+                      className="w-[55%] h-full px-3 lg:px-4 text-[13px] lg:text-[14px] font-medium text-slate-900 bg-transparent outline-none placeholder:text-slate-400 border-r border-slate-200/60 lg:border-none"
+                    />
+                    <div className="relative w-[45%] h-full">
+                      <select
+                        value={row.unit}
+                        onChange={(e) => handleChange(row.id, "unit", e.target.value)}
+                        className="w-full h-full pl-2 pr-6 text-[12px] lg:text-[13px] font-semibold text-slate-600 bg-transparent outline-none appearance-none cursor-pointer"
+                      >
+                        {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                      </select>
+                      <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" strokeWidth={3} />
+                    </div>
+                  </div>
                 </div>
 
-                {/* Bulk Deal */}
-                <div className="p-2 border-l border-gray-100 flex items-center gap-1">
-                  <input
-                    type="number"
-                    value={row.bulkQty}
-                    onChange={(e) => handleChange(row.id, "bulkQty", e.target.value)}
-                    placeholder="Qty"
-                    className={`w-[45%] h-9 px-2 text-[13px] bg-transparent outline-none border rounded-md transition-all focus:ring-1 focus:ring-rose-500 focus:border-rose-500 ${errors[`${row.id}-bulkQty`] ? "border-red-300" : "border-transparent hover:border-gray-300"}`}
-                  />
-                  <span className="text-gray-300 text-xs">@</span>
-                  <input
-                    type="number"
-                    value={row.bulkPrice}
-                    onChange={(e) => handleChange(row.id, "bulkPrice", e.target.value)}
-                    placeholder="₹ Deal"
-                    className={`w-[45%] h-9 px-2 text-[13px] bg-transparent outline-none border rounded-md transition-all focus:ring-1 focus:ring-rose-500 focus:border-rose-500 ${errors[`${row.id}-bulkPrice`] ? "border-red-300" : "border-transparent hover:border-gray-300"}`}
-                  />
+                {/* 4. Base Rate */}
+                <div className="col-span-1 lg:border-r lg:border-slate-100 flex flex-col justify-center">
+                  <label className="text-[10px] font-sora font-bold text-slate-500 uppercase mb-1.5 lg:hidden">Base Price</label>
+                  <div className={`relative h-[42px] lg:h-[52px] bg-slate-50 lg:bg-transparent rounded-[10px] lg:rounded-none border lg:border-none focus-within:ring-2 focus-within:ring-inset focus-within:bg-white transition-all ${errors[`${row.id}-price`] ? "border-rose-300 ring-1 ring-rose-100 bg-rose-50/30" : "border-slate-200 focus-within:ring-pink-200 focus-within:border-pink-300"}`}>
+                    <span className="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 text-[13px] lg:text-[14px] font-bold text-slate-400">₹</span>
+                    <input
+                      type="number"
+                      value={row.price}
+                      onChange={(e) => handleChange(row.id, "price", e.target.value)}
+                      placeholder="0.00"
+                      className="w-full h-full pl-7 lg:pl-8 pr-3 text-[13px] lg:text-[14px] font-sora font-bold text-slate-900 bg-transparent outline-none placeholder:text-slate-400 placeholder:font-inter placeholder:font-medium"
+                    />
+                  </div>
                 </div>
 
-                {/* Stock */}
-                <div className="p-2 border-l border-gray-100">
-                  <input
-                    type="number"
-                    value={row.stock}
-                    onChange={(e) => handleChange(row.id, "stock", e.target.value)}
-                    placeholder="Count"
-                    className={`w-full h-9 px-3 text-[13px] bg-transparent outline-none border rounded-md transition-all focus:ring-1 focus:ring-rose-500 focus:border-rose-500 ${errors[`${row.id}-stock`] ? "border-red-300" : "border-transparent hover:border-gray-300"}`}
-                  />
+                {/* 5. Bulk Deal */}
+                <div className="col-span-2 lg:col-span-1 lg:border-r lg:border-slate-100 flex flex-col justify-center">
+                  <label className="text-[10px] font-sora font-bold text-slate-500 uppercase mb-1.5 lg:hidden">Bulk Trigger & Deal</label>
+                  <div className={`flex items-center h-[42px] lg:h-[52px] bg-slate-50 lg:bg-transparent rounded-[10px] lg:rounded-none border lg:border-none focus-within:ring-2 focus-within:ring-inset focus-within:bg-white transition-all overflow-hidden ${errors[`${row.id}-bulkQty`] || errors[`${row.id}-bulkPrice`] ? "border-rose-300 ring-1 ring-rose-100 bg-rose-50/30" : "border-slate-200 focus-within:ring-pink-200 focus-within:border-pink-300"}`}>
+                    <input
+                      type="number"
+                      value={row.bulkQty}
+                      onChange={(e) => handleChange(row.id, "bulkQty", e.target.value)}
+                      placeholder="Trig Qty"
+                      className="w-[45%] h-full px-3 lg:px-4 text-[13px] lg:text-[14px] font-medium text-slate-900 bg-transparent outline-none placeholder:text-slate-400 text-center"
+                    />
+                    <div className="w-[10%] h-full flex items-center justify-center bg-slate-100 lg:bg-slate-50 border-x border-slate-200/50 lg:border-x-0">
+                       <span className="text-slate-400 text-[10px] font-bold">@</span>
+                    </div>
+                    <div className="relative w-[45%] h-full flex items-center">
+                      <span className="absolute left-2 text-[12px] font-bold text-slate-400 hidden lg:block">₹</span>
+                      <input
+                        type="number"
+                        value={row.bulkPrice}
+                        onChange={(e) => handleChange(row.id, "bulkPrice", e.target.value)}
+                        placeholder="Deal ₹"
+                        className="w-full h-full pl-2 lg:pl-5 pr-2 text-[13px] lg:text-[14px] font-sora font-bold text-emerald-600 bg-transparent outline-none placeholder:text-slate-400 placeholder:font-inter placeholder:font-medium text-center lg:text-left"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                {/* Act */}
-                <div className="p-2 border-l border-gray-100 flex items-center justify-center">
+                {/* 6. Stock */}
+                <div className="col-span-1 lg:border-r lg:border-slate-100 flex flex-col justify-center">
+                  <label className="text-[10px] font-sora font-bold text-slate-500 uppercase mb-1.5 lg:hidden">Available Stock</label>
+                  <div className={`relative h-[42px] lg:h-[52px] bg-slate-50 lg:bg-transparent rounded-[10px] lg:rounded-none border lg:border-none focus-within:ring-2 focus-within:ring-inset focus-within:bg-white transition-all ${errors[`${row.id}-stock`] ? "border-rose-300 ring-1 ring-rose-100 bg-rose-50/30" : "border-slate-200 focus-within:ring-pink-200 focus-within:border-pink-300"}`}>
+                    <input
+                      type="number"
+                      value={row.stock}
+                      onChange={(e) => handleChange(row.id, "stock", e.target.value)}
+                      placeholder="Count"
+                      className="w-full h-full px-3 lg:px-4 text-[13px] lg:text-[14px] font-medium text-slate-900 bg-transparent outline-none placeholder:text-slate-400"
+                    />
+                  </div>
+                </div>
+
+                {/* 7. Action (Desktop Only) */}
+                <div className="hidden lg:flex items-center justify-center relative">
                   <button
                     tabIndex="-1"
                     type="button"
                     onClick={() => handleRemove(row.id)}
                     disabled={products.length === 1}
-                    className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-30"
+                    className="p-2 rounded-[8px] text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-30"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-[18px] h-[18px]" strokeWidth={2.5} />
                   </button>
                 </div>
 
@@ -262,22 +347,43 @@ export default function WholesaleProductWorkspace() {
             ))}
           </div>
 
-          <div className="bg-gray-50 border-t border-gray-200 p-3 flex items-center justify-between">
+          {/* ========================================================= */}
+          {/* FOOTER ACTIONS (Compact buttons, single row)              */}
+          {/* ========================================================= */}
+          <div className="bg-slate-50/80 border-t border-slate-200 p-3 sm:p-4 flex flex-row items-center justify-between">
+            
+            {/* HIDDEN ON MOBILE/TABLET (< lg): Enforces "one container" rule */}
             <button
               onClick={handleAdd}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:border-gray-400 active:scale-[0.98]"
+              className="hidden lg:flex items-center justify-center gap-1.5 px-4 py-2.5 text-[12px] sm:text-[13px] font-sora font-bold text-slate-700 bg-white border border-slate-200 rounded-[8px] hover:border-pink-300 hover:text-pink-600 hover:bg-pink-50 transition-all active:scale-[0.98] shadow-sm"
             >
-              <Plus className="w-3.5 h-3.5" /> Add Row
+              <Plus className="w-4 h-4" strokeWidth={2.5} /> Add New Row
             </button>
+            
+            {/* Empty div spacer on mobile to push the Save button to the right */}
+            <div className="lg:hidden"></div>
+
             <button 
               onClick={validateAndSubmit}
               disabled={isSubmitting}
-              className="px-5 py-2 text-[12px] font-semibold text-white bg-black rounded-lg hover:bg-gray-900 active:scale-[0.98] disabled:opacity-70"
+              className="px-6 py-2.5 text-[12px] sm:text-[13px] font-sora font-bold text-white bg-slate-900 rounded-[8px] hover:bg-black transition-all active:scale-[0.98] disabled:opacity-70 shadow-md"
             >
-              {isSubmitting ? "Saving..." : "Save Updates"}
+              {isSubmitting ? "Saving Updates..." : "Save Product Data"}
             </button>
           </div>
+
         </div>
+
+        {/* ========================================================= */}
+        {/* PRO TIP (Inside the main wrapper, BELOW the container for Mobile/Tablet) */}
+        {/* ========================================================= */}
+        <div className="lg:hidden mt-3 mx-1 bg-slate-900 rounded-[12px] p-3 flex items-start gap-2.5 shadow-sm border border-slate-800">
+          <Info className="w-4 h-4 text-pink-400 shrink-0 mt-0.5" />
+          <p className="text-[11px] sm:text-[12px] text-slate-300 leading-relaxed font-medium">
+            <strong className="text-white font-sora">Pro Tip:</strong> For lightning-fast bulk entry, switch to a <strong className="text-white">Laptop or Desktop</strong>.
+          </p>
+        </div>
+
       </div>
     </div>
   );

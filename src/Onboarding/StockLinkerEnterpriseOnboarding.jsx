@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { ArrowLeft, ArrowRight, Sparkles, Check, Loader2,AlertCircle } from "lucide-react";
-import { STEPS, WHOLESALER_CATEGORIES, SHOPKEEPER_CATEGORIES, fadeUp } from "./constants";
+import { STEPS, fadeUp } from "./constants";
 import { BusinessStep, AddressStep, MarketplaceStep, SuccessScreen } from "./Steps";
 import { onboardingApi } from "../Authentication/services/api";
 import { useAuth } from "../Authentication/context/AuthContext";
@@ -294,7 +294,7 @@ export default function StockLinkerEnterpriseOnboarding() {
                   <AnimatePresence mode="wait">
                     {!completed ? (
                       <motion.div key={step} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.35 }}>
-                        {step === 0 && <BusinessStep formData={formData} updateField={updateField} errors={errorFields} />}
+                        {step === 0 && <BusinessStep  role={role} formData={formData} updateField={updateField} errors={errorFields} />}
                         {step === 1 && <AddressStep formData={formData} updateField={updateField} errors={errorFields} />}
                         {step === 2 && <MarketplaceStep role={role} categories={dbCategories} formData={formData} updateField={updateField} toggleCategory={toggleCategory} errors={errorFields} />}
                         {step === 3 && <SuccessScreen />}

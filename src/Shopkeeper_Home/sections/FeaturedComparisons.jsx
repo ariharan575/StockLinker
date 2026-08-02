@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { AlertCircle, TrendingUp } from 'lucide-react';
 import { SectionHead } from '../../Layout/common';
 import { compareApi } from '../Services/api';
-import { CTA_GRAD, C, FONT_MONO } from '../../Layout/common/constants';
 import Surf from '../../assets/SurfExcel.jpg'; // Placeholder image
 
 export default function FeaturedComparisons() {
@@ -36,99 +35,125 @@ export default function FeaturedComparisons() {
   };
 
   return (
-    <section className="mb-8">
-      <SectionHead 
-        title="Today's Market Prices" 
-        sub="Live bulk pricing on top-moving goods" 
-        action="View All" 
-      />
+    <section className="mb-6 sm:mb-8 md:mb-10 w-full overflow-hidden">
+      
+      {/* SECTION HEADER */}
+      <div className="px-1 sm:px-2 md:px-3">
+        <SectionHead 
+          title="Today's Best Deals" 
+          sub="Live bulk pricing on top-moving goods" 
+          action="View All" 
+        />
+      </div>
 
       <AnimatePresence mode="wait">
-        {/* Loading Skeletons */}
+        
+        {/* LOADING SKELETONS (Single Row Horizontal) */}
         {isLoading && (
-          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm animate-pulse">
-                <div className="flex gap-3 mb-4">
-                  <div className="w-14 h-14 bg-slate-200 rounded-xl" />
-                  <div className="flex-1 space-y-2 py-1">
-                    <div className="h-3 bg-slate-200 rounded w-3/4" />
+          <motion.div 
+            key="loading" 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="flex flex-row overflow-x-auto no-scrollbar gap-2.5 sm:gap-3 md:gap-4 px-1 sm:px-2 md:px-3 pb-5 pt-1"
+          >
+            {[...Array(5)].map((_, i) => (
+              <div 
+                key={i} 
+                className="w-[220px] xs:w-[240px] sm:w-[260px] md:w-[280px] shrink-0 bg-white rounded-[16px] p-3 border border-slate-100 shadow-sm animate-pulse"
+              >
+                <div className="flex gap-2.5 mb-3">
+                  <div className="w-10 h-10 bg-slate-200 rounded-[8px]" />
+                  <div className="flex-1 space-y-1.5 py-0.5">
+                    <div className="h-2.5 bg-slate-200 rounded w-3/4" />
                     <div className="h-2 bg-slate-200 rounded w-1/2" />
                   </div>
                 </div>
-                <div className="space-y-2 mb-4">
-                  {[...Array(3)].map((_, j) => <div key={j} className="h-8 bg-slate-100 rounded-xl" />)}
+                <div className="space-y-1.5 mb-3">
+                  {[...Array(3)].map((_, j) => <div key={j} className="h-7 bg-slate-100 rounded-[6px]" />)}
                 </div>
-                <div className="flex gap-2">
-                  <div className="h-8 bg-slate-200 rounded flex-1" />
-                  <div className="h-8 bg-slate-200 rounded flex-1" />
-                </div>
+                <div className="h-8 bg-slate-200 rounded-[8px] w-full" />
               </div>
             ))}
           </motion.div>
         )}
 
-        {/* Error State */}
+        {/* ERROR STATE */}
         {!isLoading && error && (
-          <motion.div key="error" className="flex flex-col items-center justify-center p-8 bg-red-50 rounded-2xl border border-red-100">
-            <AlertCircle className="w-6 h-6 text-red-400 mb-2" />
-            <p className="text-sm font-semibold text-red-600">{error}</p>
+          <motion.div 
+            key="error" 
+            className="mx-1 sm:mx-2 md:mx-3 my-2 flex flex-col items-center justify-center p-6 bg-rose-50 rounded-[16px] border border-rose-100"
+          >
+            <AlertCircle className="w-8 h-8 text-rose-400 mb-2" />
+            <p className="text-[12px] sm:text-[13px] font-sora font-semibold text-rose-600">{error}</p>
           </motion.div>
         )}
 
-        {/* Empty State */}
+        {/* EMPTY STATE */}
         {!isLoading && !error && featuredProducts.length === 0 && (
-          <motion.div key="empty" className="flex flex-col items-center justify-center p-10 bg-white rounded-2xl border border-dashed border-slate-200">
-            <TrendingUp className="w-8 h-8 text-slate-300 mb-3" />
-            <p className="text-sm font-semibold text-slate-700">Analyzing Market Prices...</p>
-            <p className="text-xs text-slate-400 mt-1">Check back soon for today's top deals.</p>
+          <motion.div 
+            key="empty" 
+            className="mx-1 sm:mx-2 md:mx-3 my-2 flex flex-col items-center justify-center p-8 bg-white rounded-[16px] border-2 border-dashed border-slate-200 shadow-sm"
+          >
+            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center mb-2">
+              <TrendingUp className="w-5 h-5 text-slate-400" />
+            </div>
+            <p className="text-[13px] sm:text-[15px] font-sora font-bold text-slate-800">Analyzing Market Prices...</p>
+            <p className="text-[11px] sm:text-[12px] font-inter text-slate-500 mt-1">Check back soon for today's top deals.</p>
           </motion.div>
         )}
 
-        {/* Success Render */}
+        {/* SUCCESS RENDER (Single Row Horizontal Carousel - ALL DEVICES) */}
         {!isLoading && !error && featuredProducts.length > 0 && (
-          <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <motion.div 
+            key="content" 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="flex flex-row flex-nowrap overflow-x-auto no-scrollbar gap-2.5 sm:gap-3 md:gap-4 px-1 sm:px-2 md:px-3 pb-5 pt-1"
+          >
             {featuredProducts.map((p, i) => (
               <motion.div
                 key={p.masterProductId}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                whileHover={{ y: -6, scale: 1.015, boxShadow: "0 22px 50px rgba(15,23,42,0.12)" }}
-                className="bg-white rounded-2xl p-4 border border-slate-100 transition-all duration-200 hover:border-slate-200"
-                style={{ boxShadow: "0 8px 30px rgba(15,23,42,0.06)" }}
+                whileHover={{ y: -3 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-[220px] xs:w-[240px] sm:w-[260px] md:w-[280px] shrink-0 bg-white rounded-[16px] p-3 border border-slate-200 shadow-sm hover:shadow-[0_12px_24px_-6px_rgba(15,23,42,0.08)] hover:border-pink-200 transition-all duration-300 flex flex-col"
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-14 h-14 rounded-xl overflow-hidden flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 shadow-sm shrink-0">
-                    <img src={Surf} alt={p.productName} className="w-full h-full object-contain p-1 mix-blend-multiply" />
+                
+                {/* 1. Product Header (Ultra Compact) */}
+                <div className="flex items-center gap-2.5 sm:gap-3 mb-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-[8px] sm:rounded-[10px] overflow-hidden flex items-center justify-center bg-slate-50 border border-slate-100 shrink-0">
+                    <img src={Surf} alt={p.productName} className="w-full h-full object-contain p-1.5 mix-blend-multiply" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold leading-tight truncate text-slate-800" title={p.productName}>
+                  <div className="flex-col min-w-0">
+                    <h3 className="text-[12px] sm:text-[14px] font-sora font-bold leading-tight truncate text-slate-900" title={p.productName}>
                       {p.productName}
-                    </p>
-                    <p className="text-[11px] mt-1 text-slate-500 font-medium">{p.brand}</p>
+                    </h3>
+                    <p className="text-[10px] sm:text-[11px] font-inter mt-0.5 text-slate-500 font-medium truncate">{p.brand}</p>
                   </div>
                 </div>
 
-                <div className="space-y-2 mb-4">
+                {/* 2. Suppliers Comparison List (Thin Rows) */}
+                <div className="flex flex-col gap-1.5 mb-3 flex-1">
                   {p.suppliers.map((s, pi) => (
                     <div
                       key={pi}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all"
-                      style={{
-                        backgroundColor: s.best ? "#F0FDF4" : "#F8FAFC",
-                        borderColor: s.best ? "#22c55e40" : "#E5E7EB"
-                      }}
+                      className={`flex items-center justify-between px-2.5 py-1.5 sm:py-2 rounded-[8px] border transition-colors ${
+                        s.best ? 'bg-emerald-50/60 border-emerald-100' : 'bg-slate-50 border-slate-100 hover:border-slate-200'
+                      }`}
                     >
-                      <span className="text-[11px] font-semibold text-slate-600 truncate max-w-[120px]">
+                      <span className="text-[10px] sm:text-[11px] font-inter font-medium text-slate-700 truncate max-w-[100px] sm:max-w-[120px]">
                         {s.name}
                       </span>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-xs font-bold" style={{ color: s.best ? C.green : C.head, fontFamily: FONT_MONO }}>
+                        {/* BEST Badge next to price as seen in reference image */}
+                        <span className={`text-[11px] sm:text-[12px] font-sora font-bold ${s.best ? 'text-emerald-600' : 'text-slate-900'}`}>
                           ₹{s.price.toFixed(2)}
                         </span>
                         {s.best && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm" style={{ background: CTA_GRAD, color: "#fff" }}>
+                          <span className="text-[7px] sm:text-[8px] font-sora font-bold px-1 py-[1.5px] rounded-[4px] bg-emerald-100 text-emerald-700 tracking-wider">
                             BEST
                           </span>
                         )}
@@ -137,20 +162,26 @@ export default function FeaturedComparisons() {
                   ))}
                 </div>
 
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => handleCompareClick(p.masterProductId)}
-                    className="flex-1 flex items-center justify-center py-2.5 text-xs font-bold rounded-lg text-white transition-all shadow-sm hover:opacity-90 active:scale-95" 
-                    style={{ background: CTA_GRAD }}
-                  >
-                    Compare Market
-                  </button>
-                </div>
+                {/* 3. Action Button */}
+                <button 
+                  onClick={() => handleCompareClick(p.masterProductId)}
+                  className="w-full py-2 sm:py-2.5 text-[11px] sm:text-[12px] font-sora bg-slate-900 font-bold rounded-[8px] sm:rounded-[10px] text-white shadow-sm hover:shadow-md transition-all"
+                  style={{ background: "" }}
+                >
+                  Compare price
+                </button>
+
               </motion.div>
             ))}
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Global utility to hide scrollbar */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}} />
     </section>
   );
 }

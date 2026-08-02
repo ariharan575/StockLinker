@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Star, Navigation, Phone, MessageSquare, Clock, CheckCircle, AlertCircle, MapPin, UserPlus } from 'lucide-react';
+import { Star, Navigation, Clock, CheckCircle, AlertCircle, MapPin, UserPlus,MessageSquare  } from 'lucide-react';
 import { SectionHead } from '../../Layout/common';
 import { networkApi } from '../Services/api';
-import { fadeUp, CTA_GRAD, C } from '../../Layout/common/constants';
+import { fadeUp, CTA_GRAD } from '../../Layout/common/constants';
 
 export default function NearbySellers() {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ export default function NearbySellers() {
         setIsLoading(true);
         setError(null);
         const data = await networkApi.getNearbySellers();
-        if (isMounted) setSellers(data.slice(0, 3)); // Show top 3 on homepage
+        if (isMounted) setSellers(data.slice(0, 5)); // Increased to 5 to show off horizontal scroll better
       } catch (err) {
         if (isMounted) setError("Failed to load nearby sellers in your district.");
       } finally {
@@ -45,21 +45,36 @@ export default function NearbySellers() {
   };
 
   return (
-    <section className="mb-8">
-      <SectionHead title="Nearby Sellers" sub="Suppliers within your district delivery zone" action="View All" />
+    <section className="mb-6 sm:mb-8 md:mb-10 w-full overflow-hidden">
+      
+      {/* SECTION HEADER */}
+      <div className="px-1 sm:px-2 md:px-3">
+        <SectionHead 
+          title="Nearby Sellers" 
+          sub="Suppliers within your district delivery zone" 
+          action="View All" 
+        />
+      </div>
 
       <AnimatePresence mode="wait">
-        {/* LOADING SKELETONS */}
+        
+        {/* LOADING SKELETONS (Single Row Horizontal) */}
         {isLoading && (
-          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm animate-pulse space-y-4">
+          <motion.div 
+            key="loading" 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="flex flex-row overflow-x-auto no-scrollbar gap-3 sm:gap-4 px-1 sm:px-2 md:px-3 pb-5 pt-1"
+          >
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="w-[260px] xs:w-[280px] sm:w-[300px] lg:w-[340px] shrink-0 bg-white rounded-[16px] sm:rounded-[20px] p-4 sm:p-5 border border-slate-100 shadow-sm animate-pulse space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-slate-200 rounded-xl" />
+                  <div className="w-12 h-12 bg-slate-200 rounded-[12px]" />
                   <div className="space-y-2 flex-1"><div className="h-4 bg-slate-200 rounded w-3/4" /><div className="h-3 bg-slate-200 rounded w-1/2" /></div>
                 </div>
                 <div className="h-6 bg-slate-100 rounded-full w-1/3" />
-                <div className="flex gap-2"><div className="h-9 bg-slate-200 rounded flex-1" /><div className="h-9 bg-slate-200 rounded flex-1" /></div>
+                <div className="flex gap-2"><div className="h-9 bg-slate-200 rounded-[10px] flex-1" /><div className="h-9 bg-slate-200 rounded-[10px] flex-1" /></div>
               </div>
             ))}
           </motion.div>
@@ -67,23 +82,29 @@ export default function NearbySellers() {
 
         {/* ERROR STATE */}
         {!isLoading && error && (
-          <motion.div key="error" className="flex flex-col items-center justify-center p-8 bg-red-50 rounded-2xl border border-red-100 text-center">
-            <AlertCircle className="w-8 h-8 text-red-400 mb-2" />
-            <p className="text-sm font-semibold text-red-600">{error}</p>
+          <motion.div 
+            key="error" 
+            className="mx-1 sm:mx-2 md:mx-3 my-2 flex flex-col items-center justify-center p-6 sm:p-8 bg-rose-50 rounded-[16px] sm:rounded-[20px] border border-rose-100 text-center"
+          >
+            <AlertCircle className="w-8 h-8 text-rose-400 mb-2" />
+            <p className="text-[13px] sm:text-[14px] font-sora font-semibold text-rose-600">{error}</p>
           </motion.div>
         )}
 
         {/* EMPTY STATE */}
         {!isLoading && !error && sellers.length === 0 && (
-          <motion.div key="empty" className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-dashed border-slate-200 text-center shadow-sm">
-            <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mb-3">
+          <motion.div 
+            key="empty" 
+            className="mx-1 sm:mx-2 md:mx-3 my-2 flex flex-col items-center justify-center p-8 sm:p-12 bg-white rounded-[16px] sm:rounded-[20px] border-2 border-dashed border-slate-200 text-center shadow-sm"
+          >
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full sm:rounded-[16px] bg-slate-50 flex items-center justify-center mb-3 sm:mb-4 border border-slate-100">
               <MapPin className="w-6 h-6 text-slate-400" />
             </div>
-            <h3 className="text-base font-bold text-slate-800 mb-1">No Nearby Sellers Found</h3>
-            <p className="text-sm text-slate-500 max-w-sm mb-5">There are currently no active wholesalers registered in your district zone. Expand your radar or check back soon.</p>
+            <h3 className="text-[14px] sm:text-[16px] font-sora font-bold text-slate-800 mb-1">No Nearby Sellers Found</h3>
+            <p className="text-[12px] sm:text-[13px] font-inter text-slate-500 max-w-sm mb-4 sm:mb-5">There are currently no active wholesalers registered in your district zone. Expand your radar or check back soon.</p>
             <button 
               onClick={() => navigate('/nearby')}
-              className="px-6 py-2.5 text-xs font-bold text-white rounded-xl shadow-sm transition-transform active:scale-95"
+              className="px-5 sm:px-6 py-2.5 text-[11px] sm:text-[12px] font-sora font-bold text-white rounded-[10px] sm:rounded-[12px] shadow-sm transition-transform active:scale-95"
               style={{ background: CTA_GRAD }}
             >
               Explore Full Network Directory
@@ -91,78 +112,98 @@ export default function NearbySellers() {
           </motion.div>
         )}
 
-        {/* SUCCESS DATA RENDERING */}
+        {/* SUCCESS DATA RENDERING (Single Row Horizontal Carousel - ALL DEVICES) */}
         {!isLoading && !error && sellers.length > 0 && (
-          <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <motion.div 
+            key="content" 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="flex flex-row overflow-x-auto no-scrollbar gap-3 sm:gap-4 px-1 sm:px-2 md:px-3 pb-6 pt-2"
+          >
             {sellers.map((s, i) => (
               <motion.div
                 key={s.id}
-                {...fadeUp(i * 0.09)}
-                whileHover={{ y: -4, boxShadow: "0 18px 45px rgba(15,23,42,0.12)" }}
-                className="bg-white rounded-2xl p-5 border border-slate-100 transition-all shadow-[0_8px_25px_rgba(15,23,42,0.06)] flex flex-col justify-between"
+                {...fadeUp(i * 0.05)}
+                whileHover={{ y: -4, shadow: "0 15px 35px -5px rgba(15,23,42,0.08)" }}
+                className="w-[260px] xs:w-[280px] sm:w-[300px] lg:w-[340px] shrink-0 bg-white rounded-[16px] sm:rounded-[20px] p-4 sm:p-5 border border-slate-200 transition-all shadow-sm hover:border-slate-300 flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <img src={s.avatar} alt={s.name} className="w-12 h-12 rounded-xl object-cover shadow-sm flex-shrink-0 bg-slate-100" />
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-semibold text-slate-900">{s.name}</p>
-                          {s.verification?.length > 0 && <CheckCircle style={{ width: 14, height: 14, color: "#22C55E" }} />}
+                  
+                  {/* Avatar & Basic Info */}
+                  <div className="flex items-start justify-between mb-3 sm:mb-4">
+                    <div className="flex items-center gap-3 w-full">
+                      <img src={s.avatar} alt={s.name} className="w-10 h-10 sm:w-12 sm:h-12 rounded-[10px] sm:rounded-[12px] object-cover shadow-sm flex-shrink-0 bg-slate-50 border border-slate-100" />
+                      <div className="flex-col min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <p className="text-[13px] sm:text-[15px] font-sora font-bold text-slate-900 truncate">{s.name}</p>
+                          {s.verification?.length > 0 && <CheckCircle style={{ width: 14, height: 14, color: "#10B981" }} className="shrink-0" />}
                         </div>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <Star style={{ width: 11, height: 11, fill: "#FBBF24", color: "#FBBF24" }} />
-                          <span className="text-xs font-semibold text-slate-700">{s.rating}</span>
-                          <span className="text-xs text-slate-400">({s.reviews} reviews)</span>
+                        <div className="flex items-center gap-1">
+                          <Star style={{ width: 12, height: 12, fill: "#FBBF24", color: "#FBBF24" }} />
+                          <span className="text-[10px] sm:text-[11px] font-sora font-semibold text-slate-700">{s.rating}</span>
+                          <span className="text-[10px] sm:text-[11px] font-inter text-slate-400 truncate">({s.reviews} reviews)</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100">
-                      <Navigation style={{ width: 12, height: 12, color: "#64748B" }} />
-                      <span className="text-xs font-semibold text-slate-600">{s.distance || 'Local'}</span>
-                    </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-rose-50 text-rose-600">
+                  {/* Badges */}
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3">
+                    <div className="flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-[6px] bg-slate-50 border border-slate-100 shrink-0">
+                      <Navigation size={10} className="text-slate-500" />
+                      <span className="text-[9px] sm:text-[10px] font-sora font-semibold text-slate-600">{s.distance || 'Local'}</span>
+                    </div>
+                    <span className="px-2 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-sora font-semibold rounded-[6px] bg-pink-50 border border-pink-100 text-pink-600 truncate max-w-[100px]">
                       {s.category}
                     </span>
                     {s.readyStock && (
-                      <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-50 text-emerald-600">
+                      <span className="px-2 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-sora font-semibold rounded-[6px] bg-amber-50 border border-amber-100 text-amber-600 whitespace-nowrap">
                         Ready Stock
                       </span>
                     )}
                   </div>
 
-                  <p className="text-xs mb-3 text-slate-400">Response time: <strong className="text-slate-600">{s.responseTime}</strong></p>
-
-                  <div className="flex items-center gap-1.5 mb-4">
-                    <Clock style={{ width: 13, height: 13, color: "#94A3B8" }} />
-                    <span className="text-xs text-slate-400">Delivery Estimate:</span>
-                    <span className="text-xs font-semibold text-slate-700">{s.deliveryEstimate}</span>
+                  {/* Delivery & Response Specs */}
+                  <div className="bg-slate-50 rounded-[10px] p-2.5 sm:p-3 mb-4 space-y-1.5 border border-slate-100">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] sm:text-[11px] font-inter text-slate-500 flex items-center gap-1.5">
+                        <MessageSquare size={12} className="text-slate-400"/> Response:
+                      </span>
+                      <strong className="text-[10px] sm:text-[11px] font-sora font-semibold text-slate-700">{s.responseTime}</strong>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] sm:text-[11px] font-inter text-slate-500 flex items-center gap-1.5">
+                        <Clock size={12} className="text-slate-400"/> Est. Delivery:
+                      </span>
+                      <strong className="text-[10px] sm:text-[11px] font-sora font-semibold text-slate-700">{s.deliveryEstimate}</strong>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-2 border-t border-slate-50">
-                  <button className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-lg border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition">
-                    <Phone size={13} /> Call
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => navigate(`/storefront/${s.businessProfileId || s.id}`)}
+                    className="flex-1 flex items-center justify-center py-2 sm:py-2.5 text-[11px] sm:text-[13px] font-sora font-bold rounded-[10px] border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm active:scale-95"
+                  >
+                    View Profile
                   </button>
+                  
                   {s.connectionStatus === 'CONNECTED' ? (
-                    <button className="flex-1 py-2 text-xs font-bold text-white rounded-lg bg-emerald-600 shadow-sm cursor-default">
+                    <button className="flex-1 py-2 sm:py-2.5 text-[11px] sm:text-[13px] font-sora font-bold text-emerald-600 rounded-[10px] bg-emerald-50 border border-emerald-100 cursor-default">
                       Connected
                     </button>
                   ) : s.connectionStatus === 'PENDING' ? (
-                    <button className="flex-1 py-2 text-xs font-bold text-slate-500 rounded-lg bg-slate-100 cursor-default">
+                    <button className="flex-1 py-2 sm:py-2.5 text-[11px] sm:text-[13px] font-sora font-bold text-slate-500 rounded-[10px] bg-slate-50 border border-slate-200 cursor-default">
                       Requested
                     </button>
                   ) : (
                     <button 
                       onClick={() => handleConnect(s.id)}
                       disabled={connectingId === s.id}
-                      className="flex-1 flex items-center justify-center gap-1 py-2 text-xs font-bold text-white rounded-lg transition hover:opacity-90 shadow-sm" 
-                      style={{ background: CTA_GRAD }}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 sm:py-2.5 text-[11px] sm:text-[13px] font-sora font-bold text-white rounded-[10px] bg-slate-900 hover:bg-black transition-all shadow-sm active:scale-95 disabled:opacity-70 disabled:hover:scale-100"
                     >
-                      <UserPlus size={13} /> {connectingId === s.id ? 'Sending...' : 'Connect'}
+                      <UserPlus size={14} /> {connectingId === s.id ? 'Sending...' : 'Connect'}
                     </button>
                   )}
                 </div>
@@ -171,6 +212,12 @@ export default function NearbySellers() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Global utility to hide scrollbar */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}} />
     </section>
   );
 }

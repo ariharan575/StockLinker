@@ -36,6 +36,7 @@ import SupplierStorefront from './Seller_Profile/pages/SupplierStorefront';
 
 import ComparePageWrapper from './Compare_Price/wrapper/ComparePageWrapper';
 import SettingsRouter from './settings/SettingsRouter';
+import SellerProfileWrapper from './Seller_Profile/SellerProfileWrapper'
 
 function App() {
   return (
@@ -102,7 +103,7 @@ function App() {
           <Route path="/saved" element={<PrivateRoute><ConnectedSupplierWrapper /></PrivateRoute>} />
           <Route path="/product" element={<PrivateRoute><ProductListWrapper /></PrivateRoute>} />
 
-          <Route path="/storefront/:businessProfileId" element={<SupplierStorefront />} />          
+          <Route path="/storefront/:businessProfileId" element={<SellerProfileWrapper />} />          
           
           {/* Settings & Profile */}
           <Route path="/settings/:section" element={<PrivateRoute><SettingsRouter /></PrivateRoute>} />

@@ -7,6 +7,7 @@ import { SkeletonCard, SkeletonRow } from "../components/Skeleton";
 import useDashboardData from "../hooks/useDashboardData";
 import NearbyBuyersSection from "../components/NearbyBuyersSection";
 import Footer from '../../Layout/Footer';
+import QuickAction from '../../Shopkeeper_Home/sections/QuickActions'
 
 
 function DashboardHome() {
@@ -16,10 +17,10 @@ function DashboardHome() {
   return (
     <div className="min-h-screen bg-white text-gray-900 font-inter">
       {/* Unified Canvas Container: Single column, deeply spaced, no wrapping boxes */}
-      <div className="mx-auto flex max-w-[1440px] flex-col gap-12 sm:gap-16 lg:gap-16 px-5">
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-6 sm:gap-8 lg:gap-10 px-2 ">
         
         <HeroSection userName="Boomathi" kpis={kpis} />
-
+        <QuickAction/>
         <div>
           {isLoading ? (
             <div className="space-y-4 border border-gray-100 rounded-xl p-4">

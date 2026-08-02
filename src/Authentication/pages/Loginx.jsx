@@ -341,7 +341,7 @@ export default function SaaSAuthUI() {
                     </label>
 
                     <div
-                      className={`relative w-[95%] sm:w-full mt-1 mx-auto flex items-center h-[44px] sm:h-auto rounded-xl border transition-all duration-300 bg-white shadow-sm overflow-hidden sm:mt-2 ${
+                      className={`relative w-full mt-1 mx-auto flex items-center h-[44px] sm:h-auto rounded-xl border transition-all duration-300 bg-white shadow-sm overflow-hidden sm:mt-2 ${
                         error
                           ? "border-red-500 focus-within:ring-4 focus-within:ring-red-500/20"
                           : "border-slate-200 hover:border-pink-300 focus-within:border-pink-500 focus-within:ring-4 focus-within:ring-pink-500/20"
@@ -390,7 +390,7 @@ export default function SaaSAuthUI() {
                     onClick={sendOtp}
                     disabled={loading || phone.length !== 10}
                     className={`
-                      relative group flex w-[95%] mx-auto sm:w-full items-center justify-center gap-3 rounded-xl h-[42px]  sm:h-auto sm:py-3.5 text-[14px] sm:text-[15px] font-bold text-white overflow-hidden mt-4 sm:mt-5 transition-all duration-300 transform-gpu
+                      relative group flex w-full items-center justify-center gap-3 rounded-xl h-[42px]  sm:h-auto sm:py-3.5 text-[14px] sm:text-[15px] font-bold text-white overflow-hidden mt-4 sm:mt-5 transition-all duration-300 transform-gpu
                       ${
                         loading || phone.length !== 10
                           ? "bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 text-slate-500 cursor-not-allowed shadow-none"
@@ -436,7 +436,7 @@ export default function SaaSAuthUI() {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     onClick={handleGoogleLogin}
-                    className="flex w-[90%] sm:w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white h-[43px] cursor-pointer sm:h-auto mx-auto sm:py-3.5 text-[13px] sm:text-[14px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:border-pink-200 hover:bg-pink-50 hover:text-pink-700 transform-gpu"
+                    className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white h-[43px] cursor-pointer sm:h-auto mx-auto sm:py-3.5 text-[13px] sm:text-[14px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:border-pink-200 hover:bg-pink-50 hover:text-pink-700 transform-gpu"
                   >
                     <FcGoogle size={18} className="sm:w-5 sm:h-5" />
                     Continue with Google
@@ -448,7 +448,7 @@ export default function SaaSAuthUI() {
                     whileTap={{ scale: 0.99 }}
                     onClick={handleGuestLogin}
                     disabled={loading}
-                    className="flex w-[90%] sm:w-full items-center justify-center gap-3 rounded-xl mx-auto h-[43px] sm:h-auto sm:py-3.5 text-[13px] sm:text-[14px] font-semibold transition-all duration-200 bg-black border border-slate-100 text-white cursor-pointer mt-3 sm:mt-4 transform-gpu"
+                    className="flex w-full items-center justify-center gap-3 rounded-xl mx-auto h-[43px] sm:h-auto sm:py-3.5 text-[13px] sm:text-[14px] font-semibold transition-all duration-200 bg-black border border-slate-100 text-white cursor-pointer mt-3 sm:mt-4 transform-gpu"
                   >
                     <User className="h-4 w-4" />
                     Continue as Guest

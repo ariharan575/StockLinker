@@ -3,9 +3,9 @@ import { ArrowRight } from "lucide-react";
 
 export default function SectionHeader({ title, subtitle, action }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 font-inter">
+    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 md:mx-2 font-inter">
       <div>
-        <h2 className="font-sora text-[22px] sm:text-[28px] font-semibold tracking-tight text-gray-900">
+        <h2 className="font-sora text-[21px] sm:text-[28px] font-semibold tracking-tight text-gray-900">
           {title}
         </h2>
         {subtitle && (

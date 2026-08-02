@@ -56,7 +56,9 @@ export const storefrontApi = {
   getProducts: (businessProfileId, params) => 
     axiosInstance.get(`/v1/storefront/${businessProfileId}/products`, { params }),
   getFilters: (businessProfileId) => 
-    axiosInstance.get(`/v1/storefront/${businessProfileId}/filters`)
+    axiosInstance.get(`/v1/storefront/${businessProfileId}/filters`),
+
+  submitRating: (businessProfileId, data) => axiosInstance.post(`/v1/storefront/${businessProfileId}/rate`, data)
 };
 
 export const orderApi = {

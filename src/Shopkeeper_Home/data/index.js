@@ -11,7 +11,7 @@ import { C } from '../../Layout/common/constants';
 // ─── QUICK ACTIONS ────────────────────────────────────────────────────
 export const QUICK_ACTIONS = [
   { id: 1, label: 'Find Products',   desc: 'Browse wholesale items',    Icon: Search,       color: C.brand, bg: C.bLight, path: '/category' },
-  { id: 2, label: 'Compare Prices',  desc: 'Best deals across suppliers', Icon: BarChart2,    color: C.green, bg: C.gLight, path: '/Compare' },
+  { id: 2, label: 'Compare Prices',  desc: 'Best deals with suppliers', Icon: BarChart2,    color: C.green, bg: C.gLight, path: '/Compare' },
   { id: 3, label: 'Nearby Sellers',  desc: '24 suppliers within 5km',     Icon: MapPin,       color: C.brand, bg: C.bLight, path: '/nearby' },
   { id: 4, label: 'My Orders',       desc: '3 orders in progress',        Icon: ShoppingCart, color: C.green, bg: C.gLight, path: '/orders' },
   { id: 5, label: 'Saved Suppliers', desc: '12 saved for quick access',   Icon: Bookmark,     color: C.brand, bg: C.bLight, path: '/saved' },

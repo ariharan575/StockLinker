@@ -198,7 +198,8 @@ export default function HeroSection() {
             </button>
 
             <button 
-              onClick={() => {
+              onClick={
+                () => {
                 const el = document.getElementById("features");
                 if(el) {
                   const y = el.getBoundingClientRect().top + window.scrollY - 90;

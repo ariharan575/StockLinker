@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Phone, MessageSquare, ShieldCheck, AlertCircle, Users } from 'lucide-react';
+import { MessageSquare, ShieldCheck, AlertCircle, Users, ExternalLink } from 'lucide-react';
 import { SectionHead } from '../../Layout/common';
 import { networkApi } from '../Services/api';
-import { CTA_GRAD, C, SHADOW } from '../../Layout/common/constants';
+import { fadeUp } from '../../Layout/common/constants';
 
 export default function TrustedSuppliers() {
   const navigate = useNavigate();
@@ -31,18 +31,39 @@ export default function TrustedSuppliers() {
   }, []);
 
   return (
-    <section className="mb-8">
-      <SectionHead title="Trusted & Connected Suppliers" sub="Your personal verified partner network" action="Browse Network" />
+    <section className="mb-6 sm:mb-8 md:mb-10 w-full overflow-hidden">
+      
+      {/* SECTION HEADER */}
+      <div className="px-1 sm:px-2 md:px-3">
+        <SectionHead 
+          title="Trusted & Connected Suppliers" 
+          sub="Your personal verified partner network" 
+          action="Browse Network" 
+        />
+      </div>
 
       <AnimatePresence mode="wait">
-        {/* LOADING SKELETONS */}
+        
+        {/* LOADING SKELETONS (Single Row Horizontal) */}
         {isLoading && (
-          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-pulse space-y-3">
-                <div className="flex gap-3"><div className="w-12 h-12 bg-slate-200 rounded-xl" /><div className="space-y-2 flex-1"><div className="h-3 bg-slate-200 rounded w-3/4" /><div className="h-2 bg-slate-200 rounded w-1/2" /></div></div>
-                <div className="h-7 bg-slate-100 rounded-full w-1/4" />
-                <div className="flex gap-2"><div className="h-8 bg-slate-200 rounded flex-1" /><div className="h-8 bg-slate-200 rounded flex-1" /></div>
+          <motion.div 
+            key="loading" 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="flex flex-row overflow-x-auto no-scrollbar gap-3 sm:gap-4 px-1 sm:px-2 md:px-3 pb-5 pt-1"
+          >
+            {[...Array(4)].map((_, i) => (
+              <div 
+                key={i} 
+                className="w-[260px] xs:w-[280px] sm:w-[300px] lg:w-[340px] shrink-0 bg-white rounded-[16px] sm:rounded-[20px] p-4 sm:p-5 border border-slate-100 shadow-sm animate-pulse space-y-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-slate-200 rounded-[12px]" />
+                  <div className="space-y-2 flex-1"><div className="h-4 bg-slate-200 rounded w-3/4" /><div className="h-3 bg-slate-200 rounded w-1/2" /></div>
+                </div>
+                <div className="h-6 bg-slate-100 rounded-full w-1/3" />
+                <div className="flex gap-2"><div className="h-9 bg-slate-200 rounded-[10px] flex-1" /><div className="h-9 bg-slate-200 rounded-[10px] flex-1" /></div>
               </div>
             ))}
           </motion.div>
@@ -50,83 +71,113 @@ export default function TrustedSuppliers() {
 
         {/* ERROR STATE */}
         {!isLoading && error && (
-          <motion.div key="error" className="p-6 bg-red-50 rounded-2xl border border-red-100 flex items-center gap-3 text-red-600">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <span className="text-sm font-semibold">{error}</span>
+          <motion.div 
+            key="error" 
+            className="mx-1 sm:mx-2 md:mx-3 my-2 flex flex-col items-center justify-center p-6 sm:p-8 bg-rose-50 rounded-[16px] sm:rounded-[20px] border border-rose-100 text-center"
+          >
+            <AlertCircle className="w-8 h-8 text-rose-400 mb-2" />
+            <p className="text-[13px] sm:text-[14px] font-sora font-semibold text-rose-600">{error}</p>
           </motion.div>
         )}
 
-        {/* EMPTY STATE (TRIGGERED WHEN NO CONNECTIONS EXIST) */}
+        {/* EMPTY STATE */}
         {!isLoading && !error && connectedSuppliers.length === 0 && (
           <motion.div
             key="empty"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-white rounded-2xl p-12 text-center"
-            style={{ border: `2px dashed ${C.bdr}`, boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
+            className="mx-1 sm:mx-2 md:mx-3 my-2 bg-white rounded-[16px] sm:rounded-[24px] p-8 sm:p-12 text-center border-2 border-dashed border-slate-200 shadow-sm flex flex-col items-center"
           >
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: C.bLight }}>
-              <Users style={{ width: 28, height: 28, color: C.brand }} />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[16px] bg-slate-50 flex items-center justify-center mb-3 sm:mb-4 border border-slate-100">
+              <Users className="w-6 h-6 sm:w-7 sm:h-7 text-slate-400" />
             </div>
-            <h3 className="text-base font-bold mb-2" style={{ color: C.head }}>No Connected Suppliers Yet</h3>
-            <p className="text-sm mb-6 max-w-sm mx-auto leading-relaxed" style={{ color: C.muted }}>
+            <h3 className="text-[15px] sm:text-[17px] font-sora font-bold text-slate-900 mb-1.5">No Connected Suppliers Yet</h3>
+            <p className="text-[12px] sm:text-[13px] font-inter text-slate-500 mb-5 sm:mb-6 max-w-sm mx-auto leading-relaxed">
               Connect with trusted wholesalers in your district to build your secure supply chain and unlock exclusive merchant pricing deals.
             </p>
             <button 
               onClick={() => navigate('/nearby')} 
-              className="px-7 py-2.5 text-sm font-bold text-white rounded-xl transition-all duration-200 hover:opacity-90 active:scale-95 shadow-md cursor-pointer"
-              style={{ background: CTA_GRAD, boxShadow: SHADOW.glow }}
+              className="px-6 sm:px-8 py-2.5 sm:py-3 text-[12px] sm:text-[13px] font-sora font-bold text-white bg-slate-900 hover:bg-black rounded-[10px] sm:rounded-[12px] transition-all shadow-md active:scale-95"
             >
               Find & Connect Suppliers
             </button>
           </motion.div>
         )}
 
-        {/* SUCCESS DATA RENDERING */}
+        {/* SUCCESS DATA RENDERING (Single Row Horizontal Carousel) */}
         {!isLoading && !error && connectedSuppliers.length > 0 && (
-          <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <motion.div 
+            key="content" 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="flex flex-row overflow-x-auto no-scrollbar gap-3 sm:gap-4 px-1 sm:px-2 md:px-3 pb-6 pt-2"
+          >
             {connectedSuppliers.map((s, i) => (
               <motion.div
                 key={s.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-                className="bg-white rounded-2xl p-4 transition-all duration-200 hover:-translate-y-1 shadow-sm"
-                style={{ boxShadow: SHADOW.sm, border: "1px solid rgba(0,0,0,0.04)" }}
+                {...fadeUp(i * 0.05)}
+                whileHover={{ y: -4, shadow: "0 15px 35px -5px rgba(15,23,42,0.08)" }}
+                className="w-[260px] xs:w-[280px] sm:w-[300px] lg:w-[340px] shrink-0 bg-white rounded-[16px] sm:rounded-[20px] p-3.5 sm:p-5 border border-slate-200 transition-all shadow-sm flex flex-col justify-between"
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <img src={s.avatar} alt={s.name} className="w-12 h-12 rounded-xl object-cover shadow-sm flex-shrink-0 bg-slate-100" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold truncate" style={{ color: C.head }}>{s.name}</p>
-                    <p className="text-xs" style={{ color: C.muted }}>{s.location} • Verified Partner</p>
+                <div>
+                  
+                  {/* Top Header: Avatar & Info */}
+                  <div className="flex items-start justify-between mb-3 sm:mb-4">
+                    <div className="flex items-center gap-3 w-full">
+                      <img src={s.avatar} alt={s.name} className="w-10 h-10 sm:w-12 sm:h-12 rounded-[10px] sm:rounded-[12px] object-cover shadow-sm flex-shrink-0 bg-slate-50 border border-slate-100" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] sm:text-[15px] font-sora font-bold text-slate-900 truncate mb-0.5">{s.name}</p>
+                        <p className="text-[10px] sm:text-[11px] font-inter font-medium text-slate-500 truncate">{s.location} <span className="text-slate-300 mx-0.5">•</span> Verified Partner</p>
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-[11px] px-2.5 py-1 rounded-full font-semibold bg-emerald-50 text-emerald-600 flex items-center gap-1">
-                    <ShieldCheck size={12} /> Connected
-                  </span>
+
+                  {/* Connected Badge */}
+                  <div className="mb-3 sm:mb-4">
+                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] bg-emerald-50/80 border border-emerald-100 text-emerald-600 text-[10px] sm:text-[11px] font-sora font-semibold">
+                      <ShieldCheck size={12} /> Connected
+                    </span>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4">
+                    <span className="px-2 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-inter font-semibold rounded-[6px] bg-rose-50 text-rose-600 border border-rose-100">
+                      {s.category}
+                    </span>
+                    <span className="px-2 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-inter font-semibold rounded-[6px] bg-slate-50 text-slate-600 border border-slate-200">
+                      {s.responseTime} response
+                    </span>
+                  </div>
+
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-rose-50 text-rose-600">
-                    {s.category}
-                  </span>
-                  <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-slate-100 text-slate-600">
-                    {s.responseTime} response
-                  </span>
-                </div>
-
+                {/* Actions */}
                 <div className="flex gap-2">
-                  <button className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-lg border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition">
-                    <Phone size={13} /> Call
+                  <button 
+                    onClick={() => navigate(`/storefront/${s.businessProfileId || s.id}`)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 sm:py-2.5 text-[11px] sm:text-[12px] font-sora font-bold rounded-[8px] sm:rounded-[10px] border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm active:scale-95"
+                  >
+                    <ExternalLink size={13} /> View Profile
                   </button>
-                  <button onClick={() => navigate('/message')} className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-lg border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition">
+                  <button 
+                    onClick={() => navigate('/messages')} 
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 sm:py-2.5 text-[11px] sm:text-[12px] font-sora font-bold rounded-[8px] sm:rounded-[10px] text-white bg-slate-900 hover:bg-black transition-colors shadow-sm active:scale-95"
+                  >
                     <MessageSquare size={13} /> Chat
                   </button>
                 </div>
+
               </motion.div>
             ))}
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Global utility to hide scrollbar */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}} />
     </section>
   );
 }

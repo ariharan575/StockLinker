@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  User2, Building2, Phone, Mail, ShieldCheck, MapPin, Check, CheckCircle2, ChevronDown, Search, Truck
+  User2, Building2, Phone, Mail, ShieldCheck, MapPin, Check, CheckCircle2, ChevronDown, Search, Truck, MessageCircle
 } from "lucide-react";
 import SectionTitle from "./SectionTitle";
 import Input from "./Input";
@@ -25,7 +25,7 @@ const handleEnter = (e, nextId) => {
   }
 };
 
-export function BusinessStep({ formData, updateField, errors }) {
+export function BusinessStep({ role, formData, updateField, errors }) {
   return (
     <div>
       <SectionTitle
@@ -35,9 +35,15 @@ export function BusinessStep({ formData, updateField, errors }) {
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid md:grid-cols-2 gap-5">
         <Input id="ownerName" icon={User2} label="Owner Name" placeholder="Rajesh Kumar" value={formData.ownerName} onChange={(e) => updateField("ownerName", e.target.value)} onKeyDown={(e) => handleEnter(e, "businessName")} hasError={errors.includes("ownerName")} />
-        <Input id="businessName" icon={Building2} label="Business Name" placeholder="Kumar Traders" value={formData.businessName} onChange={(e) => updateField("businessName", e.target.value)} onKeyDown={(e) => handleEnter(e, "mobile")} hasError={errors.includes("businessName")} />
-        <Input id="mobile" type="number" icon={Phone} label="Mobile Number" placeholder="9876543210" value={formData.mobile} onChange={(e) => updateField("mobile", e.target.value)} onKeyDown={(e) => handleEnter(e, "deliveryRadius")} hasError={errors.includes("mobile")} />
-        <Input id="deliveryRadius" type="number" icon={Truck} label="Delivery Coverage (in Km)" placeholder="e.g. 50" value={formData.deliveryRadius} onChange={(e) => updateField("deliveryRadius", e.target.value)} onKeyDown={(e) => handleEnter(e, "businessEmail")} hasError={errors.includes("deliveryRadius")} />
+        <Input id="businessName" icon={Building2} label="Company Name" placeholder="Kumar Traders" value={formData.businessName} onChange={(e) => updateField("businessName", e.target.value)} onKeyDown={(e) => handleEnter(e, "mobile")} hasError={errors.includes("businessName")} />
+        <Input id="mobile" type="number" icon={Phone} label="Mobile Number" placeholder="9876543210" value={formData.mobile} onChange={(e) => updateField("mobile", e.target.value)} onKeyDown={(e) => handleEnter(e, role === "WHOLESALER" ? "deliveryRadius" : "whatsappNumber")} hasError={errors.includes("mobile")} />
+        
+        {role === "WHOLESALER" ? (
+          <Input id="deliveryRadius" type="number" icon={Truck} label="Delivery Coverage (in Km)" placeholder="e.g. 50" value={formData.deliveryRadius} onChange={(e) => updateField("deliveryRadius", e.target.value)} onKeyDown={(e) => handleEnter(e, "businessEmail")} hasError={errors.includes("deliveryRadius")} />
+        ) : (
+          <Input id="whatsappNumber" type="number" icon={MessageCircle} label="WhatsApp Number (Optional)" placeholder="9876543210" value={formData.whatsappNumber} onChange={(e) => updateField("whatsappNumber", e.target.value)} onKeyDown={(e) => handleEnter(e, "businessEmail")} hasError={errors.includes("whatsappNumber")} />
+        )}
+
         <Input id="businessEmail" type="email" icon={Mail} label="Business Email" placeholder="business@email.com" value={formData.businessEmail} onChange={(e) => updateField("businessEmail", e.target.value)} onKeyDown={(e) => handleEnter(e, "gstNumber")} hasError={errors.includes("businessEmail")} />
         <Input id="gstNumber" icon={ShieldCheck} label="GST Number (Optional)" placeholder="22AAAA0000AA1Z5" value={formData.gstNumber} onChange={(e) => updateField("gstNumber", e.target.value)} />
       </motion.div>
@@ -131,14 +137,14 @@ export function MarketplaceStep({ role, categories, formData, toggleCategory, up
 
       <div className="mt-12">
         <h3 className="text-xl sm:text-2xl font-black text-slate-900">{role === "WHOLESALER" ? "Delivery support" : "Store size"} {errors.includes("selection") && <span className="text-red-500 text-sm ml-2">* Required</span>}</h3>
-        <div className="mt-5 grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="mt-5 grid grid-cols-2 xl:grid-cols-4 gap-4  md:max-w-3/4">
           {(role === "WHOLESALER" ? DELIVERY_OPTIONS : STORE_TYPES).map((item, index) => {
             const active = role === "WHOLESALER" ? formData.deliverySupport === item : formData.storeSize === item;
             return (
               <motion.button
                 key={item} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} whileHover={{ y: -5, scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onClick={() => role === "WHOLESALER" ? updateField("deliverySupport", item) : updateField("storeSize", item)}
-                className={`rounded-2xl border p-4 text-left transition-all duration-300 ${active ? "bg-pink-500 text-white border-transparent shadow-[0_0_30px_rgba(236,72,153,0.35)]" : "bg-slate-50 border-slate-200 hover:border-pink-300 text-slate-700"}`}
+                className={`rounded-2xl border p-3.5 text-left transition-all duration-300 ${active ? "bg-pink-100 border-pink-300 text-pink-700 shadow-md " : "bg-slate-50 border-slate-200 hover:border-pink-300 text-slate-700"}`}
               >
                 <div className="flex items-center justify-between">
                   <h4 className="font-bold text-sm leading-tight">{item}</h4>
