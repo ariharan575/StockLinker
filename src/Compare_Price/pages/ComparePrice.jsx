@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, SearchCode } from 'lucide-react';
+import { Loader2, SearchCode,Search ,ArrowRight  } from 'lucide-react';
 import { typographyStyles, fadeUp } from '../config/constants';
 import { compareApi } from '../Services/api';
 
@@ -68,12 +68,61 @@ export default function ComparePrice() {
   const showErrorPopup = (message) => setErrorPopup({ show: true, message });
 
   // EMPTY STATE: No Product Selected
-  if (!masterProductId && !searchModalOpen) {
+if (!masterProductId && !searchModalOpen) {
     return (
-      <div className="min-h-[80vh] flex flex-col items-center justify-center bg-[#F8FAFC]">
-        <SearchCode size={48} className="text-slate-300 mb-4" />
-        <h2 className="text-[20px] font-sora font-bold text-slate-800 mb-2">No Product Selected</h2>
-        <button onClick={() => setSearchModalOpen(true)} className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-[14px] font-semibold hover:bg-slate-800 shadow-md transition-all">Search Products to Compare</button>
+      <div className="min-h-[80vh] flex flex-col items-center justify-center bg-slate-50/50 relative overflow-hidden px-4 font-inter">
+        {/* Background Decorative Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-tr from-pink-500/10 to-orange-500/10 rounded-full blur-[80px] pointer-events-none" />
+
+        {/* Premium Card Container */}
+        <div className="relative z-10 flex flex-col items-center text-center p-10 bg-white/70 backdrop-blur-xl border border-white/60 rounded-[32px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] max-w-[480px] w-full">
+          
+          {/* Floating Icon Setup */}
+          <div className="relative mb-8">
+            <div className="absolute inset-0 bg-gradient-to-tr from-pink-500 to-orange-500 blur-xl opacity-20 rounded-[24px]" />
+            <div className="relative w-20 h-20 bg-white border border-slate-100 shadow-sm rounded-[24px] flex items-center justify-center rotate-3 transition-transform hover:rotate-0 duration-500">
+              <div className="w-12 h-12 rounded-[14px] bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center border border-slate-200/50">
+                <SearchCode size={24} className="text-slate-700" />
+              </div>
+            </div>
+          </div>
+
+          {/* Typography */}
+          <h2 className="text-[22px] font-sora font-bold text-[#0F172A] mb-3 tracking-tight">
+            No Product Selected
+          </h2>
+          <p className="text-[14px] text-slate-500 mb-8 leading-relaxed max-w-[320px]">
+            Discover live market prices, analyze bulk deals, and find the perfect procurement opportunities instantly.
+          </p>
+
+          {/* Premium Interactive Button */}
+          <button 
+            onClick={() => setSearchModalOpen(true)} 
+            className="group relative inline-flex items-center justify-center gap-3 px-8 py-3.5 bg-[#0F172A] text-white rounded-[16px] text-[14px] font-semibold transition-all duration-300 hover:bg-[#1E293B] hover:shadow-[0_8px_30px_rgb(15,23,42,0.2)] hover:-translate-y-0.5 active:translate-y-0 w-full sm:w-auto overflow-hidden"
+          >
+            {/* Subtle hover shine effect */}
+            <div className="absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-150%)] group-hover:duration-1000 group-hover:[transform:skew(-12deg)_translateX(150%)]">
+              <div className="relative h-full w-8 bg-white/20" />
+            </div>
+            
+            <Search size={18} className="text-slate-400 group-hover:text-white transition-colors" />
+            <span className="relative z-10">Search Products</span>
+            <ArrowRight size={18} className="text-slate-400 group-hover:translate-x-1 group-hover:text-white transition-all duration-300" />
+          </button>
+          
+          {/* SaaS Trust Indicators */}
+          <div className="mt-8 flex items-center justify-center gap-6 pt-6 border-t border-slate-100 w-full text-[12px] font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse" />
+              Live Data
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+              Verified Sellers
+            </div>
+          </div>
+
+        </div>
       </div>
     );
   }
@@ -99,7 +148,7 @@ export default function ComparePrice() {
         {errorPopup.show && <ErrorPopup isOpen={errorPopup.show} message={errorPopup.message} onClose={() => setErrorPopup({ show: false, message: "" })} />}
       </AnimatePresence>
 
-      <div className="font-inter antialiased selection:bg-pink-100 selection:text-pink-900 flex flex-col w-full mx-2 overflow-x-hidden relative">
+      <div className="font-inter antialiased selection:bg-pink-100 selection:text-pink-900 flex flex-col w-full mx-1 my-1 overflow-x-hidden relative">
         <ProductSearchModal isOpen={searchModalOpen} onClose={() => setSearchModalOpen(false)} onSearch={handleProductSearch} />
 
         {masterProductId && data && (

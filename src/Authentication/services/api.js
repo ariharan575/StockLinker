@@ -15,6 +15,9 @@ export const authApi = {
   
   logout: () => 
     axiosInstance.post('/auth/logout'),
+
+  logoutAll: () => 
+    axiosInstance.post('/auth/logout-all'),
 };
 
 export const onboardingApi = {
@@ -34,10 +37,13 @@ export const onboardingApi = {
 
 // --- NEW SETTINGS PROFILE API ---
 export const profileApi = {
+  // Existing...
   getProfile: () => axiosInstance.get('/v1/profile'),
   updateAccount: (data) => axiosInstance.put('/v1/profile/account', data),
   updateBusiness: (data) => axiosInstance.put('/v1/profile/business', data),
-  updateDelivery: (data) => axiosInstance.put('/v1/profile/delivery', data),
+  // New combined endpoints:
+  updateStore: (data) => axiosInstance.put('/v1/profile/store', data),
+  updateDeliveryInsights: (data) => axiosInstance.put('/v1/profile/delivery-insights', data),
 };
 
 export const networkApi = {

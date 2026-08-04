@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, TrendingUp } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { SectionHead } from '../../Layout/common';
 import { compareApi } from '../Services/api';
-import Surf from '../../assets/SurfExcel.jpg'; // Placeholder image
+import Surf from '../../assets/SurfExcel.jpg';
 
-export default function FeaturedComparisons() {
+export default function FeaturedComparisons({ onError }) {
   const navigate = useNavigate();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -20,24 +19,22 @@ export default function FeaturedComparisons() {
         const data = await compareApi.getFeaturedComparisons();
         if (isMounted) setFeaturedProducts(data);
       } catch (err) {
-        if (isMounted) setError("Failed to load today's market comparisons.");
+        if (isMounted && onError) onError(); // Trigger Full Page Error
       } finally {
         if (isMounted) setIsLoading(false);
       }
     };
     fetchFeatured();
     return () => { isMounted = false; };
-  }, []);
+  }, [onError]);
 
   const handleCompareClick = (masterProductId) => {
-    // Navigates to the detailed compare page silently passing the ID
     navigate('/Compare', { state: { masterProductId: masterProductId, requestedQty: 10 } });
   };
 
   return (
     <section className="mb-6 sm:mb-8 md:mb-10 w-full overflow-hidden">
       
-      {/* SECTION HEADER */}
       <div className="px-1 sm:px-2 md:px-3">
         <SectionHead 
           title="Today's Best Deals" 
@@ -48,7 +45,6 @@ export default function FeaturedComparisons() {
 
       <AnimatePresence mode="wait">
         
-        {/* LOADING SKELETONS (Single Row Horizontal) */}
         {isLoading && (
           <motion.div 
             key="loading" 
@@ -78,19 +74,8 @@ export default function FeaturedComparisons() {
           </motion.div>
         )}
 
-        {/* ERROR STATE */}
-        {!isLoading && error && (
-          <motion.div 
-            key="error" 
-            className="mx-1 sm:mx-2 md:mx-3 my-2 flex flex-col items-center justify-center p-6 bg-rose-50 rounded-[16px] border border-rose-100"
-          >
-            <AlertCircle className="w-8 h-8 text-rose-400 mb-2" />
-            <p className="text-[12px] sm:text-[13px] font-sora font-semibold text-rose-600">{error}</p>
-          </motion.div>
-        )}
-
         {/* EMPTY STATE */}
-        {!isLoading && !error && featuredProducts.length === 0 && (
+        {!isLoading && featuredProducts.length === 0 && (
           <motion.div 
             key="empty" 
             className="mx-1 sm:mx-2 md:mx-3 my-2 flex flex-col items-center justify-center p-8 bg-white rounded-[16px] border-2 border-dashed border-slate-200 shadow-sm"
@@ -103,8 +88,8 @@ export default function FeaturedComparisons() {
           </motion.div>
         )}
 
-        {/* SUCCESS RENDER (Single Row Horizontal Carousel - ALL DEVICES) */}
-        {!isLoading && !error && featuredProducts.length > 0 && (
+        {/* SUCCESS RENDER */}
+        {!isLoading && featuredProducts.length > 0 && (
           <motion.div 
             key="content" 
             initial={{ opacity: 0 }} 
@@ -122,7 +107,6 @@ export default function FeaturedComparisons() {
                 className="w-[220px] xs:w-[240px] sm:w-[260px] md:w-[280px] shrink-0 bg-white rounded-[16px] p-3 border border-slate-200 shadow-sm hover:shadow-[0_12px_24px_-6px_rgba(15,23,42,0.08)] hover:border-pink-200 transition-all duration-300 flex flex-col"
               >
                 
-                {/* 1. Product Header (Ultra Compact) */}
                 <div className="flex items-center gap-2.5 sm:gap-3 mb-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-[8px] sm:rounded-[10px] overflow-hidden flex items-center justify-center bg-slate-50 border border-slate-100 shrink-0">
                     <img src={Surf} alt={p.productName} className="w-full h-full object-contain p-1.5 mix-blend-multiply" />
@@ -135,7 +119,6 @@ export default function FeaturedComparisons() {
                   </div>
                 </div>
 
-                {/* 2. Suppliers Comparison List (Thin Rows) */}
                 <div className="flex flex-col gap-1.5 mb-3 flex-1">
                   {p.suppliers.map((s, pi) => (
                     <div
@@ -148,7 +131,6 @@ export default function FeaturedComparisons() {
                         {s.name}
                       </span>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        {/* BEST Badge next to price as seen in reference image */}
                         <span className={`text-[11px] sm:text-[12px] font-sora font-bold ${s.best ? 'text-emerald-600' : 'text-slate-900'}`}>
                           ₹{s.price.toFixed(2)}
                         </span>
@@ -162,11 +144,9 @@ export default function FeaturedComparisons() {
                   ))}
                 </div>
 
-                {/* 3. Action Button */}
                 <button 
                   onClick={() => handleCompareClick(p.masterProductId)}
                   className="w-full py-2 sm:py-2.5 text-[11px] sm:text-[12px] font-sora bg-slate-900 font-bold rounded-[8px] sm:rounded-[10px] text-white shadow-sm hover:shadow-md transition-all"
-                  style={{ background: "" }}
                 >
                   Compare price
                 </button>
@@ -177,7 +157,6 @@ export default function FeaturedComparisons() {
         )}
       </AnimatePresence>
 
-      {/* Global utility to hide scrollbar */}
       <style dangerouslySetInnerHTML={{__html: `
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

@@ -6,18 +6,16 @@ import { C, EASE } from '../../Layout/common/constants';
 import HeroImges from '../../assets/Store.png';
 import { dashboardApi } from '../Services/api';
 
-export default function Hero() {
+export default function Hero({ onError }) {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
-  // States
   const [ownerName, setOwnerName] = useState("Loading...");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState({ products: [], categories: [], sellers: [] });
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // Fetch Welcome Name on Mount
   useEffect(() => {
     let isMounted = true;
     const fetchWelcome = async () => {
@@ -26,13 +24,13 @@ export default function Hero() {
         if (isMounted) setOwnerName(data.ownerName || "Arun");
       } catch (err) {
         if (isMounted) setOwnerName("Partner");
+        // Opting not to crash full page for missing welcome name
       }
     };
     fetchWelcome();
     return () => { isMounted = false; };
   }, []);
 
-  // Handle outside click for dropdown
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setShowDropdown(false);
@@ -41,7 +39,6 @@ export default function Hero() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Debounced Omni-Search
   useEffect(() => {
     if (query.trim().length < 2) {
       setResults({ products: [], categories: [], sellers: [] });
@@ -69,7 +66,6 @@ export default function Hero() {
     return () => clearTimeout(timeoutId);
   }, [query]);
 
-  // Routing Handlers
   const handleProductClick = (product) => {
     setShowDropdown(false);
     navigate('/Compare', { state: { openModal: true, selectedProduct: { id: product.id, name: product.name } } });
@@ -85,12 +81,6 @@ export default function Hero() {
     navigate(`/storefront/${businessProfileId}`);
   };
 
-  // Quick tag handler
-  const handleQuickTag = (tag) => {
-    setQuery(tag);
-    setShowDropdown(true);
-  };
-
   return (
     <motion.section
       initial={{ opacity: 0, y: 15 }}
@@ -98,14 +88,8 @@ export default function Hero() {
       transition={{ duration: 0.6, ease: EASE }}
       className="relative w-full mb-2 sm:mb-6 md:mb-8 z-20 flex"
     >
-      {/* 
-        Responsive Container 
-        Mobile (< 768px): Transparent/White, NO borders, perfectly flat.
-        Tablet & Desktop (md+): Fixed height, rounded bordered container with shadow.
-      */}
-      <div className="relative w-full md:h-[260px] lg:h-[280px] md:bg-white md:rounded-[24px] lg:rounded-[32px] md:border border-slate-200 md:shadow-[0_8px_30px_rgba(15,23,42,0.04)] overflow-visible md:overflow-hidden flex">
+      <div className="relative w-full md:h-[260px] lg:h-[280px] md:bg-white md:rounded-[24px] lg:rounded-[32px] md:border border-slate-200 md:shadow-[0_8px_30px_rgba(15,23,42,0.04)] overflow-visible flex">
         
-        {/* RIGHT COLUMN IMAGE (Visible on Tablet and Desktop) */}
         <div className="hidden md:flex absolute right-0 top-0 w-[45%] h-full items-center justify-center p-3 sm:p-4 z-0 pointer-events-none overflow-hidden rounded-r-[24px] lg:rounded-r-[32px]">
           <motion.img 
             initial={{ scale: 1.05, opacity: 0 }} 
@@ -115,17 +99,13 @@ export default function Hero() {
             alt="Platform UI" 
             className="w-full h-full object-cover object-center rounded-[16px] lg:rounded-[20px] shadow-sm" 
           />
-          {/* Gradient fade to blend image smoothly with the white background */}
           <div className="absolute inset-0 bg-gradient-to-r from-white via-white/50 to-transparent pointer-events-none" />
         </div>
 
-        {/* FOREGROUND CONTENT */}
         <div className="relative z-30 flex h-full w-full pointer-events-none px-2 sm:px-4 md:px-8 lg:px-8 py-4 sm:py-2 md:py-0">
           
-          {/* LEFT COLUMN: Text and Search */}
           <div className="w-full md:w-[65%] lg:w-[55%] h-full flex flex-col justify-center pointer-events-auto">
             
-            {/* 1. INLINE GREETING & NAME */}
             <h1 className="text-[23px] xs:text-[24px] sm:text-[28px] md:text-[30px] lg:text-[25px] xl:text-[36px] font-sora font-bold text-slate-900 leading-tight flex items-center flex-wrap gap-x-1.5 sm:gap-x-2">
               Welcome back,
               <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
@@ -134,11 +114,9 @@ export default function Hero() {
               <span className="text-black inline-block origin-bottom-right hover:animate-[wave_1s_ease-in-out_infinite]">👋</span>
             </h1>
 
-            {/* 2. SINGLE LINE DESCRIPTION */}
             <p className="mt-1 sm:mt-1.5 md:mt-2.5 text-[13px] sm:text-[13px] md:text-[14px] lg:text-[15px] text-slate-500 font-inter font-medium leading-relaxed max-w-[95%] md:max-w-[480px]">
                 Discover verified Wholesaler, Compare prices instanstly, and track order and grow your business           </p>
 
-            {/* 3. SEARCH BAR CONTAINER */}
             <div className="relative mt-5 sm:mt-6 md:mt-7 w-full max-w-full md:max-w-[480px] lg:max-w-[550px] z-50" ref={dropdownRef}>
               <motion.div 
                 whileHover={{ y: -1 }} 
@@ -161,7 +139,6 @@ export default function Hero() {
                     <button className="p-2 text-slate-400 hover:text-pink-500 transition-colors hidden xs:block">
                       <Camera size={16} strokeWidth={2.5} />
                     </button>
-                    {/* Pink/Rose Gradient Mic Button */}
                     <button 
                       className="w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] md:w-[44px] md:h-[44px] rounded-[10px] sm:rounded-full flex items-center justify-center text-white transition-transform duration-300 hover:scale-105 active:scale-95 shadow-sm" 
                       style={{ background: "linear-gradient(135deg, #EC4899, #F43F5E)" }}
@@ -172,7 +149,6 @@ export default function Hero() {
                 )}
               </motion.div>
 
-              {/* OMNI-SEARCH DROPDOWN RESULTS */}
               <AnimatePresence>
                 {showDropdown && (
                   <motion.div 
@@ -190,7 +166,6 @@ export default function Hero() {
                         @keyframes wave { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-10deg); } 75% { transform: rotate(15deg); } }
                       `}} />
 
-                      {/* Products Section */}
                       {results.products.length > 0 && (
                         <div className="mb-1 sm:mb-2">
                           <div className="px-3 py-1.5 text-[9px] sm:text-[10px] font-inter font-bold tracking-widest text-slate-400 uppercase">Products</div>
@@ -206,7 +181,6 @@ export default function Hero() {
                         </div>
                       )}
 
-                      {/* Categories Section */}
                       {results.categories.length > 0 && (
                         <div className="mb-1 sm:mb-2">
                           <div className="px-3 py-1.5 text-[9px] sm:text-[10px] font-inter font-bold tracking-widest text-slate-400 uppercase">Categories</div>
@@ -225,7 +199,6 @@ export default function Hero() {
                         </div>
                       )}
 
-                      {/* Sellers Section */}
                       {results.sellers.length > 0 && (
                         <div>
                           <div className="px-3 py-1.5 text-[9px] sm:text-[10px] font-inter font-bold tracking-widest text-slate-400 uppercase">Suppliers</div>

@@ -11,8 +11,8 @@ export default function SettingsRouter() {
     const path = location.pathname;
     if (path.includes('/settings/account')) return 'account';
     if (path.includes('/settings/business')) return 'business';
-    if (path.includes('/settings/delivery')) return 'delivery';
-    if (path.includes('/settings/inventory')) return 'inventory';
+    if (path.includes('/settings/store')) return 'store';
+    if (path.includes('/settings/delivery-insights')) return 'delivery-insights';
     return 'account';
   };
 
@@ -22,8 +22,8 @@ export default function SettingsRouter() {
     const sectionPaths = {
       account: '/settings/account',
       business: '/settings/business',
-      delivery: '/settings/delivery',
-      inventory: '/settings/inventory',
+      store: '/settings/store',
+      'delivery-insights': '/settings/delivery-insights',
     };
     navigate(sectionPaths[section]);
   };
@@ -32,9 +32,9 @@ export default function SettingsRouter() {
     <MainLayout 
       activeNav="settings"
       maxWidth={1500}
-      pageBackground="#FAFAFA" /* Slightly softer premium white/gray */
+      pageBackground="#FAFAFA"
       breadcrumbBackground="#FAFAFA"
-      breadcrumbBorder="#F1F5F9" /* Lighter slate border */
+      breadcrumbBorder="#F1F5F9"
       contentPadding=""
       customStyles={{ backgroundColor: "#FAFAFA" }}
     >

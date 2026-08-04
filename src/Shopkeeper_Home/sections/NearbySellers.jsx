@@ -1,44 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Star, Navigation, Clock, CheckCircle, AlertCircle, MapPin, UserPlus,MessageSquare  } from 'lucide-react';
+import { Star, Navigation, Clock, CheckCircle, MapPin, UserPlus, MessageSquare } from 'lucide-react';
 import { SectionHead } from '../../Layout/common';
 import { networkApi } from '../Services/api';
 import { fadeUp, CTA_GRAD } from '../../Layout/common/constants';
 
-export default function NearbySellers() {
+// --- PREMIUM TOAST ADDED ---
+import { PremiumToast } from '../../Components/PremiumToast';
+
+export default function NearbySellers({ onError }) {
   const navigate = useNavigate();
   const [sellers, setSellers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [connectingId, setConnectingId] = useState(null);
+
+  // Toast Notification State
+  const [notification, setNotification] = useState(null);
+
+  const showNotification = (type, msg) => {
+    setNotification({ type, msg });
+  };
 
   useEffect(() => {
     let isMounted = true;
     const fetchNearby = async () => {
       try {
         setIsLoading(true);
-        setError(null);
         const data = await networkApi.getNearbySellers();
-        if (isMounted) setSellers(data.slice(0, 5)); // Increased to 5 to show off horizontal scroll better
+        if (isMounted) setSellers(data.slice(0, 5));
       } catch (err) {
-        if (isMounted) setError("Failed to load nearby sellers in your district.");
+        if (isMounted && onError) onError(); // Trigger Full Page Error
       } finally {
         if (isMounted) setIsLoading(false);
       }
     };
     fetchNearby();
     return () => { isMounted = false; };
-  }, []);
+  }, [onError]);
 
   const handleConnect = async (partnerId) => {
     try {
       setConnectingId(partnerId);
       await networkApi.sendConnectionRequest(partnerId);
-      // Update local connection state to reflect pending status
       setSellers(prev => prev.map(s => s.id === partnerId ? { ...s, connectionStatus: 'PENDING' } : s));
+      showNotification('success', 'Connection request sent successfully!');
     } catch (err) {
-      alert("Could not send connection request. Try again.");
+      showNotification('error', 'Could not send connection request. Try again.');
     } finally {
       setConnectingId(null);
     }
@@ -47,7 +55,14 @@ export default function NearbySellers() {
   return (
     <section className="mb-6 sm:mb-8 md:mb-10 w-full overflow-hidden">
       
-      {/* SECTION HEADER */}
+      {/* PREMIUM TOAST */}
+      <PremiumToast 
+        isVisible={!!notification} 
+        type={notification?.type || 'info'} 
+        message={notification?.msg} 
+        onClose={() => setNotification(null)} 
+      />
+
       <div className="px-1 sm:px-2 md:px-3">
         <SectionHead 
           title="Nearby Sellers" 
@@ -58,7 +73,6 @@ export default function NearbySellers() {
 
       <AnimatePresence mode="wait">
         
-        {/* LOADING SKELETONS (Single Row Horizontal) */}
         {isLoading && (
           <motion.div 
             key="loading" 
@@ -80,19 +94,8 @@ export default function NearbySellers() {
           </motion.div>
         )}
 
-        {/* ERROR STATE */}
-        {!isLoading && error && (
-          <motion.div 
-            key="error" 
-            className="mx-1 sm:mx-2 md:mx-3 my-2 flex flex-col items-center justify-center p-6 sm:p-8 bg-rose-50 rounded-[16px] sm:rounded-[20px] border border-rose-100 text-center"
-          >
-            <AlertCircle className="w-8 h-8 text-rose-400 mb-2" />
-            <p className="text-[13px] sm:text-[14px] font-sora font-semibold text-rose-600">{error}</p>
-          </motion.div>
-        )}
-
         {/* EMPTY STATE */}
-        {!isLoading && !error && sellers.length === 0 && (
+        {!isLoading && sellers.length === 0 && (
           <motion.div 
             key="empty" 
             className="mx-1 sm:mx-2 md:mx-3 my-2 flex flex-col items-center justify-center p-8 sm:p-12 bg-white rounded-[16px] sm:rounded-[20px] border-2 border-dashed border-slate-200 text-center shadow-sm"
@@ -112,8 +115,8 @@ export default function NearbySellers() {
           </motion.div>
         )}
 
-        {/* SUCCESS DATA RENDERING (Single Row Horizontal Carousel - ALL DEVICES) */}
-        {!isLoading && !error && sellers.length > 0 && (
+        {/* SUCCESS DATA RENDERING */}
+        {!isLoading && sellers.length > 0 && (
           <motion.div 
             key="content" 
             initial={{ opacity: 0 }} 
@@ -128,8 +131,6 @@ export default function NearbySellers() {
                 className="w-[260px] xs:w-[280px] sm:w-[300px] lg:w-[340px] shrink-0 bg-white rounded-[16px] sm:rounded-[20px] p-4 sm:p-5 border border-slate-200 transition-all shadow-sm hover:border-slate-300 flex flex-col justify-between"
               >
                 <div>
-                  
-                  {/* Avatar & Basic Info */}
                   <div className="flex items-start justify-between mb-3 sm:mb-4">
                     <div className="flex items-center gap-3 w-full">
                       <img src={s.avatar} alt={s.name} className="w-10 h-10 sm:w-12 sm:h-12 rounded-[10px] sm:rounded-[12px] object-cover shadow-sm flex-shrink-0 bg-slate-50 border border-slate-100" />
@@ -147,7 +148,6 @@ export default function NearbySellers() {
                     </div>
                   </div>
 
-                  {/* Badges */}
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3">
                     <div className="flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-[6px] bg-slate-50 border border-slate-100 shrink-0">
                       <Navigation size={10} className="text-slate-500" />
@@ -163,7 +163,6 @@ export default function NearbySellers() {
                     )}
                   </div>
 
-                  {/* Delivery & Response Specs */}
                   <div className="bg-slate-50 rounded-[10px] p-2.5 sm:p-3 mb-4 space-y-1.5 border border-slate-100">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] sm:text-[11px] font-inter text-slate-500 flex items-center gap-1.5">
@@ -180,7 +179,6 @@ export default function NearbySellers() {
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="flex gap-2">
                   <button 
                     onClick={() => navigate(`/storefront/${s.businessProfileId || s.id}`)}
@@ -213,7 +211,6 @@ export default function NearbySellers() {
         )}
       </AnimatePresence>
 
-      {/* Global utility to hide scrollbar */}
       <style dangerouslySetInnerHTML={{__html: `
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

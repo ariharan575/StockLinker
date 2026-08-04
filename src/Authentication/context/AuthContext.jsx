@@ -102,6 +102,20 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const logoutAll = useCallback(async () => {
+    try {
+      await authApi.logoutAll();
+    } catch (error) {
+      console.error('Logout all error:', error);
+    } finally {
+      setAuthState({
+        isAuthenticated: false,
+        accountStatus: null,
+        isInitialized: true,
+      });
+    }
+  }, []);
+
   const handleOAuthSuccess = useCallback((status) => {
     setAuthState({
       isAuthenticated: true,
@@ -117,6 +131,7 @@ export const AuthProvider = ({ children }) => {
     verifySession,
     login,
     logout,
+    logoutAll,
     selectRole,
     handleOAuthSuccess,
   };

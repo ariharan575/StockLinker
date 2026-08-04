@@ -4,6 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Package, X, CheckCircle2, Save, RotateCcw, RefreshCw, Download, ChevronDown, Pencil, Trash2, PackageSearch, Search } from 'lucide-react';
 import { inventoryApi } from '../Services/api';
 
+// --- ADDED PREMIUM COMPONENTS IMPORTS ---
+import { PremiumToast } from "../../Components/PremiumToast";
+import { DataFetchError } from "../../Components/DataFetchError";
+
 /* ─────────────────────────────────────────────
    PREMIUM THEME SYSTEM & CSS
 ───────────────────────────────────────────── */
@@ -39,34 +43,6 @@ const typographyStyles = `
 /* ─────────────────────────────────────────────
    SHARED REUSABLE COMPONENTS
 ───────────────────────────────────────────── */
-
-// --- PREMIUM TOAST COMPONENT ---
-const PremiumToast = ({ message, isVisible, onClose }) => {
-  return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div 
-          initial={{ opacity: 0, y: 30, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 30, scale: 0.95 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed bottom-6 right-4 sm:right-6 z-[100] flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 bg-white border border-[#10B981]/20 rounded-2xl shadow-[0_30px_60px_rgba(15,23,42,0.12)] w-[calc(100%-32px)] sm:w-auto"
-        >
-          <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-[#10B981]/10 rounded-full text-[#10B981] shrink-0">
-            <CheckCircle2 size={18} strokeWidth={2.5} />
-          </div>
-          <div className="flex flex-col pr-2 sm:pr-4">
-            <span className="font-sora text-[14px] sm:text-[15px] font-bold text-[#0F172A]">Success</span>
-            <span className="font-inter text-[12px] sm:text-[14px] font-medium text-[#475569] leading-tight mt-0.5">{message}</span>
-          </div>
-          <button onClick={onClose} className="text-[#94A3B8] hover:text-[#0F172A] transition-colors ml-auto p-1 rounded-full hover:bg-slate-100">
-            <X size={16} />
-          </button>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
 
 // --- PREMIUM EDIT MODAL COMPONENT ---
 const EditProductModal = ({ product, isOpen, onClose, onSave }) => {
@@ -362,9 +338,17 @@ export default function ProductListPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
-  // Modal & Toast States
+  // --- ADDED STATE FOR DATA FETCH ERROR & NOTIFICATION ---
+  const [fetchError, setFetchError] = useState(false);
+  const [notification, setNotification] = useState(null);
+
+  // Modal State
   const [editingProduct, setEditingProduct] = useState(null);
-  const [toastMessage, setToastMessage] = useState('');
+
+  // --- NOTIFICATION HANDLER ---
+  const showNotification = (type, msg) => {
+    setNotification({ type, msg });
+  };
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -379,6 +363,7 @@ export default function ProductListPage() {
 
   const fetchProducts = async () => {
     setIsLoading(true);
+    setFetchError(false);
     try {
       const params = {
         search: searchTerm,
@@ -392,6 +377,7 @@ export default function ProductListPage() {
       setProducts(res.data);
     } catch (error) {
       console.error("Failed to fetch products", error);
+      setFetchError(true);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -421,8 +407,10 @@ export default function ProductListPage() {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      showNotification('success', "Export successful!");
     } catch (error) {
       console.error("Export failed", error);
+      showNotification('error', "Export failed. Please try again.");
     }
   }, []);
 
@@ -431,9 +419,9 @@ export default function ProductListPage() {
     try {
       await inventoryApi.deleteProduct(id);
       setProducts(prev => prev.filter(p => p.id !== id));
-      showToast("Product successfully deleted from catalog.");
+      showNotification('success', "Product successfully deleted from catalog.");
     } catch (error) {
-      alert("Failed to delete product.");
+      showNotification('error', "Failed to delete product.");
     }
   };
 
@@ -445,15 +433,10 @@ export default function ProductListPage() {
       setProducts(prev => prev.map(p => (p.id === id ? updatedProduct : p)));
       
       setEditingProduct(null);
-      showToast("Product details updated and synced across catalog.");
+      showNotification('success', "Product details updated and synced across catalog.");
     } catch (error) {
-      alert("Failed to update product details. Please try again.");
+      showNotification('error', "Failed to update product details. Please try again.");
     }
-  };
-
-  const showToast = (message) => {
-    setToastMessage(message);
-    setTimeout(() => setToastMessage(''), 4000);
   };
 
   const isFiltered = searchTerm.trim() !== '' || filters.category !== 'all' || filters.brand !== 'all' || filters.availability !== 'all';
@@ -462,244 +445,254 @@ export default function ProductListPage() {
     <>
       <style dangerouslySetInnerHTML={{ __html: typographyStyles }} />
       <div className="min-h-screen font-inter antialiased flex flex-col w-full overflow-x-hidden pt-2 pb-12 ">
+        
+        {/* --- PREMIUM TOAST GLOBAL REPLACEMENT --- */}
+        <PremiumToast 
+          isVisible={!!notification} 
+          type={notification?.type || 'info'} 
+          message={notification?.msg} 
+          onClose={() => setNotification(null)} 
+        />
+
         <motion.main
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
           className="w-full max-w-[1440px] mx-auto flex flex-col flex-1 h-full"
         >
-          {/* Main Flat Container - Removed heavy rounded corners */}
-          <div className="flex flex-col w-full flex-1 bg-white sm:border sm:border-slate-200 min-h-[calc(100vh-40px)] overflow-hidden">
-            
-            {/* 1. Header Area */}
-            <div className="px-4 sm:px-6 pt-6 sm:pt-6 flex flex-col md:flex-row md:items-start justify-between gap-4 sm:gap-6">
-              <div className="max-w-3xl">
-                <h1 className="text-[24px] sm:text-[32px] font-sora font-extrabold text-[#0F172A] tracking-[-0.03em] leading-[1.2]">
-                  Inventory Management
-                </h1>
-                <p className="text-[13px] sm:text-[14px] font-inter font-normal text-[#475569] mt-2 sm:mt-3 leading-[1.6]">
-                  Monitor and optimize your product stock, base pricing, and bulk thresholds from a centralized enterprise workspace.
-                </p>
-              </div>
-              <div className="flex items-center gap-4 shrink-0">
-                <div className="inline-flex items-center gap-2 sm:gap-3 px-4 py-2.5 sm:py-3 rounded-[12px] bg-slate-50 border border-slate-200 shadow-sm shrink-0">
-                  <Package size={18} className="text-gray-900" />
-                  <span className="text-[11px] sm:text-[12px] font-sora font-bold uppercase tracking-[0.1em] text-[#0F172A]">
-                    {products.length.toLocaleString('en-IN')} Active
-                  </span>
+          {/* --- ADDED CHECK TO RENDER ERROR COMPONENT AS FULL PAGE REPLACEMENT --- */}
+          {fetchError ? (
+            <DataFetchError onRetry={fetchProducts} />
+          ) : (
+            <div className="flex flex-col w-full flex-1 bg-white sm:border sm:border-slate-200 min-h-[calc(100vh-40px)] overflow-hidden">
+              
+              {/* 1. Header Area */}
+              <div className="px-4 sm:px-6 pt-6 sm:pt-6 flex flex-col md:flex-row md:items-start justify-between gap-4 sm:gap-6">
+                <div className="max-w-3xl">
+                  <h1 className="text-[24px] sm:text-[32px] font-sora font-extrabold text-[#0F172A] tracking-[-0.03em] leading-[1.2]">
+                    Inventory Management
+                  </h1>
+                  <p className="text-[13px] sm:text-[14px] font-inter font-normal text-[#475569] mt-2 sm:mt-3 leading-[1.6]">
+                    Monitor and optimize your product stock, base pricing, and bulk thresholds from a centralized enterprise workspace.
+                  </p>
                 </div>
-              </div>
-            </div>
-
-            {/* 2. Search & Filter Area */}
-            <div className="px-4 sm:px-6 mt-6 sm:mt-8 flex flex-col gap-4 w-full">
-              <SearchBar value={searchTerm} onChange={setSearchTerm} />
-              <FilterBar 
-                categories={filterOptions.categories} 
-                brands={filterOptions.brands} 
-                filters={filters} 
-                onFilterChange={handleFilterChange} 
-                onReset={handleReset} 
-                onRefresh={handleRefresh} 
-                onExport={handleExport} 
-                isRefreshing={isRefreshing} 
-              />
-            </div>
-
-            {/* 3. Table Control Header (Between Filters & List) */}
-            <div className="px-4 sm:px-8 mt-6 w-full">
-              <div className="flex items-center justify-between py-4 border-b border-slate-200">
-                <h3 className="font-sora font-bold text-[#0F172A] text-[14px] sm:text-[16px]">All Products</h3>
-                <button 
-                  onClick={() => navigate('/add')} 
-                  className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-gray-900 hover:bg-black text-white text-[12px] sm:text-[13px] font-bold font-inter rounded-[10px] transition-all shadow-sm active:scale-95"
-                >
-                  <Plus size={16} /> Add Product
-                </button>
-              </div>
-            </div>
-
-            {/* 4. Data Grid Area */}
-            <div className="w-full flex flex-col flex-1 bg-white">
-              {isLoading ? (
-                <div className="px-4 sm:px-8 pb-10"><SkeletonLoader rows={6} /></div>
-              ) : products.length === 0 ? (
-                <div className="px-4 sm:px-8 pb-10 flex-1 flex flex-col justify-center"><EmptyState isFiltered={isFiltered} onAddProduct={() => navigate('/add')} onReset={handleReset} /></div>
-              ) : (
-                <div className="w-full flex flex-col flex-1 h-full">
-                  
-                  {/* DESKTOP VIEW - Using strictly defined percentage widths to prevent horizontal scroll */}
-                  <div className="hidden lg:block w-full flex-1">
-                    <table className="w-full text-left border-collapse table-fixed">
-                      <colgroup>
-                        <col className="w-[28%]" /> {/* Product & ID */}
-                        <col className="w-[12%]" /> {/* Brand */}
-                        <col className="w-[13%]" /> {/* Min Qty */}
-                        <col className="w-[13%]" /> {/* Base Price */}
-                        <col className="w-[15%]" /> {/* Bulk Tier */}
-                        <col className="w-[9%]" />  {/* Stock */}
-                        <col className="w-[10%]" /> {/* Action */}
-                      </colgroup>
-                      <thead className="bg-white border-b border-slate-200">
-                        <tr>
-                          <th className="py-4 pl-8 pr-3 text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#94A3B8]">Product & ID</th>
-                          <th className="py-4 px-3 text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#94A3B8]">Brand</th>
-                          <th className="py-4 px-3 text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#94A3B8]">Min Qty</th>
-                          <th className="py-4 px-3 text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#94A3B8]">Base Price</th>
-                          <th className="py-4 px-3 text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#94A3B8]">Bulk Tier</th>
-                          <th className="py-4 px-3 text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#94A3B8] text-center">Stock</th>
-                          <th className="py-4 pr-8 pl-3 text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#94A3B8] text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white">
-                        {products.map((product) => {
-                          const status = getStockStatus(product.availableStock, product.minimumOrderQuantity);
-
-                          return (
-                            <motion.tr 
-                              key={product.id}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              className="group border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
-                            >
-                              <td className="py-4 pl-8 pr-3 align-middle overflow-hidden text-ellipsis whitespace-nowrap">
-                                <div className="flex flex-col gap-1 pr-2">
-                                  <span className="font-sora text-[13px] font-bold text-[#0F172A] truncate" title={product.productName}>
-                                    {product.productName}
-                                  </span>
-                                  <span className="font-inter text-[11px] text-[#94A3B8] font-medium truncate">
-                                    ID: {product.id.substring(0,8).toUpperCase()} <span className="mx-1">•</span> {product.category}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="py-4 px-3 align-middle overflow-hidden text-ellipsis whitespace-nowrap">
-                                <span className="font-sora text-[12px] font-bold text-[#475569] truncate block">
-                                  {product.brand}
-                                </span>
-                              </td>
-                              <td className="py-4 px-3 align-middle">
-                                <span className="inline-flex items-center px-2 py-1 rounded-[6px] bg-slate-100 border border-slate-200 text-[#475569] font-sora text-[11px] font-bold uppercase tracking-wide">
-                                  {product.minimumOrderQuantity} {product.unit}
-                                </span>
-                              </td>
-                              <td className="py-4 px-3 align-middle">
-                                <div className="flex items-baseline gap-1">
-                                  <span className="font-sora text-[14px] font-[800] text-[#0F172A]">
-                                    ₹{product.price.toLocaleString('en-IN')}
-                                  </span>
-                                  <span className="font-inter text-[11px] font-medium text-[#94A3B8]">/{product.unit}</span>
-                                </div>
-                              </td>
-                              <td className="py-4 px-3 align-middle">
-                                <div className="flex flex-col gap-0.5">
-                                  {product.bulkDealQuantity && product.bulkDealPrice ? (
-                                    <>
-                                      <span className="font-inter text-[10px] font-bold text-pink-600 uppercase tracking-widest">
-                                        Bulk {product.bulkDealQuantity}+
-                                      </span>
-                                      <span className="font-sora text-[13px] font-bold text-[#0F172A]">
-                                        ₹{product.bulkDealPrice.toLocaleString('en-IN')}
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <span className="font-inter text-[11px] text-[#94A3B8] italic">No tier</span>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="py-4 px-3 align-middle text-center">
-                                <div className="flex flex-col items-center justify-center gap-1.5">
-                                  <StatusBadge status={status} />
-                                  <span className={`text-[13px] font-sora font-bold ${status === 'out' ? 'text-rose-600' : status === 'low' ? 'text-amber-600' : 'text-[#0F172A]'}`}>
-                                    {product.availableStock}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="py-4 pr-8 pl-3 align-middle text-right">
-                                <ActionButtons 
-                                  onEdit={() => setEditingProduct(product)} 
-                                  onDelete={() => handleDeleteProduct(product.id)} 
-                                />
-                              </td>
-                            </motion.tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* MOBILE / TABLET VIEW - Perfect for 320px to 768px */}
-                  <div className="flex flex-col gap-4 lg:hidden w-full px-3 sm:px-4 py-2 bg-slate-50 min-h-screen">
-                    {products.map((product) => {
-                      const status = getStockStatus(product.availableStock, product.minimumOrderQuantity);
-                      return (
-                        <div key={product.id} className="p-4 sm:p-5 flex flex-col gap-4 bg-white border border-slate-200 rounded-[16px] shadow-sm w-full">
-                          
-                          <div className="flex flex-col overflow-hidden w-full">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="font-inter text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] text-[#0F172A] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-[4px]">{product.brand}</span>
-                              <span className="font-inter text-[9px] sm:text-[10px] text-[#94A3B8] font-semibold truncate">ID: {product.id.substring(0,8).toUpperCase()}</span>
-                            </div>
-                            <h3 className="font-sora text-[14px] sm:text-[16px] font-bold text-[#0F172A] leading-[1.3] truncate w-full">{product.productName}</h3>
-                          </div>
-
-                          <div className="flex items-center justify-between border-y border-slate-100 py-3 mt-1">
-                            <div className="flex flex-col min-w-0 flex-1 border-r border-slate-100 pr-2">
-                              <span className="font-inter text-[9px] sm:text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.1em] mb-1">Base Price</span>
-                              <span className="font-sora text-[13px] sm:text-[14px] font-[800] text-[#0F172A] truncate">₹{product.price.toLocaleString('en-IN')}<span className="text-[9px] sm:text-[10px] text-[#94A3B8] font-normal font-inter">/{product.unit}</span></span>
-                            </div>
-                            <div className="flex flex-col min-w-0 flex-1 border-r border-slate-100 px-2 sm:px-4">
-                              <span className="font-inter text-[9px] sm:text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.1em] mb-1">Min Qty</span>
-                              <span className="font-sora text-[12px] sm:text-[13px] font-bold text-[#0F172A] truncate">{product.minimumOrderQuantity} {product.unit}</span>
-                            </div>
-                            <div className="flex flex-col min-w-0 flex-1 pl-2 sm:pl-4">
-                              <span className="font-inter text-[9px] sm:text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.1em] mb-1">Stock</span>
-                              <span className={`font-sora text-[13px] sm:text-[14px] font-bold truncate ${status === 'out' ? 'text-rose-600' : status === 'low' ? 'text-amber-600' : 'text-[#10B981]'}`}>{product.availableStock}</span>
-                            </div>
-                          </div>
-
-                          {product.bulkDealQuantity && product.bulkDealPrice && (
-                            <div className="bg-pink-50 border border-pink-100 rounded-[12px] p-3 sm:p-3.5 flex justify-between items-center w-full">
-                               <div className="flex flex-col min-w-0 pr-2">
-                                 <span className="font-inter text-[9px] sm:text-[10px] font-bold text-[#64748B] uppercase tracking-[0.1em]">Bulk Deal</span>
-                                 <span className="font-sora text-[12px] sm:text-[13px] font-bold text-[#0F172A] mt-0.5 truncate">{product.bulkDealQuantity}+ {product.unit}s</span>
-                               </div>
-                               <div className="flex flex-col items-end min-w-0 pl-2">
-                                 <span className="font-inter text-[9px] sm:text-[10px] font-bold text-[#64748B] uppercase tracking-[0.1em]">Special Price</span>
-                                 <span className="font-sora text-[13px] sm:text-[15px] font-[800] text-pink-600 mt-0.5 truncate">₹{product.bulkDealPrice.toLocaleString('en-IN')}</span>
-                               </div>
-                            </div>
-                          )}
-
-                          <div className="flex items-center justify-between mt-1">
-                            <StatusBadge status={status} />
-                            <ActionButtons 
-                              onEdit={() => setEditingProduct(product)} 
-                              onDelete={() => handleDeleteProduct(product.id)} 
-                            />
-                          </div>
-
-                        </div>
-                      );
-                    })}
+                <div className="flex items-center gap-4 shrink-0">
+                  <div className="inline-flex items-center gap-2 sm:gap-3 px-4 py-2.5 sm:py-3 rounded-[12px] bg-slate-50 border border-slate-200 shadow-sm shrink-0">
+                    <Package size={18} className="text-gray-900" />
+                    <span className="text-[11px] sm:text-[12px] font-sora font-bold uppercase tracking-[0.1em] text-[#0F172A]">
+                      {products.length.toLocaleString('en-IN')} Active
+                    </span>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* 2. Search & Filter Area */}
+              <div className="px-4 sm:px-6 mt-6 sm:mt-8 flex flex-col gap-4 w-full">
+                <SearchBar value={searchTerm} onChange={setSearchTerm} />
+                <FilterBar 
+                  categories={filterOptions.categories} 
+                  brands={filterOptions.brands} 
+                  filters={filters} 
+                  onFilterChange={handleFilterChange} 
+                  onReset={handleReset} 
+                  onRefresh={handleRefresh} 
+                  onExport={handleExport} 
+                  isRefreshing={isRefreshing} 
+                />
+              </div>
+
+              {/* 3. Table Control Header (Between Filters & List) */}
+              <div className="px-4 sm:px-8 mt-6 w-full">
+                <div className="flex items-center justify-between py-4 border-b border-slate-200">
+                  <h3 className="font-sora font-bold text-[#0F172A] text-[14px] sm:text-[16px]">All Products</h3>
+                  <button 
+                    onClick={() => navigate('/add')} 
+                    className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-gray-900 hover:bg-black text-white text-[12px] sm:text-[13px] font-bold font-inter rounded-[10px] transition-all shadow-sm active:scale-95"
+                  >
+                    <Plus size={16} /> Add Product
+                  </button>
+                </div>
+              </div>
+
+              {/* 4. Data Grid Area */}
+              <div className="w-full flex flex-col flex-1 bg-white">
+                {isLoading ? (
+                  <div className="px-4 sm:px-8 pb-10"><SkeletonLoader rows={6} /></div>
+                ) : products.length === 0 ? (
+                  <div className="px-4 sm:px-8 pb-10 flex-1 flex flex-col justify-center"><EmptyState isFiltered={isFiltered} onAddProduct={() => navigate('/add')} onReset={handleReset} /></div>
+                ) : (
+                  <div className="w-full flex flex-col flex-1 h-full">
+                    
+                    {/* DESKTOP VIEW - Using strictly defined percentage widths to prevent horizontal scroll */}
+                    <div className="hidden lg:block w-full flex-1">
+                      <table className="w-full text-left border-collapse table-fixed">
+                        <colgroup>
+                          <col className="w-[28%]" /> {/* Product & ID */}
+                          <col className="w-[12%]" /> {/* Brand */}
+                          <col className="w-[13%]" /> {/* Min Qty */}
+                          <col className="w-[13%]" /> {/* Base Price */}
+                          <col className="w-[15%]" /> {/* Bulk Tier */}
+                          <col className="w-[9%]" />  {/* Stock */}
+                          <col className="w-[10%]" /> {/* Action */}
+                        </colgroup>
+                        <thead className="bg-white border-b border-slate-200">
+                          <tr>
+                            <th className="py-4 pl-8 pr-3 text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#94A3B8]">Product & ID</th>
+                            <th className="py-4 px-3 text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#94A3B8]">Brand</th>
+                            <th className="py-4 px-3 text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#94A3B8]">Min Qty</th>
+                            <th className="py-4 px-3 text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#94A3B8]">Base Price</th>
+                            <th className="py-4 px-3 text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#94A3B8]">Bulk Tier</th>
+                            <th className="py-4 px-3 text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#94A3B8] text-center">Stock</th>
+                            <th className="py-4 pr-8 pl-3 text-[11px] font-inter font-bold uppercase tracking-[0.1em] text-[#94A3B8] text-right">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white">
+                          {products.map((product) => {
+                            const status = getStockStatus(product.availableStock, product.minimumOrderQuantity);
+
+                            return (
+                              <motion.tr 
+                                key={product.id}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="group border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
+                              >
+                                <td className="py-4 pl-8 pr-3 align-middle overflow-hidden text-ellipsis whitespace-nowrap">
+                                  <div className="flex flex-col gap-1 pr-2">
+                                    <span className="font-sora text-[13px] font-bold text-[#0F172A] truncate" title={product.productName}>
+                                      {product.productName}
+                                    </span>
+                                    <span className="font-inter text-[11px] text-[#94A3B8] font-medium truncate">
+                                      ID: {product.id.substring(0,8).toUpperCase()} <span className="mx-1">•</span> {product.category}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="py-4 px-3 align-middle overflow-hidden text-ellipsis whitespace-nowrap">
+                                  <span className="font-sora text-[12px] font-bold text-[#475569] truncate block">
+                                    {product.brand}
+                                  </span>
+                                </td>
+                                <td className="py-4 px-3 align-middle">
+                                  <span className="inline-flex items-center px-2 py-1 rounded-[6px] bg-slate-100 border border-slate-200 text-[#475569] font-sora text-[11px] font-bold uppercase tracking-wide">
+                                    {product.minimumOrderQuantity} {product.unit}
+                                  </span>
+                                </td>
+                                <td className="py-4 px-3 align-middle">
+                                  <div className="flex items-baseline gap-1">
+                                    <span className="font-sora text-[14px] font-[800] text-[#0F172A]">
+                                      ₹{product.price.toLocaleString('en-IN')}
+                                    </span>
+                                    <span className="font-inter text-[11px] font-medium text-[#94A3B8]">/{product.unit}</span>
+                                  </div>
+                                </td>
+                                <td className="py-4 px-3 align-middle">
+                                  <div className="flex flex-col gap-0.5">
+                                    {product.bulkDealQuantity && product.bulkDealPrice ? (
+                                      <>
+                                        <span className="font-inter text-[10px] font-bold text-pink-600 uppercase tracking-widest">
+                                          Bulk {product.bulkDealQuantity}+
+                                        </span>
+                                        <span className="font-sora text-[13px] font-bold text-[#0F172A]">
+                                          ₹{product.bulkDealPrice.toLocaleString('en-IN')}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <span className="font-inter text-[11px] text-[#94A3B8] italic">No tier</span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="py-4 px-3 align-middle text-center">
+                                  <div className="flex flex-col items-center justify-center gap-1.5">
+                                    <StatusBadge status={status} />
+                                    <span className={`text-[13px] font-sora font-bold ${status === 'out' ? 'text-rose-600' : status === 'low' ? 'text-amber-600' : 'text-[#0F172A]'}`}>
+                                      {product.availableStock}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="py-4 pr-8 pl-3 align-middle text-right">
+                                  <ActionButtons 
+                                    onEdit={() => setEditingProduct(product)} 
+                                    onDelete={() => handleDeleteProduct(product.id)} 
+                                  />
+                                </td>
+                              </motion.tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* MOBILE / TABLET VIEW - Perfect for 320px to 768px */}
+                    <div className="flex flex-col gap-4 lg:hidden w-full px-3 sm:px-4 py-2 bg-slate-50 min-h-screen">
+                      {products.map((product) => {
+                        const status = getStockStatus(product.availableStock, product.minimumOrderQuantity);
+                        return (
+                          <div key={product.id} className="p-4 sm:p-5 flex flex-col gap-4 bg-white border border-slate-200 rounded-[16px] shadow-sm w-full">
+                            
+                            <div className="flex flex-col overflow-hidden w-full">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="font-inter text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] text-[#0F172A] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-[4px]">{product.brand}</span>
+                                <span className="font-inter text-[9px] sm:text-[10px] text-[#94A3B8] font-semibold truncate">ID: {product.id.substring(0,8).toUpperCase()}</span>
+                              </div>
+                              <h3 className="font-sora text-[14px] sm:text-[16px] font-bold text-[#0F172A] leading-[1.3] truncate w-full">{product.productName}</h3>
+                            </div>
+
+                            <div className="flex items-center justify-between border-y border-slate-100 py-3 mt-1">
+                              <div className="flex flex-col min-w-0 flex-1 border-r border-slate-100 pr-2">
+                                <span className="font-inter text-[9px] sm:text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.1em] mb-1">Base Price</span>
+                                <span className="font-sora text-[13px] sm:text-[14px] font-[800] text-[#0F172A] truncate">₹{product.price.toLocaleString('en-IN')}<span className="text-[9px] sm:text-[10px] text-[#94A3B8] font-normal font-inter">/{product.unit}</span></span>
+                              </div>
+                              <div className="flex flex-col min-w-0 flex-1 border-r border-slate-100 px-2 sm:px-4">
+                                <span className="font-inter text-[9px] sm:text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.1em] mb-1">Min Qty</span>
+                                <span className="font-sora text-[12px] sm:text-[13px] font-bold text-[#0F172A] truncate">{product.minimumOrderQuantity} {product.unit}</span>
+                              </div>
+                              <div className="flex flex-col min-w-0 flex-1 pl-2 sm:pl-4">
+                                <span className="font-inter text-[9px] sm:text-[10px] font-bold text-[#94A3B8] uppercase tracking-[0.1em] mb-1">Stock</span>
+                                <span className={`font-sora text-[13px] sm:text-[14px] font-bold truncate ${status === 'out' ? 'text-rose-600' : status === 'low' ? 'text-amber-600' : 'text-[#10B981]'}`}>{product.availableStock}</span>
+                              </div>
+                            </div>
+
+                            {product.bulkDealQuantity && product.bulkDealPrice && (
+                              <div className="bg-pink-50 border border-pink-100 rounded-[12px] p-3 sm:p-3.5 flex justify-between items-center w-full">
+                                 <div className="flex flex-col min-w-0 pr-2">
+                                   <span className="font-inter text-[9px] sm:text-[10px] font-bold text-[#64748B] uppercase tracking-[0.1em]">Bulk Deal</span>
+                                   <span className="font-sora text-[12px] sm:text-[13px] font-bold text-[#0F172A] mt-0.5 truncate">{product.bulkDealQuantity}+ {product.unit}s</span>
+                                 </div>
+                                 <div className="flex flex-col items-end min-w-0 pl-2">
+                                   <span className="font-inter text-[9px] sm:text-[10px] font-bold text-[#64748B] uppercase tracking-[0.1em]">Special Price</span>
+                                   <span className="font-sora text-[13px] sm:text-[15px] font-[800] text-pink-600 mt-0.5 truncate">₹{product.bulkDealPrice.toLocaleString('en-IN')}</span>
+                                 </div>
+                              </div>
+                            )}
+
+                            <div className="flex items-center justify-between mt-1">
+                              <StatusBadge status={status} />
+                              <ActionButtons 
+                                onEdit={() => setEditingProduct(product)} 
+                                onDelete={() => handleDeleteProduct(product.id)} 
+                              />
+                            </div>
+
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </motion.main>
 
         {/* --- OVERLAYS --- */}
-        <EditProductModal 
-          isOpen={!!editingProduct} 
-          product={editingProduct} 
-          onClose={() => setEditingProduct(null)} 
-          onSave={handleUpdateProduct} 
-        />
-        <PremiumToast 
-          message={toastMessage} 
-          isVisible={!!toastMessage} 
-          onClose={() => setToastMessage('')} 
-        />
+        {!fetchError && (
+          <EditProductModal 
+            isOpen={!!editingProduct} 
+            product={editingProduct} 
+            onClose={() => setEditingProduct(null)} 
+            onSave={handleUpdateProduct} 
+          />
+        )}
       </div>
     </>
   );

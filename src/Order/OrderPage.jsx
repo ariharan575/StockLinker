@@ -10,6 +10,10 @@ import { useAuth } from '../Authentication/context/AuthContext';
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
 
+// --- ADDED PREMIUM COMPONENTS IMPORTS ---
+import { PremiumToast } from "../components/PremiumToast";
+import { DataFetchError } from "../components/DataFetchError";
+
 const TABS = [
   { key: "all", label: "All Orders" },
   { key: "PENDING", label: "Pending Requests" },
@@ -38,8 +42,11 @@ export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null); // Network Error State
   const [searchTerm, setSearchTerm] = useState("");
+
+  // --- ADDED STATE FOR DATA FETCH ERROR & NOTIFICATION ---
+  const [fetchError, setFetchError] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   // Live Tracking State
   const [activeRouteOrderId, setActiveRouteOrderId] = useState(null);
@@ -59,10 +66,15 @@ export default function OrdersPage() {
   const [routeOrders, setRouteOrders] = useState([]);
   const [isSavingRoute, setIsSavingRoute] = useState(false);
 
+  // --- NOTIFICATION HANDLER ---
+  const showNotification = (type, msg) => {
+    setNotification({ type, msg });
+  };
+
   // 1. Fetch Orders Engine
   const fetchOrders = useCallback(async () => {
     setIsLoading(true);
-    setError(null);
+    setFetchError(false); // Reset error state before fetch
     try {
       const response = await orderApi.getOrders(activeTab);
       
@@ -79,7 +91,7 @@ export default function OrdersPage() {
       }
     } catch (err) {
       console.error("Failed to fetch orders", err);
-      setError("Unable to connect to the network. Please check your connection and try again.");
+      setFetchError(true); // --- TRIGGER ERROR COMPONENT ON FAIL ---
       setOrders([]);
     } finally {
       setIsLoading(false);
@@ -142,7 +154,7 @@ export default function OrdersPage() {
   // --- CONTROLLER ACTIONS ---
 
   const handleAcceptSubmit = async () => {
-    if (!scheduledDate) return alert("Please select a delivery date");
+    if (!scheduledDate) return showNotification("error", "Please select a delivery date");
     try {
       await orderApi.acceptAndSchedule(acceptModalOrder.id, scheduledDate);
       
@@ -150,21 +162,22 @@ export default function OrdersPage() {
       setRouteOrders(res.data || []);
       setAcceptModalOrder(null);
       setRouteBuilderModalOpen(true);
-      
+      showNotification("success", "Order accepted successfully!");
     } catch (error) {
-      alert("Failed to accept order");
+      showNotification("error", "Failed to accept order");
     }
   };
 
   const handleRejectSubmit = async () => {
-    if (!rejectionReason) return alert("Please specify a rejection reason.");
+    if (!rejectionReason) return showNotification("error", "Please specify a rejection reason.");
     try {
       await orderApi.rejectOrder(rejectModalOrder.id, rejectionReason);
       setRejectModalOrder(null);
       setRejectionReason("");
+      showNotification("success", "Order rejected successfully.");
       fetchOrders();
     } catch (error) {
-      alert("Failed to reject order");
+      showNotification("error", "Failed to reject order");
     }
   };
 
@@ -181,30 +194,44 @@ export default function OrdersPage() {
       const orderedIds = routeOrders.map(o => o.id);
       await orderApi.updateRouteSequence(scheduledDate, orderedIds);
       setRouteBuilderModalOpen(false);
+      showNotification("success", "Route sequence saved!");
       fetchOrders();
     } catch (error) {
-      alert("Failed to save route sequence");
+      showNotification("error", "Failed to save route sequence");
     } finally {
       setIsSavingRoute(false);
     }
   };
 
-  const handleStartDeliveryRoute = async (date) => {
-    if(!window.confirm("Start delivery route? All scheduled orders for this date will be marked 'Out for Delivery'.")) return;
+const handleStartDeliveryRoute = async (date) => {
+    // 1. Safety Check: Ensure the date actually exists before making the API call
+    if (!date) {
+      showNotification("error", "Cannot start route: No delivery date assigned to this order.");
+      return;
+    }
+
+    // 2. Format check (Optional but safe: Ensures date is a string if your backend sends arrays)
+    const formattedDate = Array.isArray(date) ? date.join('-') : date;
+
+    if(!window.confirm(`Start delivery route for ${formattedDate}? All scheduled orders for this date will be marked 'Out for Delivery'.`)) return;
+    
     try {
-      await orderApi.startRouteForDate(date);
+      await orderApi.startRouteForDate(formattedDate);
+      showNotification("success", "Delivery route started successfully!");
       fetchOrders();
     } catch (error) {
-      alert("Failed to start route.");
+      console.error(error);
+      showNotification("error", "Failed to start route.");
     }
   };
 
   const handleMarkDelivered = async (orderId) => {
     try {
       await orderApi.markDelivered(orderId);
+      showNotification("success", "Order marked as delivered!");
       fetchOrders();
     } catch (error) {
-      alert("Failed to update status to DELIVERED");
+      showNotification("error", "Failed to update status to DELIVERED");
     }
   };
 
@@ -273,167 +300,166 @@ export default function OrdersPage() {
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
       `}} />
 
+      {/* --- PREMIUM TOAST COMPONENT --- */}
+      <PremiumToast 
+        isVisible={!!notification} 
+        type={notification?.type || 'info'} 
+        message={notification?.msg} 
+        onClose={() => setNotification(null)} 
+      />
+
       <div className="bg-[#FAFAFA] font-['Inter',_sans-serif] text-[#0F1626] p-4 md:p-5 pb-24 min-h-screen">
-        <div className="max-w-[1440px] mx-auto flex flex-col gap-6 sm:gap-8">
-          
-          {/* Main Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mt-2 sm:mt-0">
-            <div>
-              <h1 className="text-[24px] sm:text-[32px] font-extrabold tracking-tight text-gray-900">
-                 My Orders
-              </h1>
-              <p className="text-[13px] sm:text-[14px] font-medium text-slate-500 mt-1">
-                {pageRole === 'WHOLESALER' ? 'Manage incoming requests, schedule deliveries, and sequence your routes.' : 'Track live deliveries, view invoices, and review order history.'}
-              </p>
-            </div>
-            <div className="relative w-full md:w-[320px]">
-              <Search className="absolute left-3.5 top-2.5 text-slate-400" size={18} strokeWidth={2} />
-              <input 
-                type="text" 
-                placeholder="Search order ID..." 
-                value={searchTerm} 
-                onChange={e => setSearchTerm(e.target.value)} 
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[14px] font-medium focus:border-black focus:ring-1 focus:ring-black outline-none transition-all shadow-sm" 
-              />
-            </div>
-          </div>
-
-          {/* Navigation Tabs (Hidden Scrollbar) */}
-          <div className="flex items-center gap-6 sm:gap-8 border-b border-slate-200 overflow-x-auto no-scrollbar pb-px">
-            {TABS.map(tab => (
-              <button 
-                key={tab.key} 
-                onClick={() => setActiveTab(tab.key)} 
-                className={`pb-3 text-[13px] sm:text-[14px] font-bold whitespace-nowrap transition-all border-b-[3px] ${activeTab === tab.key ? 'border-black text-black' : 'border-transparent text-slate-600 hover:text-black'}`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Core Interface Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-[2.5fr_1fr] gap-6 items-start">
+        {/* --- ADDED CHECK TO RENDER ERROR COMPONENT AS FULL PAGE REPLACEMENT --- */}
+        {fetchError ? (
+          <DataFetchError onRetry={fetchOrders} />
+        ) : (
+          <div className="max-w-[1440px] mx-auto flex flex-col gap-6 sm:gap-8">
             
-            {/* LEFT COLUMN: Order List */}
-            <div className="space-y-4">
-              {error ? (
-                <div className="bg-white border border-rose-200 rounded-[24px] min-h-[400px] sm:min-h-[450px] flex flex-col items-center justify-center text-center shadow-sm p-6 sm:p-8 animate-[fadeIn_0.3s_ease-out]">
-                  <div className="w-16 h-16 bg-rose-50 border border-rose-100 rounded-full flex items-center justify-center mb-6 text-rose-500">
-                    <AlertCircle size={28} />
-                  </div>
-                  <h3 className="font-['Manrope',_sans-serif] text-[20px] font-extrabold text-black mb-2">Network Connection Issue</h3>
-                  <p className="font-['Inter',_sans-serif] text-[13px] sm:text-[14px] font-medium text-slate-500 max-w-[320px] mb-6">
-                    {error}
-                  </p>
-                  <button onClick={fetchOrders} className="bg-black text-white px-8 py-3 rounded-xl font-bold text-[14px] hover:bg-slate-800 transition-all shadow-md active:scale-95 flex items-center gap-2">
-                    <Loader2 size={16} className={isLoading ? "animate-spin" : ""} /> Try Again
-                  </button>
-                </div>
-              ) : isLoading ? (
-                <div className="flex items-center justify-center min-h-[400px] sm:min-h-[450px] bg-white border border-slate-200 rounded-[24px] shadow-sm">
-                  <Loader2 className="w-8 h-8 animate-spin text-black" />
-                </div>
-              ) : displayOrders.length === 0 ? (
-                <div className="bg-white border border-slate-200 rounded-[24px] min-h-[400px] sm:min-h-[450px] flex flex-col items-center justify-center text-center shadow-sm p-6 sm:p-8">
-                  <div className="w-16 h-16 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center mb-6">
-                    <ShoppingCart size={24} className="text-slate-300" />
-                  </div>
-                  <h3 className="font-['Manrope',_sans-serif] text-[20px] font-extrabold text-black mb-2">No orders found</h3>
-                  <p className="font-['Inter',_sans-serif] text-[13px] sm:text-[14px] font-medium text-slate-500 max-w-[320px] mb-8">
-                    {pageRole === 'WHOLESALER' ? 'You have no orders matching this status right now.' : "You haven't placed any wholesale orders yet."}
-                  </p>
-                  {pageRole !== 'WHOLESALER' && (
-                    <button onClick={() => navigate('/nearby')} className="bg-black text-white px-8 py-3 rounded-xl font-bold text-[14px] hover:bg-slate-800 transition-all shadow-md active:scale-95">
-                      Explore Nearby Sellers
-                    </button>
-                  )}
-                </div>
-              ) : (
-                displayOrders.map((order) => (
-                  <div 
-                    key={order.id} 
-                    onClick={() => setActiveRouteOrderId(order.id)}
-                    className={`rounded-[20px] bg-white border p-5 sm:p-6 transition-all cursor-pointer ${activeRouteOrderId === order.id ? 'border-pink-500 shadow-md ring-1 ring-pink-500/10' : 'border-slate-200 shadow-sm hover:border-slate-300'}`}
-                  >
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4 sm:pb-5  sm:mb-5">
-                      <div>
-                        <h3 className="font-['Manrope',_sans-serif] font-extrabold text-[16px] sm:text-[18px] text-black flex items-center flex-wrap gap-2 sm:gap-2.5">
-                          {order.orderNumber}
-                          <span className={`text-[9px] sm:text-[10px] font-extrabold px-2.5 py-0.5 rounded border tracking-widest uppercase whitespace-nowrap ${STATUS_STYLES[order.status] || "bg-slate-100"}`}>
-                            {order.status.replace(/_/g, ' ')}
-                          </span>
-                        </h3>
-                        <p className="text-[12px] sm:text-[13px] text-slate-500 mt-1.5 font-medium">Placed: {new Date(order.placedAt).toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'})}</p>
-                        {order.deliveryDate && <p className="text-[12px] sm:text-[13px] font-bold text-black mt-1.5 flex items-center gap-1.5"><Clock size={14} className="text-pink-500"/> Scheduled Delivery: {order.deliveryDate}</p>}
-                        {order.rejectionReason && <p className="text-[12px] sm:text-[13px] font-bold text-rose-600 mt-1.5">Reason: {order.rejectionReason}</p>}
-                      </div>
-                      <div className="text-left md:text-right">
-                        <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Total Amount</span>
-                        <span className="font-['Manrope',_sans-serif] text-[20px] sm:text-[24px] font-extrabold text-black">{formatINR(order.totalAmount)}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div className="text-[13px] sm:text-[14px] font-bold text-slate-700 flex items-center gap-2">
-                        <ShieldCheck size={18} className="text-pink-500"/> {pageRole === 'WHOLESALER' ? order.buyerName : order.sellerName} <span className="text-slate-300 mx-1">•</span> {order.totalItems} Items
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-1 sm:gap-3 w-full md:w-auto">
-                        
-                        {/* WHOLESALER ONLY ACTIONS */}
-                        {pageRole === 'WHOLESALER' && order.status === 'PENDING' && (
-                          <>
-                            <button onClick={(e) => { e.stopPropagation(); setRejectModalOrder(order); }} className="flex-1 md:flex-none px-4 sm:px-6 py-2.5 bg-white border border-slate-200 text-black text-[12px] sm:text-[13px] font-bold rounded-xl hover:bg-slate-50 transition-colors shadow-sm active:scale-95">Reject</button>
-                            <button onClick={(e) => { e.stopPropagation(); setAcceptModalOrder(order); }} className="flex-1 md:flex-none px-4 sm:px-6 py-2.5 bg-black text-white text-[12px] sm:text-[13px] font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-sm active:scale-95">Accept Order</button>
-                          </>
-                        )}
-                        
-                        {pageRole === 'WHOLESALER' && order.status === 'PROCESSING' && (
-                          <button onClick={(e) => { e.stopPropagation(); handleStartDeliveryRoute(order.deliveryDate); }} className="flex-1 md:flex-none px-4 sm:px-6 py-2.5 bg-slate-200  text-black text-[12px] sm:text-[13px] font-bold rounded-xl hover:bg-slate-400 transition-colors flex items-center justify-center gap-2 shadow-sm active:scale-95">
-                            <Play size={16} fill="currentColor"/> Start Delivery
-                          </button>
-                        )}
-
-                        {pageRole === 'WHOLESALER' && order.status === 'OUT_FOR_DELIVERY' && (
-                          <button onClick={(e) => { e.stopPropagation(); handleMarkDelivered(order.id); }} className="flex-1 md:flex-none px-4 sm:px-6 py-2.5 bg-[#067647] text-white text-[12px] sm:text-[13px] font-bold rounded-xl hover:bg-[#05603a] transition-colors flex items-center justify-center gap-2 shadow-sm active:scale-95">
-                            <CheckCircle2 size={16}/> Delivered
-                          </button>
-                        )}
-
-                        {/* MOBILE LIVE TRACKER BUTTON (Visible only on < xl screens if order is active) */}
-                        {['PROCESSING', 'OUT_FOR_DELIVERY'].includes(order.status) && (
-                           <button 
-                             onClick={(e) => { e.stopPropagation(); setActiveRouteOrderId(order.id); setIsTrackerModalOpen(true); }} 
-                             className="xl:hidden flex-1 md:flex-none px-4 sm:px-6 py-2.5 bg-pink-50 border border-pink-200 text-pink-600 text-[12px] sm:text-[13px] font-bold rounded-xl hover:bg-pink-100 transition-colors shadow-sm active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap"
-                           >
-                             <Map size={16}/> Track Live
-                           </button>
-                        )}
-
-                        {/* UNIVERSAL ACTION */}
-                        <button onClick={(e) => { e.stopPropagation(); setModalOrder(order); }} className="flex-1 md:flex-none px-4 sm:px-6 py-2.5 bg-black border border-slate-200 text-white text-[12px] sm:text-[13px] font-bold rounded-xl cursor-pointer transition-colors shadow-sm active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
-                          View Details
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
+            {/* Main Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mt-2 sm:mt-2">
+              <div>
+                <h1 className="text-[24px] sm:text-[32px] font-extrabold tracking-tight text-gray-900">
+                   My Orders
+                </h1>
+                <p className="text-[13px] sm:text-[14px] font-medium text-slate-500 mt-1">
+                  {pageRole === 'WHOLESALER' ? 'Manage incoming requests, schedule deliveries, and sequence your routes.' : 'Track live deliveries, view invoices, and review order history.'}
+                </p>
+              </div>
+              <div className="relative w-full md:w-[320px]">
+                <Search className="absolute left-3.5 top-2.5 text-slate-400" size={18} strokeWidth={2} />
+                <input 
+                  type="text" 
+                  placeholder="Search order ID..." 
+                  value={searchTerm} 
+                  onChange={e => setSearchTerm(e.target.value)} 
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[14px] font-medium focus:border-black focus:ring-1 focus:ring-black outline-none transition-all shadow-sm" 
+                />
+              </div>
             </div>
 
-            {/* RIGHT COLUMN: Live Animated Delivery Tracker (Desktop Only) */}
-            <div className="hidden xl:block bg-white border border-slate-200 rounded-[24px] p-6 shadow-sm sticky top-24 min-h-[450px]">
-              <TrackerContent />
+            {/* Navigation Tabs (Hidden Scrollbar) */}
+            <div className="flex items-center gap-6 sm:gap-8 border-b border-slate-200 overflow-x-auto no-scrollbar pb-px mt-6">
+              {TABS.map(tab => (
+                <button 
+                  key={tab.key} 
+                  onClick={() => setActiveTab(tab.key)} 
+                  className={`pb-3 text-[13px] sm:text-[14px] font-bold whitespace-nowrap transition-all border-b-[3px] ${activeTab === tab.key ? 'border-black text-black' : 'border-transparent text-slate-600 hover:text-black'}`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
+            <div className="grid grid-cols-1 xl:grid-cols-[2.5fr_1fr] gap-6 items-start">
+              
+              {/* LEFT COLUMN: Order List */}
+              <div className="space-y-4">
+                {isLoading ? (
+                  <div className="flex items-center justify-center min-h-[400px] sm:min-h-[450px] bg-white border border-slate-200 rounded-[24px] shadow-sm">
+                    <Loader2 className="w-8 h-8 animate-spin text-black" />
+                  </div>
+                ) : displayOrders.length === 0 ? (
+                  <div className="bg-white border border-slate-200 rounded-[24px] min-h-[400px] sm:min-h-[450px] flex flex-col items-center justify-center text-center shadow-sm p-6 sm:p-8">
+                    <div className="w-16 h-16 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center mb-6">
+                      <ShoppingCart size={24} className="text-slate-300" />
+                    </div>
+                    <h3 className="font-['Manrope',_sans-serif] text-[20px] font-extrabold text-black mb-2">No orders found</h3>
+                    <p className="font-['Inter',_sans-serif] text-[13px] sm:text-[14px] font-medium text-slate-500 max-w-[320px] mb-8">
+                      {pageRole === 'WHOLESALER' ? 'You have no orders matching this status right now.' : "You haven't placed any wholesale orders yet."}
+                    </p>
+                    {pageRole !== 'WHOLESALER' && (
+                      <button onClick={() => navigate('/nearby')} className="bg-black text-white px-8 py-3 rounded-xl font-bold text-[14px] hover:bg-slate-800 transition-all shadow-md active:scale-95">
+                        Explore Nearby Sellers
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  displayOrders.map((order) => (
+                    <div 
+                      key={order.id} 
+                      onClick={() => setActiveRouteOrderId(order.id)}
+                      className={`rounded-[20px] bg-white border p-5 sm:p-6 transition-all cursor-pointer ${activeRouteOrderId === order.id ? 'border-pink-500 shadow-md ring-1 ring-pink-500/10' : 'border-slate-200 shadow-sm hover:border-slate-300'}`}
+                    >
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4 sm:pb-5  sm:mb-5">
+                        <div>
+                          <h3 className="font-['Manrope',_sans-serif] font-extrabold text-[16px] sm:text-[18px] text-black flex items-center flex-wrap gap-2 sm:gap-2.5">
+                            {order.orderNumber}
+                            <span className={`text-[9px] sm:text-[10px] font-extrabold px-2.5 py-0.5 rounded border tracking-widest uppercase whitespace-nowrap ${STATUS_STYLES[order.status] || "bg-slate-100"}`}>
+                              {order.status.replace(/_/g, ' ')}
+                            </span>
+                          </h3>
+                          <p className="text-[12px] sm:text-[13px] text-slate-500 mt-1.5 font-medium">Placed: {new Date(order.placedAt).toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'})}</p>
+                          {order.deliveryDate && <p className="text-[12px] sm:text-[13px] font-bold text-black mt-1.5 flex items-center gap-1.5"><Clock size={14} className="text-pink-500"/> Scheduled Delivery: {order.deliveryDate}</p>}
+                          {order.rejectionReason && <p className="text-[12px] sm:text-[13px] font-bold text-rose-600 mt-1.5">Reason: {order.rejectionReason}</p>}
+                        </div>
+                        <div className="text-left md:text-right">
+                          <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Total Amount</span>
+                          <span className="font-['Manrope',_sans-serif] text-[20px] sm:text-[24px] font-extrabold text-black">{formatINR(order.totalAmount)}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div className="text-[13px] sm:text-[14px] font-bold text-slate-700 flex items-center gap-2">
+                          <ShieldCheck size={18} className="text-pink-500"/> {pageRole === 'WHOLESALER' ? order.buyerName : order.sellerName} <span className="text-slate-300 mx-1">•</span> {order.totalItems} Items
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-3 w-full md:w-auto">
+                          
+                          {/* WHOLESALER ONLY ACTIONS */}
+                          {pageRole === 'WHOLESALER' && order.status === 'PENDING' && (
+                            <>
+                              <button onClick={(e) => { e.stopPropagation(); setRejectModalOrder(order); }} className="flex-1 md:flex-none px-4 sm:px-6 py-2.5 bg-white border border-slate-200 text-black text-[12px] sm:text-[13px] font-bold rounded-xl hover:bg-slate-50 transition-colors shadow-sm active:scale-95">Reject</button>
+                              <button onClick={(e) => { e.stopPropagation(); setAcceptModalOrder(order); }} className="flex-1 md:flex-none px-4 sm:px-6 py-2.5 bg-black text-white text-[12px] sm:text-[13px] font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-sm active:scale-95">Accept Order</button>
+                            </>
+                          )}
+                          
+                          {pageRole === 'WHOLESALER' && order.status === 'PROCESSING' && (
+                            <button onClick={(e) => { e.stopPropagation(); handleStartDeliveryRoute(order.deliveryDate); }} className="flex-1 md:flex-none px-4 sm:px-6 py-2.5 bg-slate-200  text-black text-[12px] sm:text-[13px] font-bold rounded-xl hover:bg-slate-400 transition-colors flex items-center justify-center gap-2 shadow-sm active:scale-95">
+                              <Play size={16} fill="currentColor"/> Start Delivery
+                            </button>
+                          )}
+
+                          {pageRole === 'WHOLESALER' && order.status === 'OUT_FOR_DELIVERY' && (
+                            <button onClick={(e) => { e.stopPropagation(); handleMarkDelivered(order.id); }} className="flex-1 md:flex-none px-4 sm:px-6 py-2.5 bg-[#067647] text-white text-[12px] sm:text-[13px] font-bold rounded-xl hover:bg-[#05603a] transition-colors flex items-center justify-center gap-2 shadow-sm active:scale-95">
+                              <CheckCircle2 size={16}/> Delivered
+                            </button>
+                          )}
+
+                          {/* MOBILE LIVE TRACKER BUTTON (Visible only on < xl screens if order is active) */}
+                          {['PROCESSING', 'OUT_FOR_DELIVERY'].includes(order.status) && (
+                             <button 
+                               onClick={(e) => { e.stopPropagation(); setActiveRouteOrderId(order.id); setIsTrackerModalOpen(true); }} 
+                               className="xl:hidden flex-1 md:flex-none px-4 sm:px-6 py-2.5 bg-pink-50 border border-pink-200 text-pink-600 text-[12px] sm:text-[13px] font-bold rounded-xl hover:bg-pink-100 transition-colors shadow-sm active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap"
+                             >
+                               <Map size={16}/> Track Live
+                             </button>
+                          )}
+
+                          {/* UNIVERSAL ACTION */}
+                          <button onClick={(e) => { e.stopPropagation(); setModalOrder(order); }} className="flex-1 md:flex-none px-4 sm:px-6 py-2.5 bg-black border border-slate-200 text-white text-[12px] sm:text-[13px] font-bold rounded-xl cursor-pointer transition-colors shadow-sm active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* RIGHT COLUMN: Live Animated Delivery Tracker (Desktop Only) */}
+              <div className="hidden xl:block bg-white border border-slate-200 rounded-[24px] p-6 shadow-sm sticky top-24 min-h-[450px]">
+                <TrackerContent />
+              </div>
+
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* --- OVERLAY MODALS --- */}
 
       {/* MOBILE LIVE TRACKER MODAL (Sliding up from bottom) */}
-      {isTrackerModalOpen && (
+      {!fetchError && isTrackerModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
            <div className="bg-white rounded-t-[24px] sm:rounded-[24px] w-full max-w-md h-[80vh] sm:h-auto sm:max-h-[85vh] shadow-2xl flex flex-col overflow-hidden animate-[slideUp_0.3s_ease-out]">
               <div className="flex justify-end p-4 pb-0">
@@ -449,7 +475,7 @@ export default function OrdersPage() {
       )}
 
       {/* 1. ORDER DETAILS MANIFEST MODAL (EXACT SCREENSHOT MATCH) */}
-      {modalOrder && (
+      {!fetchError && modalOrder && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
           <div className="bg-white rounded-[24px] max-w-4xl w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
             
@@ -606,7 +632,7 @@ export default function OrdersPage() {
       )}
 
       {/* 2. WHolesaler ACCEPT & SCHEDULE MODAL */}
-      {acceptModalOrder && (
+      {!fetchError && acceptModalOrder && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
           <div className="bg-white rounded-[24px] max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6">
             <div>
@@ -618,7 +644,7 @@ export default function OrdersPage() {
               type="date" 
               value={scheduledDate} 
               onChange={e => setScheduledDate(e.target.value)} 
-              className="w-full p-3 sm:p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] sm:text-[14px] font-bold text-black outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all" 
+              className="w-full p-3.5 sm:p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] sm:text-[14px] font-bold text-black outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all" 
             />
 
             <div className="flex gap-3 pt-2">
@@ -630,7 +656,7 @@ export default function OrdersPage() {
       )}
 
       {/* 3. WHOLESALER ROUTE SEQUENCING MODAL */}
-      {routeBuilderModalOpen && (
+      {!fetchError && routeBuilderModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]">
           <div className="bg-white rounded-[24px] max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6">
             <div>
@@ -664,7 +690,7 @@ export default function OrdersPage() {
       )}
 
       {/* 4. WHOLESALER REJECT MODAL */}
-      {rejectModalOrder && (
+      {!fetchError && rejectModalOrder && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
           <div className="bg-white rounded-[24px] max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 sm:space-y-6">
             <div className="flex items-center gap-3">

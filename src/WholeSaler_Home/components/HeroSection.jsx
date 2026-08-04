@@ -6,7 +6,7 @@ import StoreImage from "../../assets/Store.png";
 const EASE = [0.22, 1, 0.36, 1];
 
 // Reusable StatCard Component (Strict Icon-Left, Text-Right, Ultra-Compact)
-const StatCard = ({ label, value, icon: Icon, index }) => (
+const StatCard = ({ label, value, icon: Icon, index, isLoading }) => (
   <motion.div
     initial={{ opacity: 0, y: 15 }}
     animate={{ opacity: 1, y: 0 }}
@@ -23,9 +23,13 @@ const StatCard = ({ label, value, icon: Icon, index }) => (
     {/* Text Data (Right Side) - Strictly 2 Lines, Truncated */}
     <div className="flex flex-col text-left min-w-0 flex-1 overflow-hidden">
       {/* Count (Top) */}
-      <span className="font-sora text-[12px] xs:text-[12px] sm:text-[15px] md:text-[20px] font-bold text-slate-900 leading-none truncate mb-0.5 sm:mb-1">
-        {value}
-      </span>
+      {isLoading ? (
+        <div className="h-3 sm:h-4 md:h-5 w-8 sm:w-12 bg-slate-200 rounded animate-pulse mb-1"></div>
+      ) : (
+        <span className="font-sora text-[12px] xs:text-[12px] sm:text-[15px] md:text-[20px] font-bold text-slate-900 leading-none truncate mb-0.5 sm:mb-1">
+          {value}
+        </span>
+      )}
       {/* Name/Label (Bottom) */}
       <span className="font-inter text-[8px] xs:text-[8px] sm:text-[9px] md:text-[10px] text-slate-400 uppercase tracking-widest font-bold truncate">
         {label}
@@ -34,7 +38,10 @@ const StatCard = ({ label, value, icon: Icon, index }) => (
   </motion.div>
 );
 
-const WholesalerHero = ({ userName = "Boomathi", kpis = [] }) => {
+const WholesalerHero = ({ userName, kpis = [] }) => {
+  // Detect if the API is still fetching data
+  const isLoading = !userName || userName === "Loading...";
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 15 }}
@@ -42,11 +49,6 @@ const WholesalerHero = ({ userName = "Boomathi", kpis = [] }) => {
       transition={{ duration: 0.6, ease: EASE }}
       className="relative w-full md:mt-4 z-20 flex"
     >
-      {/* 
-        Responsive Container 
-        Mobile (< 768px): Transparent/White, NO borders, perfectly flat.
-        Tablet & Desktop (md+): Fixed height, rounded bordered container with shadow.
-      */}
       <div className="relative w-full md:h-[260px] lg:h-[300px] md:bg-white md:rounded-[24px] lg:rounded-[32px] md:border border-slate-200 md:shadow-[0_8px_30px_rgba(15,23,42,0.04)] overflow-visible md:overflow-hidden flex">
         
         {/* RIGHT COLUMN IMAGE (Visible on Tablet and Desktop) */}
@@ -59,7 +61,6 @@ const WholesalerHero = ({ userName = "Boomathi", kpis = [] }) => {
             alt="Wholesale Dashboard" 
             className="w-full h-full object-cover object-center rounded-[16px] lg:rounded-[20px] shadow-sm" 
           />
-          {/* Gradient fade to blend image smoothly with the white background */}
           <div className="absolute inset-0 bg-gradient-to-r from-white via-white/50 to-transparent pointer-events-none" />
         </div>
 
@@ -69,23 +70,28 @@ const WholesalerHero = ({ userName = "Boomathi", kpis = [] }) => {
           {/* LEFT COLUMN: Text and KPIs */}
           <div className="w-full md:w-[65%] lg:w-[60%] h-full flex flex-col justify-center pointer-events-auto">
             
-            {/* 1. INLINE GREETING & NAME */}
             <h1 className="text-[24px] xs:text-[24px] sm:text-[28px] md:text-[32px] lg:text-[36px] font-sora font-bold text-slate-900 leading-tight flex items-center flex-wrap gap-x-1.5 sm:gap-x-2">
               Welcome back,
-              <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
-                {userName}
-              </span>
-              <span className="text-black inline-block origin-bottom-right hover:animate-[wave_1s_ease-in-out_infinite]">👋</span>
+              {isLoading ? (
+                // Premium Shimmer Effect while loading
+                <div className="h-8 sm:h-10 md:h-12 w-32 sm:w-48 bg-slate-200 rounded-xl animate-pulse ml-1"></div>
+              ) : (
+                <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
+                  {userName}
+                </span>
+              )}
+              {!isLoading && (
+                <span className="text-black inline-block origin-bottom-right hover:animate-[wave_1s_ease-in-out_infinite]">👋</span>
+              )}
             </h1>
 
-            {/* 2. DESCRIPTION */}
             <p className="mt-1.5 sm:mt-2 md:mt-3 text-[13px] sm:text-[13px] md:text-[14px] lg:text-[15px] text-slate-500 font-inter font-medium leading-relaxed max-w-[95%] md:max-w-[480px]">
-              Manage your inventory, receive buyer enquiries, fulfil wholesale orders, and grow your business            </p>
+              Manage your inventory, receive buyer enquiries, fulfil wholesale orders, and grow your business
+            </p>
 
-            {/* 3. KPI CARDS CONTAINER (Strictly 3 items in a single row across all devices) */}
             <div className="mt-5 sm:mt-6 md:mt-8 flex flex-row w-full gap-1.5 xs:gap-2 sm:gap-3 md:gap-4 max-w-full md:max-w-[500px] lg:max-w-[580px] z-50">
               {kpis.map((kpi, i) => (
-                <StatCard key={i} {...kpi} index={i} />
+                <StatCard key={i} {...kpi} index={i} isLoading={isLoading} />
               ))}
             </div>
 
@@ -93,7 +99,6 @@ const WholesalerHero = ({ userName = "Boomathi", kpis = [] }) => {
         </div>
       </div>
 
-      {/* Global wave animation for the emoji */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes wave { 
           0%, 100% { transform: rotate(0deg); } 

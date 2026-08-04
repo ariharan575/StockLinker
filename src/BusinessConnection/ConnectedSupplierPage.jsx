@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -6,26 +6,37 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Star, Navigation, Phone, MessageSquare, Clock, Sparkles, CheckCircle2, 
   Building2, Search, ArrowRight, AlertCircle, Loader2, Users, Compass, 
-  Bell, MapPin, ShieldCheck, Award, Package, Truck
+  Bell, MapPin, ShieldCheck, Award, Package, Truck, X
 } from 'lucide-react';
 import { networkApi } from '../Authentication/services/api'; 
+
+// --- ADDED PREMIUM COMPONENTS IMPORTS ---
+import { PremiumToast } from "../components/PremiumToast";
+import { DataFetchError } from "../components/DataFetchError";
+
+// ============================================================
+// IMAGE UTILS FOR CATEGORIES
+// ============================================================
+// Safely import subcategory images based on the reference provided
+const subcategoryImages = import.meta.glob(
+  "../assets/subcategories/*", 
+  { eager: true, import: "default" }
+);
+
+const getSubcategoryImageUrl = (imageName) => {
+  if (!imageName) return null;
+  if (imageName.startsWith('http') || imageName.startsWith('data:')) return imageName;
+  
+  // Try to match the filename across different potential path depths
+  const matchingKey = Object.keys(subcategoryImages).find(key => key.includes(imageName));
+  return matchingKey ? subcategoryImages[matchingKey] : null;
+};
 
 const CTA_GRAD = "linear-gradient(135deg, #0F172A, #334155)";
 
 const fadeUp = (delay = 0) => ({ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5, ease: "easeOut", delay } });
 
-function LiveToast({ notification, onClose }) {
-  if (!notification) return null;
-  return (
-    <motion.div initial={{ opacity: 0, y: -50, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] bg-white border border-emerald-200 shadow-2xl rounded-2xl p-4 flex items-center gap-4 min-w-[300px]">
-      <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center"><Bell size={20} className="animate-bounce" /></div>
-      <div className="flex-1"><h4 className="text-sm font-bold text-zinc-900">{notification.type === 'NEW_REQUEST' ? 'New Connection Request' : 'Connection Accepted'}</h4><p className="text-xs text-zinc-500">{notification.message}</p></div>
-      <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600">×</button>
-    </motion.div>
-  );
-}
-
-function SupplierCard({ supplier, index, isConnected, onAccept, isPendingReq }) {
+function SupplierCard({ supplier, index, isConnected, onAccept, isPendingReq, onNotify, onShowMore }) {
   const navigate = useNavigate();
   const initial = supplier.name ? supplier.name.charAt(0).toUpperCase() : "B";
   const verified = supplier.verificationStatus === "VERIFIED" || supplier.verification?.includes("Business Verified");
@@ -39,13 +50,28 @@ function SupplierCard({ supplier, index, isConnected, onAccept, isPendingReq }) 
     try {
       await networkApi.requestConnection(supplier.id);
       setConnectStatus('PENDING');
-    } catch (err) { console.error(err); } finally { setIsConnecting(false); }
+      if (onNotify) onNotify('success', `Connection request sent to ${supplier.name}`);
+    } catch (err) { 
+      console.error(err); 
+      if (onNotify) onNotify('error', 'Failed to send connection request.');
+    } finally { 
+      setIsConnecting(false); 
+    }
   };
 
   const handleMessageClick = () => {
-    navigate('/messages', {
+    navigate('/message', {
       state: { partnerToMessage: { id: supplier.userId || supplier.id, name: supplier.name, businessName: supplier.category, profileImage: null } }
     });
+  };
+
+  const handleViewProfile = () => {
+    const profileId = supplier.businessProfileId || supplier.id;
+    if (profileId) {
+      navigate(`/storefront/${profileId}`);
+    } else {
+      console.error("Missing business profile reference.");
+    }
   };
 
   const displaySubs = supplier.subCategories?.slice(0, 3) || [];
@@ -75,13 +101,29 @@ function SupplierCard({ supplier, index, isConnected, onAccept, isPendingReq }) 
 
       <div className="mt-auto">
         <div className="flex gap-2 w-full overflow-x-auto pb-3 no-scrollbar items-center">
-          {displaySubs.map((sub, idx) => (
-            <div key={idx} className="relative border border-zinc-200 rounded-md overflow-hidden w-10 h-10 flex-shrink-0 group/prod cursor-pointer">
-              <img src={sub.image} alt={sub.name} className="w-full h-full object-cover transition-transform duration-300 group-hover/prod:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover/prod:opacity-100 transition-opacity duration-200 flex items-center justify-center p-1"><span className="text-[8px] text-white font-bold text-center leading-tight">{sub.name}</span></div>
+          {displaySubs.map((sub, idx) => {
+            const imgUrl = getSubcategoryImageUrl(sub.image) || sub.image;
+            return (
+              <div key={idx} className="relative border border-zinc-200 rounded-md overflow-hidden w-10 h-10 flex-shrink-0 group/prod cursor-pointer">
+                {imgUrl ? (
+                  <img src={imgUrl} alt={sub.name} className="w-full h-full object-cover transition-transform duration-300 group-hover/prod:scale-110" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400 font-bold text-xs uppercase">{sub.name?.charAt(0)}</div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover/prod:opacity-100 transition-opacity duration-200 flex items-center justify-center p-1">
+                  <span className="text-[8px] text-white font-bold text-center leading-tight">{sub.name}</span>
+                </div>
+              </div>
+            );
+          })}
+          {remainingCount > 0 && (
+            <div 
+              onClick={() => onShowMore(supplier)} 
+              className="border border-dashed border-zinc-300 rounded-md w-10 h-10 flex items-center justify-center text-xs text-zinc-500 font-bold bg-zinc-50 cursor-pointer hover:bg-zinc-100 transition-colors"
+            >
+              +{remainingCount}
             </div>
-          ))}
-          {remainingCount > 0 && <div className="border border-dashed border-zinc-300 rounded-md w-10 h-10 flex items-center justify-center text-xs text-zinc-500 font-bold bg-zinc-50">+{remainingCount}</div>}
+          )}
         </div>
 
         <div className="flex gap-2">
@@ -90,13 +132,13 @@ function SupplierCard({ supplier, index, isConnected, onAccept, isPendingReq }) 
           ) : isConnected ? (
             <>
               <button onClick={handleMessageClick} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold rounded-lg border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-all"><MessageSquare size={14} /> Message</button>
-              <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg shadow-md transition-all"><Package size={14} /> Order Now</button>
+              <button onClick={handleViewProfile} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg shadow-md transition-all"><Package size={14} /> Order Now</button>
             </>
           ) : connectStatus === 'PENDING' ? (
              <button disabled className="flex-1 py-2.5 text-xs font-semibold bg-slate-100 text-slate-500 rounded-lg shadow-inner cursor-not-allowed">Requested</button>
           ) : (
             <>
-              <button className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all"><Building2 size={14} /> View Profile</button>
+              <button onClick={handleViewProfile} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg  transition-all"><Building2 size={14} /> View Profile</button>
               <button onClick={handleConnect} disabled={isConnecting} className="flex-1 flex justify-center py-2.5 text-xs font-bold text-white rounded-lg hover:opacity-90 transition-all shadow-sm" style={{ background: CTA_GRAD }}>
                 {isConnecting ? <Loader2 size={16} className="animate-spin" /> : "Connect"}
               </button>
@@ -117,7 +159,14 @@ export default function ConnectedSupplierPage() {
   
   const [searchQuery, setSearchQuery] = useState("");
   const [showRequests, setShowRequests] = useState(false);
-  const [liveToast, setLiveToast] = useState(null);
+
+  // --- ADDED STATES FOR PREMIUM COMPONENTS ---
+  const [fetchError, setFetchError] = useState(false);
+  const [notification, setNotification] = useState(null);
+  
+  const showNotification = (type, msg) => {
+    setNotification({ type, msg });
+  };
 
   useEffect(() => {
     const client = new Client({
@@ -125,12 +174,14 @@ export default function ConnectedSupplierPage() {
       debug: () => {}, 
       onConnect: () => {
         client.subscribe('/user/queue/notifications', (message) => {
-          const notification = JSON.parse(message.body);
-          setLiveToast(notification);
-          setTimeout(() => setLiveToast(null), 5000);
+          const notif = JSON.parse(message.body);
+          
+          // Map WS notification to PremiumToast format
+          const title = notif.type === 'NEW_REQUEST' ? 'New Connection Request' : 'Connection Accepted';
+          showNotification('info', `${title}: ${notif.message}`);
 
-          if (notification.type === 'NEW_REQUEST') setPendingRequests(prev => [notification.payload, ...prev]);
-          else if (notification.type === 'ACCEPTED') fetchNetworkData();
+          if (notif.type === 'NEW_REQUEST') setPendingRequests(prev => [notif.payload, ...prev]);
+          else if (notif.type === 'ACCEPTED') fetchNetworkData();
         });
       }
     });
@@ -140,9 +191,10 @@ export default function ConnectedSupplierPage() {
 
   const fetchNetworkData = async () => {
     setIsLoading(true);
+    setFetchError(false);
     try {
       const [connectedRes, pendingRes, discoverRes] = await Promise.all([
-        networkApi.getConnectedSuppliers().catch(() => ({ data: { data: [] } })),
+        networkApi.getConnectedSuppliers(),
         networkApi.getPendingRequests().catch(() => ({ data: { data: [] } })),
         networkApi.getNearbySellers().catch(() => ({ data: { data: [] } }))
       ]);
@@ -157,7 +209,12 @@ export default function ConnectedSupplierPage() {
       
       const filteredNearby = nearby.filter(user => !connectedIds.includes(user.id));
       setDiscoverSuppliers(filteredNearby.slice(0, 6)); // Cap at 6
-    } catch (err) { console.error("Failed to fetch data", err); } finally { setIsLoading(false); }
+    } catch (err) { 
+      console.error("Failed to fetch data", err); 
+      setFetchError(true);
+    } finally { 
+      setIsLoading(false); 
+    }
   };
 
   useEffect(() => { fetchNetworkData(); }, []);
@@ -165,8 +222,12 @@ export default function ConnectedSupplierPage() {
   const handleAccept = async (connectionId) => {
     try {
       await networkApi.acceptConnection(connectionId);
+      showNotification('success', 'Connection request accepted!');
       fetchNetworkData(); 
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      console.error(err); 
+      showNotification('error', 'Failed to accept connection request.');
+    }
   };
 
   const filteredConnections = connectedSuppliers.filter(s => 
@@ -175,6 +236,11 @@ export default function ConnectedSupplierPage() {
   );
 
   const hasConnections = connectedSuppliers.length > 0;
+
+  // --- TRIGGER ENTERPRISE ERROR COMPONENT ON FAIL ---
+  if (fetchError) {
+    return <DataFetchError onRetry={() => fetchNetworkData()} />;
+  }
 
   if (isLoading) {
     return (
@@ -194,11 +260,17 @@ export default function ConnectedSupplierPage() {
       `}} />
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 min-h-screen bg-[#FAFAFA]" style={{ fontFamily: "'Inter', sans-serif" }}>
-        <AnimatePresence><LiveToast notification={liveToast} onClose={() => setLiveToast(null)} /></AnimatePresence>
+        {/* --- REPLACED OLD NOTIFICATION WITH PREMIUM TOAST --- */}
+        <PremiumToast 
+          isVisible={!!notification} 
+          type={notification?.type || 'info'} 
+          message={notification?.msg} 
+          onClose={() => setNotification(null)} 
+        />
 
         <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <motion.h1 {...fadeUp(0)} className="text-[24px] sm:text-[32px] font-extrabold tracking-tight text-gray-900">Conneted Network</motion.h1>
+            <motion.h1 {...fadeUp(0)} className="text-[24px] sm:text-[32px] font-extrabold tracking-tight text-gray-900">Connected Network</motion.h1>
             <motion.p {...fadeUp(0.1)} className="text-slate-500 mt-2 text-base">Manage your active trading partners and requests.</motion.p>
           </div>
           
@@ -220,7 +292,7 @@ export default function ConnectedSupplierPage() {
               <div className="p-6 bg-indigo-50 border border-indigo-100 rounded-2xl">
                 <h3 className="text-sm font-bold text-indigo-900 mb-4 flex items-center gap-2"><Bell size={16}/> Incoming Connection Requests</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {pendingRequests.map((req, i) => <SupplierCard key={req.id} supplier={req} index={i} isPendingReq={true} onAccept={handleAccept} />)}
+                  {pendingRequests.map((req, i) => <SupplierCard key={req.id} supplier={req} index={i} isPendingReq={true} onAccept={handleAccept} onNotify={showNotification} onShowMore={setSelectedSupplierForModal} />)}
                 </div>
               </div>
             </motion.section>
@@ -236,7 +308,7 @@ export default function ConnectedSupplierPage() {
           {filteredConnections.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <AnimatePresence>
-                {filteredConnections.map((supplier, i) => <SupplierCard key={supplier.id} supplier={supplier} index={i} isConnected={true} />)}
+                {filteredConnections.map((supplier, i) => <SupplierCard key={supplier.id} supplier={supplier} index={i} isConnected={true} onNotify={showNotification}  />)}
               </AnimatePresence>
             </div>
           ) : hasConnections ? (
@@ -245,10 +317,10 @@ export default function ConnectedSupplierPage() {
             <motion.div {...fadeUp(0.3)} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-10 text-center max-w-4xl mx-auto relative overflow-hidden">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-indigo-50 rounded-full blur-3xl opacity-60" />
               <div className="relative z-10">
-                <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-indigo-100"><Compass className="w-10 h-10" /></div>
+                <div className="w-20 h-20 bg-slate-100 text-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-indigo-100"><Compass className="w-10 h-10" /></div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-3">Your network is currently empty</h3>
                 <p className="text-slate-500 max-w-md mx-auto mb-8 leading-relaxed text-sm">You haven't connected with any verified businesses yet. Establish connections to view pricing and chat directly.</p>
-                <button onClick={() => navigate('/nearbyseller')} className="px-8 py-3.5 bg-gradient-to-r from-teal-500 to-emerald-500 shadow-lg text-white rounded-xl font-bold hover:scale-[1.02] flex items-center gap-2 mx-auto">
+                <button onClick={() => navigate('/nearby')} className="px-8 py-3.5 bg-gray-800 text-white shadow-lg text-white rounded-xl font-bold hover:scale-[1.02] flex items-center gap-2 mx-auto">
                   Discover Nearby Partners <Navigation className="w-4 h-4" />
                 </button>
               </div>
@@ -263,18 +335,21 @@ export default function ConnectedSupplierPage() {
                 <h2 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2"><Sparkles className="w-5 h-5 text-amber-500" /> Suggested for you</h2>
                 <p className="text-slate-500 text-sm">Top-rated businesses in your district.</p>
               </div>
-              <button onClick={() => navigate('/nearbyseller')} className="text-sm font-bold text-indigo-600 flex items-center gap-1.5 hover:gap-2.5 transition-all px-4 py-2">
+              <button onClick={() => navigate('/nearby')} className="text-sm font-bold text-indigo-600 flex items-center gap-1.5 hover:gap-2.5 transition-all px-4 py-2">
                 See more <ArrowRight className="w-4 h-4" />
               </button>
             </motion.div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-95">
               {discoverSuppliers.map((supplier, i) => (
-                <SupplierCard key={supplier.id} supplier={supplier} index={i} isConnected={false} />
+                <SupplierCard key={supplier.id} supplier={supplier} index={i} isConnected={false} onNotify={showNotification}  />
               ))}
             </div>
           </section>
         )}
       </div>
+
+      {/* --- SUBCATEGORY EXPAND MODAL (LARGE SQUARE GRID) --- */}
+
     </>
   );
 }

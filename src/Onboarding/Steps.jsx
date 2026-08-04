@@ -36,12 +36,12 @@ export function BusinessStep({ role, formData, updateField, errors }) {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid md:grid-cols-2 gap-5">
         <Input id="ownerName" icon={User2} label="Owner Name" placeholder="Rajesh Kumar" value={formData.ownerName} onChange={(e) => updateField("ownerName", e.target.value)} onKeyDown={(e) => handleEnter(e, "businessName")} hasError={errors.includes("ownerName")} />
         <Input id="businessName" icon={Building2} label="Company Name" placeholder="Kumar Traders" value={formData.businessName} onChange={(e) => updateField("businessName", e.target.value)} onKeyDown={(e) => handleEnter(e, "mobile")} hasError={errors.includes("businessName")} />
-        <Input id="mobile" type="number" icon={Phone} label="Mobile Number" placeholder="9876543210" value={formData.mobile} onChange={(e) => updateField("mobile", e.target.value)} onKeyDown={(e) => handleEnter(e, role === "WHOLESALER" ? "deliveryRadius" : "whatsappNumber")} hasError={errors.includes("mobile")} />
+        <Input id="mobile" type="number" icon={Phone} label="Mobile Number" placeholder="9876543210" value={formData.mobile} onChange={(e) => updateField("mobile", e.target.value)} onKeyDown={(e) => handleEnter(e, role === "WHOLESALER" ? "deliveryRadius" : "yearsInBusiness")} hasError={errors.includes("mobile")} />
         
         {role === "WHOLESALER" ? (
           <Input id="deliveryRadius" type="number" icon={Truck} label="Delivery Coverage (in Km)" placeholder="e.g. 50" value={formData.deliveryRadius} onChange={(e) => updateField("deliveryRadius", e.target.value)} onKeyDown={(e) => handleEnter(e, "businessEmail")} hasError={errors.includes("deliveryRadius")} />
         ) : (
-          <Input id="whatsappNumber" type="number" icon={MessageCircle} label="WhatsApp Number (Optional)" placeholder="9876543210" value={formData.whatsappNumber} onChange={(e) => updateField("whatsappNumber", e.target.value)} onKeyDown={(e) => handleEnter(e, "businessEmail")} hasError={errors.includes("whatsappNumber")} />
+          <Input id="yearsInBusiness" type="number" icon={MessageCircle} label="YearsInBusiness (Optional)" placeholder="5 Year" value={formData.yearsInBusiness} onChange={(e) => updateField("yearsInBusiness", e.target.value)} onKeyDown={(e) => handleEnter(e, "businessEmail")} hasError={errors.includes("yearsInBusiness")} />
         )}
 
         <Input id="businessEmail" type="email" icon={Mail} label="Business Email" placeholder="business@email.com" value={formData.businessEmail} onChange={(e) => updateField("businessEmail", e.target.value)} onKeyDown={(e) => handleEnter(e, "gstNumber")} hasError={errors.includes("businessEmail")} />

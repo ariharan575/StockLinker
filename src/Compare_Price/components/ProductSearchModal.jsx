@@ -109,7 +109,28 @@ export default function ProductSearchModal({ isOpen, onClose, onSearch }) {
       
       onSearch(selectedProduct.id, quantity);
     } catch (e) {
-      const msg = e.response?.data?.message || "No valid sellers available for this quantity. Please adjust your request.";
+      console.error("Backend Error Object:", e);
+      
+      // Enhanced error handling to properly catch Spring Boot RuntimeExceptions
+      let msg = "No valid sellers available for this quantity. Please adjust your request.";
+      
+      if (e.response && e.response.data) {
+        // If the backend returns a simple string message
+        if (typeof e.response.data === 'string') {
+          msg = e.response.data;
+        } 
+        // If the backend returns a JSON object (Standard Spring Boot Error format)
+        else if (e.response.data.message) {
+          msg = e.response.data.message;
+        } 
+        // Fallback for other custom JSON error properties
+        else if (e.response.data.error) {
+          msg = e.response.data.error;
+        }
+      } else if (e.message) {
+        msg = e.message;
+      }
+
       setErrorMessage(msg);
     } finally {
       setIsSearching(false);

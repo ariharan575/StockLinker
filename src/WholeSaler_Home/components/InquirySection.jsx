@@ -5,7 +5,7 @@ import InquiryModal from "./InquiryModal";
 import EmptyState from "./EmptyState";
 import { enquiryApi } from "../services/api";
 
-export default function InquirySection() {
+export default function InquirySection({ onError, showNotification }) {
   const [enquiries, setEnquiries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
@@ -18,6 +18,7 @@ export default function InquirySection() {
       setEnquiries(data);
     } catch (err) {
       console.error(err);
+      if (onError) onError(); // Trigger Full Page Error
     } finally {
       setIsLoading(false);
     }
@@ -32,8 +33,9 @@ export default function InquirySection() {
       await enquiryApi.acceptEnquiry(enquiryId);
       setEnquiries(prev => prev.filter(e => e.id !== enquiryId));
       setSelectedEnquiry(null);
+      if (showNotification) showNotification('success', 'Order accepted successfully!');
     } catch (error) {
-      alert("Failed to accept order.");
+      if (showNotification) showNotification('error', 'Failed to accept order.');
     }
   };
 

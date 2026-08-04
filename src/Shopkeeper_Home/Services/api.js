@@ -113,3 +113,9 @@ export const dashboardApi = {
     }
   }
 };
+
+export const notificationApi = {
+  getNotifications: () => axiosInstance.get('/v1/notifications'),
+  markAsRead: (id) => axiosInstance.put(`/v1/notifications/${id}/read`),
+  markAllAsRead: () => axiosInstance.put('/v1/notifications/read-all')
+};

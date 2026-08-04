@@ -6,7 +6,7 @@ import { SectionHead } from '../../Layout/common';
 import { orderApi } from '../Services/api';
 import { fadeUp } from '../../Layout/common/constants';
 
-export default function ReorderSection() {
+export default function ReorderSection({ onError }) {
   const navigate = useNavigate();
   const [reorders, setReorders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,18 +17,18 @@ export default function ReorderSection() {
       try {
         setIsLoading(true);
         const data = await orderApi.getReorderSummary();
-        if (isMounted) setReorders(data); // Will be empty array if orders < 3
+        if (isMounted) setReorders(data);
       } catch (err) {
         console.error(err);
+        if (isMounted && onError) onError(); // Trigger Full Page Error
       } finally {
         if (isMounted) setIsLoading(false);
       }
     };
     fetchReorders();
     return () => { isMounted = false; };
-  }, []);
+  }, [onError]);
 
-  // 🚀 UX RULE: If the user has fewer than 3 orders, hide the component entirely.
   if (!isLoading && reorders.length < 3) {
     return null;
   }
@@ -41,7 +41,7 @@ export default function ReorderSection() {
     if (masterProductId) {
       navigate('/Compare', { state: { masterProductId: masterProductId } });
     } else {
-      navigate('/Compare'); // Fallback
+      navigate('/Compare');
     }
   };
 
@@ -80,9 +80,8 @@ export default function ReorderSection() {
             className="flex flex-row overflow-x-auto no-scrollbar gap-3 sm:gap-4 px-1 sm:px-2 md:px-3 pb-6 pt-2"
           >
             {reorders.map((o, i) => {
-              // Calculate difference based on the math done in the backend
               const diff = o.priceDifference;
-              const isPriceDrop = diff <= 0; // Treating no change or drop as positive/neutral
+              const isPriceDrop = diff <= 0;
 
               return (
                 <motion.div
@@ -92,7 +91,6 @@ export default function ReorderSection() {
                   className="w-[260px] xs:w-[280px] sm:w-[300px] md:w-[320px] shrink-0 bg-white rounded-[16px] sm:rounded-[20px] p-3.5 sm:p-5 border border-slate-200 transition-all shadow-sm flex flex-col justify-between"
                 >
                   <div>
-                    {/* Header: Order Info */}
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex flex-col gap-1">
                         <span className="text-[13px] sm:text-[15px] font-sora font-bold text-slate-900 leading-none">
@@ -107,7 +105,6 @@ export default function ReorderSection() {
                       </span>
                     </div>
 
-                    {/* Item List (Ultra Compact) */}
                     <div className="space-y-1 sm:space-y-1.5 mb-3 sm:mb-4 bg-slate-50/50 rounded-[8px] p-2 border border-slate-100/50">
                       {o.items.slice(0, 2).map((item, idx) => (
                         <div key={idx} className="flex items-center gap-1.5 sm:gap-2">
@@ -124,7 +121,6 @@ export default function ReorderSection() {
                   </div>
 
                   <div>
-                    {/* Price Comparison Box */}
                     <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-[10px] sm:rounded-[12px] mb-3 sm:mb-4 bg-slate-50 border border-slate-100">
                       <div className="flex-1 flex flex-col">
                         <p className="text-[9px] sm:text-[10px] font-inter font-bold text-slate-400 uppercase tracking-widest mb-0.5">Last Price</p>
@@ -140,7 +136,6 @@ export default function ReorderSection() {
                         </p>
                       </div>
                       
-                      {/* Up/Down Pill */}
                       {diff !== 0 && (
                         <span className={`px-1.5 py-0.5 text-[9px] sm:text-[10px] font-sora font-bold rounded-[6px] ml-1 shrink-0 ${isPriceDrop ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
                           {isPriceDrop ? "↓" : "↑"} ₹{Math.abs(diff).toFixed(0)}
@@ -148,7 +143,6 @@ export default function ReorderSection() {
                       )}
                     </div>
 
-                    {/* Action Buttons (Solid Black SaaS Style) */}
                     <div className="flex gap-2 sm:gap-2.5">
                       <button 
                         onClick={() => handleReorderClick(o.sellerBusinessProfileId)}
@@ -171,7 +165,6 @@ export default function ReorderSection() {
         )}
       </AnimatePresence>
 
-      {/* Global utility to hide scrollbar completely */}
       <style dangerouslySetInnerHTML={{__html: `
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

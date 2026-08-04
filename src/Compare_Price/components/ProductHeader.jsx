@@ -40,7 +40,7 @@ export default function ProductHeader({ qty, setQty, metrics, boundaries, onNewS
         Mobile: No border, no shadow, transparent/white bg to maximize space
         Tablet/Desktop (sm/md+): Rounded card, tight borders, subtle shadow 
       */}
-      <div className="flex flex-col md:flex-row bg-white sm:rounded-[16px] sm:border sm:border-slate-200 sm:shadow-sm overflow-hidden w-full">
+      <div className="flex flex-col md:flex-row bg-white  sm:border sm:border-slate-200 sm:shadow-sm overflow-hidden w-full">
         
         {/* =========================================
             LEFT COLUMN: PRODUCT DETAILS 

@@ -1,39 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, ShieldCheck, AlertCircle, Users, ExternalLink } from 'lucide-react';
+import { MessageSquare, ShieldCheck, Users, ExternalLink } from 'lucide-react';
 import { SectionHead } from '../../Layout/common';
 import { networkApi } from '../Services/api';
 import { fadeUp } from '../../Layout/common/constants';
 
-export default function TrustedSuppliers() {
+export default function TrustedSuppliers({ onError }) {
   const navigate = useNavigate();
   const [connectedSuppliers, setConnectedSuppliers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
     const fetchConnected = async () => {
       try {
         setIsLoading(true);
-        setError(null);
         const data = await networkApi.getConnectedSuppliers();
         if (isMounted) setConnectedSuppliers(data);
       } catch (err) {
-        if (isMounted) setError("Failed to sync connected supplier networks.");
+        if (isMounted && onError) onError(); // Trigger Full Page Error
       } finally {
         if (isMounted) setIsLoading(false);
       }
     };
     fetchConnected();
     return () => { isMounted = false; };
-  }, []);
+  }, [onError]);
+
+    const handleMessageClick = () => {
+    navigate('/message', {
+      state: { partnerToMessage: { id: connectedSuppliers.userId || connectedSuppliers.id, name: connectedSuppliers.name, businessName: connectedSuppliers.category, profileImage: null } }
+    });
+  };
 
   return (
     <section className="mb-6 sm:mb-8 md:mb-10 w-full overflow-hidden">
       
-      {/* SECTION HEADER */}
       <div className="px-1 sm:px-2 md:px-3">
         <SectionHead 
           title="Trusted & Connected Suppliers" 
@@ -44,7 +47,6 @@ export default function TrustedSuppliers() {
 
       <AnimatePresence mode="wait">
         
-        {/* LOADING SKELETONS (Single Row Horizontal) */}
         {isLoading && (
           <motion.div 
             key="loading" 
@@ -69,19 +71,8 @@ export default function TrustedSuppliers() {
           </motion.div>
         )}
 
-        {/* ERROR STATE */}
-        {!isLoading && error && (
-          <motion.div 
-            key="error" 
-            className="mx-1 sm:mx-2 md:mx-3 my-2 flex flex-col items-center justify-center p-6 sm:p-8 bg-rose-50 rounded-[16px] sm:rounded-[20px] border border-rose-100 text-center"
-          >
-            <AlertCircle className="w-8 h-8 text-rose-400 mb-2" />
-            <p className="text-[13px] sm:text-[14px] font-sora font-semibold text-rose-600">{error}</p>
-          </motion.div>
-        )}
-
         {/* EMPTY STATE */}
-        {!isLoading && !error && connectedSuppliers.length === 0 && (
+        {!isLoading && connectedSuppliers.length === 0 && (
           <motion.div
             key="empty"
             initial={{ opacity: 0 }}
@@ -104,8 +95,8 @@ export default function TrustedSuppliers() {
           </motion.div>
         )}
 
-        {/* SUCCESS DATA RENDERING (Single Row Horizontal Carousel) */}
-        {!isLoading && !error && connectedSuppliers.length > 0 && (
+        {/* SUCCESS DATA RENDERING */}
+        {!isLoading && connectedSuppliers.length > 0 && (
           <motion.div 
             key="content" 
             initial={{ opacity: 0 }} 
@@ -121,7 +112,6 @@ export default function TrustedSuppliers() {
               >
                 <div>
                   
-                  {/* Top Header: Avatar & Info */}
                   <div className="flex items-start justify-between mb-3 sm:mb-4">
                     <div className="flex items-center gap-3 w-full">
                       <img src={s.avatar} alt={s.name} className="w-10 h-10 sm:w-12 sm:h-12 rounded-[10px] sm:rounded-[12px] object-cover shadow-sm flex-shrink-0 bg-slate-50 border border-slate-100" />
@@ -132,14 +122,12 @@ export default function TrustedSuppliers() {
                     </div>
                   </div>
 
-                  {/* Connected Badge */}
                   <div className="mb-3 sm:mb-4">
                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] bg-emerald-50/80 border border-emerald-100 text-emerald-600 text-[10px] sm:text-[11px] font-sora font-semibold">
                       <ShieldCheck size={12} /> Connected
                     </span>
                   </div>
 
-                  {/* Tags */}
                   <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4">
                     <span className="px-2 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-inter font-semibold rounded-[6px] bg-rose-50 text-rose-600 border border-rose-100">
                       {s.category}
@@ -151,7 +139,6 @@ export default function TrustedSuppliers() {
 
                 </div>
 
-                {/* Actions */}
                 <div className="flex gap-2">
                   <button 
                     onClick={() => navigate(`/storefront/${s.businessProfileId || s.id}`)}
@@ -160,7 +147,7 @@ export default function TrustedSuppliers() {
                     <ExternalLink size={13} /> View Profile
                   </button>
                   <button 
-                    onClick={() => navigate('/messages')} 
+                    onClick={handleMessageClick} 
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 sm:py-2.5 text-[11px] sm:text-[12px] font-sora font-bold rounded-[8px] sm:rounded-[10px] text-white bg-slate-900 hover:bg-black transition-colors shadow-sm active:scale-95"
                   >
                     <MessageSquare size={13} /> Chat
@@ -173,7 +160,6 @@ export default function TrustedSuppliers() {
         )}
       </AnimatePresence>
 
-      {/* Global utility to hide scrollbar */}
       <style dangerouslySetInnerHTML={{__html: `
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

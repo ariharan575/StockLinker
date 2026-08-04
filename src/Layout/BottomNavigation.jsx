@@ -1,18 +1,17 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Home, MapPin, BarChart2, ShoppingCart, Settings } from 'lucide-react';
-
-const NAV_TABS = [
-  { id: 'home', label: 'Home', Icon: Home, path: '/dash' },
-  { id: 'nearby', label: 'Nearby', Icon: MapPin, path: '/nearby' },
-  { id: 'compare', label: 'Compare', Icon: BarChart2, path: '/compare' },
-  { id: 'orders', label: 'Orders', Icon: ShoppingCart, path: '/orders' },
-  { id: 'settings', label: 'Settings', Icon: Settings, path: '/settings/account' },
-];
+import { getNavTabs } from './data/index';
+import { useAuth } from '../Authentication/context/AuthContext'; // <-- Import added
 
 const BottomNavigation = memo(({ active, setActive }) => {
   const navigate = useNavigate();
+  
+  // FETCH SECURE JWT ROLE
+  const { role } = useAuth();
+  
+  // GENERATE DYNAMIC TABS
+  const NAV_TABS = getNavTabs(role);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-4px_15px_rgba(0,0,0,0.05)] pb-safe">

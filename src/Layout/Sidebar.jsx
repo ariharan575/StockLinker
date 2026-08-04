@@ -2,7 +2,15 @@ import React, { useState, memo, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, LogOut, X } from 'lucide-react';
-import { NAV_ITEMS } from './data/index'; 
+import { getNavItems } from './data/index'; 
+import { useAuth } from '../Authentication/context/AuthContext';
+import { profileApi } from '../Authentication/services/api';
+
+// Helper to get 2 initials safely
+const getInitials = (name) => {
+  if (!name || name === "Loading...") return "US";
+  return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
+};
 
 // ==========================================
 // REUSABLE SUBCOMPONENTS
@@ -10,16 +18,11 @@ import { NAV_ITEMS } from './data/index';
 
 const DesktopNavItem = memo(({ item, currentPath, navigate }) => {
   const hasChildren = !!item.children;
-  // Match active state based on the actual URL path instead of an ID
   const isChildActive = hasChildren && item.children.some(c => c.path === currentPath);
   const isActive = item.path === currentPath || isChildActive;
 
-  console.log(isActive);
-
-  // Initialize expanded state to true if a child is currently active
   const [expanded, setExpanded] = useState(isChildActive);
 
-  // Automatically expand if a child becomes active via URL change
   useEffect(() => {
     if (isChildActive) {
       setExpanded(true);
@@ -29,7 +32,6 @@ const DesktopNavItem = memo(({ item, currentPath, navigate }) => {
   const handleClick = useCallback(() => {
     if (hasChildren) {
       setExpanded(prev => !prev);
-      // If the parent also has a path (rare, but just in case), navigate to it
       if (item.path && item.path !== currentPath) navigate(item.path);
     } else {
       if (item.path) navigate(item.path);
@@ -93,7 +95,6 @@ const DesktopNavItem = memo(({ item, currentPath, navigate }) => {
         )}
       </motion.button>
 
-      {/* Children Dropdown */}
       {hasChildren && (
         <AnimatePresence initial={false}>
           {expanded && (
@@ -201,7 +202,6 @@ const MobileNavItem = memo(({ item, currentPath, setOpen, navigate }) => {
         )}
       </motion.button>
 
-      {/* Children Dropdown for Mobile */}
       {hasChildren && (
         <AnimatePresence initial={false}>
           {expanded && (
@@ -239,14 +239,41 @@ const MobileNavItem = memo(({ item, currentPath, setOpen, navigate }) => {
 // MAIN COMPONENT
 // ==========================================
 
-// Kept `active` and `setActive` props in the signature so parent components don't break,
-// but they are ignored internally because we now determine active state via URL.
 export default function Sidebar({ open, setOpen, active, setActive }) {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Using user's exact NAV_ITEMS array mapped dynamically
+  const { role, logout, isAuthenticated } = useAuth();
+  
+  // Profile State
+  const [profileData, setProfileData] = useState({ ownerName: 'Loading...', role: 'Loading...' });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchProfileFromDB = async () => {
+      try {
+        const res = await profileApi.getProfile();
+        if (isMounted) {
+          const data = res.data.data;
+          setProfileData({
+            ownerName: data.ownerName || 'User',
+            role: data.businessType || 'Partner'
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load profile from DB", err);
+      }
+    };
+
+    if (isAuthenticated) fetchProfileFromDB();
+
+    return () => { isMounted = false; };
+  }, [isAuthenticated]);
+  
+  const NAV_ITEMS = getNavItems(role);
+
   const topItems = NAV_ITEMS.filter(i => i.id !== 'help');
   const bottomItems = NAV_ITEMS.filter(i => i.id === 'help');
 
@@ -259,13 +286,8 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
         .dark-scrollbar:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
       `}} />
 
-      {/* ==========================================
-          DESKTOP SIDEBAR (lg and up)
-          Deep Enterprise Neutral Workspace Rail
-          ========================================== */}
       <aside className="hidden lg:flex fixed top-[72px] bottom-0 left-0 w-[260px] 2xl:w-[280px] bg-[#20263D] border-r border-white/5 flex-col overflow-hidden z-30 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
         
-        {/* Soft Inner Glow */}
         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-white/[0.04] to-transparent pointer-events-none" />
 
         <nav className="flex-1 overflow-y-auto dark-scrollbar px-4 py-6 relative z-10">
@@ -277,32 +299,37 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
           ))}
         </nav>
 
-        {/* Desktop Profile & Bottom Items */}
+        {/* DESKTOP SECURE PROFILE FOOTER */}
         <div className="p-4 relative z-10 flex flex-col gap-2 border-t border-white/5 bg-white/[0.01]">
-          
           <div className="mt-2 flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-[800] text-[13px] shadow-[0_0_12px_rgba(99,102,241,0.4)] border border-white/20">
-                JD
+                {getInitials(profileData.ownerName)}
               </div>
               <div className="flex flex-col">
-                <span className="text-[14px] font-[700] text-white leading-tight">John Doe</span>
-                <span className="text-[11px] font-[600] text-pink-400 uppercase tracking-wide mt-0.5">Admin</span>
+                <span className="text-[14px] font-[700] text-white leading-tight truncate max-w-[110px]">
+                  {profileData.ownerName}
+                </span>
+                <span className="text-[11px] font-[600] text-pink-400 uppercase tracking-wide mt-0.5 truncate capitalize">
+                  {profileData.role}
+                </span>
               </div>
             </div>
-            <LogOut size={16} strokeWidth={2.5} className="text-slate-400 group-hover:text-pink-400 transition-colors mr-1" />
+            {/* LOGOUT ACTION HOOKED HERE */}
+            <button 
+              onClick={(e) => { e.stopPropagation(); logout(); }} 
+              className="p-1 outline-none shrink-0"
+              aria-label="Logout"
+            >
+              <LogOut size={16} strokeWidth={2.5} className="text-slate-400 group-hover:text-pink-400 transition-colors mr-1" />
+            </button>
           </div>
         </div>
       </aside>
 
-      {/* ==========================================
-          MOBILE / TABLET FULLSCREEN DRAWER (lg:hidden)
-          Elegant White Glass Aesthetic (Untouched perfectly)
-          ========================================== */}
       <AnimatePresence>
         {open && (
           <div className="fixed inset-0 z-[100] lg:hidden">
-            {/* Soft Backdrop */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -312,7 +339,6 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
               onClick={() => setOpen(false)}
             />
             
-            {/* Drawer Container */}
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
@@ -320,7 +346,6 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
               transition={{ type: "spring", stiffness: 350, damping: 30 }}
               className="absolute inset-y-0 right-0 w-full max-w-[360px] bg-white flex flex-col shadow-2xl rounded-l-[32px] overflow-hidden border-l border-slate-200"
             >
-              {/* Drawer Header */}
               <div className="h-24 px-6 flex items-center justify-between shrink-0 bg-white">
                 <span className="text-[13px] font-[800] uppercase tracking-widest text-slate-400">Menu</span>
                 <motion.button 
@@ -332,7 +357,6 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
                 </motion.button>
               </div>
 
-              {/* Scrollable Navigation Area */}
               <div className="flex-1 overflow-y-auto px-4 pb-6">
                 {topItems.map((item, idx) => (
                   <motion.div key={item.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.03, duration: 0.2 }}>
@@ -349,7 +373,7 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
                 ))}
               </div>
 
-              {/* Bottom Profile (Mobile) */}
+              {/* MOBILE SECURE PROFILE FOOTER */}
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -358,18 +382,24 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
               >
                 <div className="w-full bg-white border border-slate-200 rounded-[24px] p-3 shadow-[0_8px_30px_rgba(15,23,42,0.06)] flex items-center justify-between group">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-[700] text-[15px] shadow-sm">
-                      JD
+                    <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-[700] text-[15px] shadow-sm shrink-0">
+                      {getInitials(profileData.ownerName)}
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[15px] font-[800] text-slate-900 leading-tight">John Doe</span>
-                      <span className="text-[13px] font-[500] text-slate-500 mt-0.5">Admin</span>
+                      <span className="text-[15px] font-[800] text-slate-900 leading-tight truncate max-w-[140px]">
+                        {profileData.ownerName}
+                      </span>
+                      <span className="text-[13px] font-[500] text-slate-500 mt-0.5 capitalize truncate">
+                        {profileData.role}
+                      </span>
                     </div>
                   </div>
+                  {/* LOGOUT ACTION HOOKED HERE */}
                   <motion.button 
                     whileHover={{ scale: 1.05, backgroundColor: 'rgba(244,63,94,0.1)' }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-[42px] h-[42px] rounded-2xl flex items-center justify-center text-pink-500 bg-pink-50 transition-colors mr-1"
+                    onClick={() => { setOpen(false); logout(); }}
+                    className="w-[42px] h-[42px] rounded-2xl flex items-center justify-center text-pink-500 bg-pink-50 transition-colors mr-1 shrink-0"
                     aria-label="Logout"
                   >
                     <LogOut size={18} strokeWidth={2.5} />

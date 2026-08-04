@@ -1,158 +1,34 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 import {
-  Search,
-  MoreVertical,
-  Paperclip,
-  Smile,
-  Send,
-  Check,
-  CheckCheck,
-  ArrowLeft,
-  MessageSquare,
-  Users,
-  Phone,
-  Video,
-  Pin,
-  AtSign,
+  Search, MoreVertical, Paperclip, Smile, Send, ArrowLeft, MessageSquare,
+  Users, MessageCircle, X, UserPlus, Loader2, Sparkles, HelpCircle
 } from "lucide-react";
+import { useConversations } from "../hooks/useConversations";
+import { useMessages } from "../hooks/useMessages";
+import { createOrGetConversation } from "../api/chatApi";
+import { networkApi } from "../../Authentication/services/api"; 
 
-// ─── MOCK DATA ───────────────────────────────────────────────
-const CONVERSATIONS = [
-  {
-    id: 1,
-    name: "Nicky Franceska",
-    role: "Product Designer",
-    colorClass: "from-indigo-500 to-indigo-600",
-    online: true,
-    unread: 3,
-    lastMsg: "That sounds good, but what exactly do you mean?",
-    time: "11:48",
-  },
-  {
-    id: 2,
-    name: "Carry Jenkingson",
-    role: "Engineering Lead",
-    colorClass: "from-sky-500 to-sky-600",
-    online: true,
-    unread: 0,
-    lastMsg: "If the rumors prove true Brooklyn...",
-    time: "10:32",
-  },
-  {
-    id: 3,
-    name: "Alexey Vishnevskiy",
-    role: "Backend Engineer",
-    colorClass: "from-emerald-500 to-emerald-600",
-    online: false,
-    unread: 0,
-    lastMsg: "Can't try to go on that concert, it was...",
-    time: "12:45",
-  },
-  {
-    id: 4,
-    name: "Kelly Minori",
-    role: "UX Researcher",
-    colorClass: "from-amber-500 to-amber-600",
-    online: true,
-    unread: 0,
-    lastMsg: "Yeah, that's the vibe.",
-    time: "07:24",
-  },
-  {
-    id: 5,
-    name: "Bella Frederick",
-    role: "Marketing",
-    colorClass: "from-rose-500 to-rose-600",
-    online: false,
-    unread: 8,
-    lastMsg: "Love the recipe that you gave me...",
-    time: "05:47",
-  },
-  {
-    id: 6,
-    name: "Alan Dupree",
-    role: "Sales",
-    colorClass: "from-violet-500 to-violet-600",
-    online: true,
-    unread: 0,
-    lastMsg: "Seems good to me, let's do that.",
-    time: "05:21",
-  },
-  {
-    id: 7,
-    name: "Erick Conseil",
-    role: "DevOps",
-    colorClass: "from-cyan-500 to-cyan-600",
-    online: false,
-    unread: 0,
-    lastMsg: "Boss nightmare — Grits...",
-    time: "03:18",
-  },
-  {
-    id: 8,
-    name: "Sarah Jenkins",
-    role: "Product Manager",
-    colorClass: "from-blue-500 to-blue-600",
-    online: true,
-    unread: 0,
-    lastMsg: "Let's review the quarterly roadmap.",
-    time: "07:24",
-  },
-];
+// --- ADDED PREMIUM COMPONENTS IMPORTS ---
+import { PremiumToast } from "./components/component/PremiumToast";
+import { DataFetchError } from "./components/component/DataFetchError";
 
-const MESSAGES_BY_CONV = {
-  1: [
-    { id: 1, from: "them", text: "That is such a sad story :( Don't even know what to say...", time: "10:44", read: true },
-    { id: 2, from: "them", text: "Keep your heads up!", time: "10:46", read: true },
-    { id: 3, from: "me", text: "Yeah, indeed that is, but what can you actually do about that? Pretty much nothing...", time: "11:16", read: true },
-    { id: 4, from: "them", text: "Don't know, there is always a way to make this right, even if that's not obvious :)", time: "11:48", read: true },
-    { id: 5, from: "them", text: "What if we're gonna change a bit of this and a bit of that, add some extra space and make some small changes and improvements?", time: "11:14", read: true },
-    { id: 6, from: "me", text: "Hmm. Can't focus...", time: "11:48", read: true },
-    { id: 7, from: "me", text: "That sounds good, but what exactly do you mean with that random text?", time: "11:48", read: false },
-    { id: 8, from: "them", text: "Take your time 🙂", time: "11:45", read: true },
-  ],
-  default: [
-    { id: 1, from: "them", text: "Hey there! 👋", time: "09:00", read: true },
-    { id: 2, from: "me", text: "Hi! How's it going?", time: "09:01", read: true },
-  ],
-};
-
-// ─── UTILS ──────────────────────────────────────────────────
 function getInitials(name) {
+  if (!name) return "?";
   return name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
 }
 
-// ─── COMPONENTS ─────────────────────────────────────────────
-
-function Avatar({ name, colorClass, sizeClass = "w-10 h-10", textClass = "text-sm", online, showStatus = true }) {
+export function Avatar({ name, colorClass, sizeClass = "w-10 h-10", textClass = "text-sm", online, showStatus = true }) {
   return (
-    <div className="relative shrink-0">
-      <div 
-        className={`
-          ${sizeClass} 
-          bg-gradient-to-br ${colorClass} 
-          rounded-full 
-          flex items-center justify-center 
-          font-medium text-white 
-          shadow-[inset_0_0_0_1.5px_rgba(255,255,255,0.25)] 
-          ring-1 ring-white/10
-          transition-all duration-200
-        `}
-      >
+    <div className="relative shrink-0 select-none">
+      <div className={`${sizeClass} bg-gradient-to-br ${colorClass || "from-slate-700 to-black"} rounded-full flex items-center justify-center font-bold text-white shadow-[inset_0_0_0_1.5px_rgba(255,255,255,0.2)] ring-1 ring-slate-900/5`}>
         <span className={`${textClass} tracking-tight`}>{getInitials(name)}</span>
       </div>
       {showStatus && online !== undefined && (
-        <span 
-          className={`
-            absolute bottom-0 right-0 
-            w-3 h-3 rounded-full 
-            border-2 border-white 
-            shadow-sm
-            ${online ? "bg-teal-500" : "bg-[#E5E7EB]"}
-            transition-all duration-200
-          `} 
-        />
+        <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white shadow-sm ${online ? "bg-[#17B26A]" : "bg-slate-300"}`} />
       )}
     </div>
   );
@@ -161,199 +37,63 @@ function Avatar({ name, colorClass, sizeClass = "w-10 h-10", textClass = "text-s
 function ConversationItem({ conv, isActive, onClick }) {
   return (
     <motion.div
-      whileHover={{ scale: 1.01 }}
-      transition={{ duration: 0.15 }}
+      whileHover={{ scale: 1.01, backgroundColor: isActive ? "#ffffff" : "#F8FAFC" }}
+      whileTap={{ scale: 0.99 }}
+      transition={{ duration: 0.15, ease: "easeOut" }}
       onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onClick()}
-      className={`
-        group relative flex items-center gap-3 px-3 py-2.5 mx-2 my-0.5 rounded-xl cursor-pointer 
-        transition-all duration-200 
-        ${isActive 
-          ? "bg-white shadow-[0px_2px_8px_rgba(0,0,0,0.06)] ring-1 ring-[#E5E7EB] ring-inset" 
-          : "hover:bg-[#F8FAFC] active:bg-[#F1F5F9]"
-        }
-      `}
+      className={`group relative flex items-center gap-3 px-4 py-3 mx-2 my-1 rounded-xl cursor-pointer transition-all duration-200 select-none ${isActive ? "bg-white shadow-[0px_4px_12px_rgba(0,0,0,0.04)] ring-1 ring-slate-200/80" : "bg-transparent border border-transparent hover:border-slate-100"}`}
     >
-      {isActive && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-teal-500 rounded-r-full shadow-[0_0_12px_rgba(20,184,166,0.3)]" />
-      )}
-      
-      <Avatar 
-        name={conv.name} 
-        colorClass={conv.colorClass} 
-        sizeClass="w-11 h-11" 
-        textClass="text-[13px]" 
-        online={conv.online} 
-      />
-      
+      {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-pink-500 rounded-r-full shadow-[0_0_12px_rgba(236,72,153,0.4)]" />}
+      <Avatar name={conv.name} colorClass={conv.colorClass} sizeClass="w-11 h-11" textClass="text-[13px]" online={conv.online} />
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-baseline gap-2 mb-0.5">
-          <h3 className={`
-            text-[14px] font-semibold truncate tracking-tight leading-snug
-            ${isActive ? "text-[#111827]" : "text-[#111827]"}
-            ${conv.unread > 0 && !isActive ? "text-[#111827]" : ""}
-          `}>
-            {conv.name}
-          </h3>
-          <span className={`
-            text-[11px] font-medium shrink-0
-            ${isActive ? "text-teal-600" : (conv.unread > 0 ? "text-teal-600" : "text-[#94A3B8]")}
-          `}>
-            {conv.time}
-          </span>
+          <h3 className={`font-['Manrope',_sans-serif] text-[15px] font-extrabold truncate tracking-tight leading-snug ${conv.unread > 0 && !isActive ? "text-black" : "text-slate-800"}`}>{conv.name}</h3>
+          <span className={`text-[11px] font-bold shrink-0 ${isActive || conv.unread > 0 ? "text-pink-600" : "text-slate-400"}`}>{conv.time}</span>
         </div>
         <div className="flex justify-between items-center gap-2">
-          <p className={`
-            text-[13px] truncate leading-relaxed
-            ${isActive ? "text-[#64748B]" : "text-[#64748B]"}
-            ${conv.unread > 0 && !isActive ? "font-medium text-[#111827]" : ""}
-          `}>
-            {conv.lastMsg}
-          </p>
-          {conv.unread > 0 && (
-            <span className={`
-              flex items-center justify-center h-5 min-w-[20px] px-1.5 
-              text-[10px] font-semibold rounded-full 
-              shadow-sm
-              ${isActive ? "bg-teal-600 text-white" : "bg-teal-600 text-white"}
-            `}>
-              {conv.unread}
-            </span>
-          )}
+          <p className={`text-[13px] truncate leading-relaxed ${conv.unread > 0 && !isActive ? "font-bold text-slate-800" : "font-medium text-slate-500"}`}>{conv.lastMsg}</p>
+          {conv.unread > 0 && <span className="flex items-center justify-center h-5 min-w-[20px] px-1.5 text-[10px] font-extrabold rounded-full bg-pink-500 text-white shadow-sm shadow-pink-500/20">{conv.unread}</span>}
         </div>
       </div>
     </motion.div>
   );
 }
 
-function ConversationList({ convs, activeId, onSelect, isMobileHidden }) {
+function ConversationList({ convs, activeId, onSelect, isMobileHidden, onOpenNewChat, isInitialLoad }) {
   const [query, setQuery] = useState("");
-  const filtered = convs.filter(
-    (c) =>
-      c.name.toLowerCase().includes(query.toLowerCase()) ||
-      c.lastMsg.toLowerCase().includes(query.toLowerCase()) ||
-      c.role.toLowerCase().includes(query.toLowerCase())
-  );
+  const filtered = convs.filter(c => c.name.toLowerCase().includes(query.toLowerCase()) || c.lastMsg.toLowerCase().includes(query.toLowerCase()) || (c.role && c.role.toLowerCase().includes(query.toLowerCase())));
 
   return (
-<div className={`
-      w-full lg:w-[380px] shrink-0 flex flex-col 
-      bg-white border-r border-[#E5E7EB] 
-      min-h-0 overflow-hidden
-      transition-all duration-300 ease-in-out
-      ${isMobileHidden ? "hidden lg:flex" : "flex"}
-    `}>
-      {/* Header */}
-       <div className="px-5 pt-5 pb-4 border-b border-[#E5E7EB] bg-white">
-
-        
-        {/* Search */}
-{/* Header */}
-<div className="border-b border-[#E5E7EB] bg-white">
-
-  {/* Same Search Wrapper */}
-  <div className="relative group">
-
-    {/* Messages Title inside same div */}
-    <div className="mb-3">
-      <h2 className="text-2xl font-bold text-[#111827] tracking-tight">
-        Messages
-      </h2>
-    </div>
-
-
-    {/* Search Input Wrapper */}
-    <div className="relative border-1 rounded-lg border-gray-400/50 mb-3">
-
-      {/* Icon inside input */}
-      <div
-        className="
-          absolute
-          left-3
-          top-1/2
-          -translate-y-1/2
-          flex
-          items-center
-          pointer-events-none
-          z-10
-        "
-      >
-        <Search
-          className="
-            w-4
-            h-4
-            text-[#94A3B8]
-            group-focus-within:text-teal-600
-            transition-colors
-          "
-        />
-      </div>
-
-
-      <input
-        type="text"
-        placeholder="Search conversations..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="
-          w-full
-          pl-10
-          py-2
-
-          bg-[#F8FAFC]
-
-          border
-          border-transparent
-
-          focus:border-teal-500/30
-          focus:bg-white
-
-          focus:ring-4
-          focus:ring-teal-500/10
-
-          rounded-xl
-
-          text-[14px]
-          font-medium
-          text-[#111827]
-
-          outline-none
-
-          transition-all
-          duration-200
-
-          placeholder:text-[#94A3B8]
-        "
-      />
-
-    </div>
-
-  </div>
-
-</div>
-      </div>
-      
-      {/* Conversation List */}
-      <div className="flex-1 overflow-y-auto  [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#E5E7EB] [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#CBD5E1] [&::-webkit-scrollbar-thumb]:transition-colors">
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-            <div className="w-12 h-12 bg-[#F8FAFC] rounded-full flex items-center justify-center mb-3">
-              <Search className="w-5 h-5 text-[#94A3B8]" />
-            </div>
-            <p className="text-[14px] font-medium text-[#64748B]">No conversations found</p>
-            <p className="text-[13px] text-[#94A3B8] mt-1">Try adjusting your search</p>
+    <div className={`w-full lg:w-[380px] shrink-0 flex flex-col bg-white border-r border-slate-200 min-h-0 overflow-hidden relative z-20 transition-all duration-300 ease-in-out ${isMobileHidden ? "hidden lg:flex" : "flex"}`}>
+      <div className="p-1 pt-4 border-b border-slate-100 bg-white shrink-0">
+        <div className="flex items-center justify-between mb-4 px-3">
+          <h2 className="font-['Manrope',_sans-serif] text-[24px] sm:text-[28px] font-extrabold text-black tracking-tight">Messages</h2>
+          {convs.length > 0 && (
+            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={onOpenNewChat} className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-bold text-pink-600 bg-pink-50 hover:bg-pink-100 rounded-xl transition-all shadow-sm">
+              <MessageCircle className="w-3.5 h-3.5" /><span>New Chat</span>
+            </motion.button>
+          )}
+        </div>
+        {convs.length > 0 && (
+          <div className="relative group px-3 pb-3">
+            <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center pointer-events-none z-10 -mt-1.5"><Search className="w-4 h-4 text-slate-400 group-focus-within:text-pink-500 transition-colors" /></div>
+            <input type="text" placeholder="Search conversations..." value={query} onChange={(e) => setQuery(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-pink-500 focus:bg-white focus:ring-1 focus:ring-pink-500 rounded-xl text-[13px] font-medium text-black outline-none transition-all duration-200 placeholder:text-slate-400 shadow-sm" />
           </div>
+        )}
+      </div>
+      <div className="flex-1 overflow-y-auto bg-[#FAFAFA] py-2 no-scrollbar">
+        {isInitialLoad ? <div className="flex flex-col items-center justify-center h-full gap-2 text-slate-400"><Loader2 className="w-6 h-6 animate-spin text-black" /></div>
+        : convs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full px-6 py-12 text-center">
+            <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-slate-200/40"><MessageSquare className="w-6 h-6 text-slate-400" /></div>
+            <p className="font-['Manrope',_sans-serif] text-[16px] font-extrabold text-black">No active chats yet</p>
+            <p className="text-[13px] text-slate-500 font-medium mt-1.5 max-w-[200px] mx-auto leading-normal">Connect and collaborate with your verified workspace partners.</p>
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={onOpenNewChat} className="mt-6 inline-flex items-center gap-2 bg-black text-white px-5 py-2.5 text-[13px] font-bold rounded-xl shadow-md hover:bg-slate-800 transition-all active:scale-95"><span>Start a New Chat</span></motion.button>
+            </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center"><div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mb-3"><Search className="w-5 h-5 text-slate-400" /></div><p className="font-['Manrope',_sans-serif] text-[15px] font-extrabold text-black">No conversations found</p></div>
         ) : (
-          filtered.map((c) => (
-            <ConversationItem
-              key={c.id}
-              conv={c}
-              isActive={c.id === activeId}
-              onClick={() => onSelect(c.id)}
-            />
-          ))
+          filtered.map((c) => <ConversationItem key={c.id} conv={c} isActive={c.id === activeId} onClick={() => onSelect(c.id)} />)
         )}
       </div>
     </div>
@@ -362,398 +102,267 @@ function ConversationList({ convs, activeId, onSelect, isMobileHidden }) {
 
 function ChatHeader({ conv, onBack }) {
   return (
-    <div className="py-3.5 flex items-center justify-between px-5 sm:px-6 bg-white border-b border-[#E5E7EB] shrink-0">
+    <div className="flex items-center justify-between gap-3 px-2 py-3.5 bg-white border-b border-slate-200 shrink-0 select-none relative z-20 shadow-sm">
       <div className="flex items-center gap-3 min-w-0">
-        <button 
-          onClick={onBack} 
-          className="lg:hidden p-2 -ml-2 text-[#64748B] hover:text-[#111827] hover:bg-[#F8FAFC] rounded-xl transition-all duration-200"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        
-        <Avatar 
-          name={conv.name} 
-          colorClass={conv.colorClass} 
-          sizeClass="w-11 h-11" 
-          textClass="text-[14px]" 
-          online={conv.online} 
-        />
-        
-        <div className="flex flex-col min-w-0">
-          <h2 className="text-[16px] font-semibold text-[#111827] tracking-tight leading-snug truncate">
-            {conv.name}
-          </h2>
-          <div className="flex items-center gap-2">
-            <p className="text-[13px] font-medium text-[#64748B] truncate">
-              {conv.role}
-            </p>
-            <span className="w-1 h-1 rounded-full bg-[#CBD5E1]" />
-            <span className="text-[12px] font-medium text-[#64748B]">
-              {conv.online ? "Active now" : "Last seen recently"}
-            </span>
-          </div>
+        <button onClick={onBack} className="lg:hidden p-2 -ml-1 text-slate-500 hover:text-black hover:bg-slate-50 rounded-xl transition-all duration-200 shrink-0"><ArrowLeft className="w-5 h-5" /></button>
+        <Avatar name={conv.name} colorClass={conv.colorClass} sizeClass="w-10 h-10" textClass="text-[13px]" online={conv.online} />
+        <div className="min-w-0">
+          <h2 className="font-['Manrope',_sans-serif] text-[16px] font-extrabold text-black tracking-tight truncate leading-snug">{conv.name}</h2>
+          <p className="text-[12px] text-slate-500 truncate leading-tight flex items-center gap-1.5 font-bold">{conv.online === true ? <span className="text-[#17B26A]">Online</span> : conv.role || "Offline"}</p>
         </div>
       </div>
-      
-      <div className="flex items-center gap-0.5">
-        <button className="p-2.5 text-[#64748B] hover:text-[#111827] hover:bg-[#F8FAFC] rounded-xl transition-all duration-200">
-          <MoreVertical className="w-4.5 h-4.5" />
-        </button>
-      </div>
+      <div className="flex items-center gap-1 shrink-0"><motion.button whileTap={{ scale: 0.94 }} className="p-2.5 text-slate-400 hover:text-black hover:bg-slate-50 rounded-xl transition-all"><MoreVertical className="w-[18px] h-[18px]" /></motion.button></div>
     </div>
   );
 }
 
-function MessageBubble({ msg, conv, isGrouped, isLast }) {
+function MessageBubble({ msg, conv, isGrouped, isLast, onRetry }) {
   const isMe = msg.from === "me";
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      layout
-      className={`flex w-full ${isMe ? "justify-end" : "justify-start"} ${isGrouped ? "mt-1" : "mt-4"}`}
-    >
-      <div className={`flex w-[85%] lg:w-[75%] xl:w-[70%] gap-3 ${isMe ? "flex-row-reverse" : "flex-row"} items-end`}>
-        {!isMe && (
-          <div className="w-8 shrink-0 flex flex-col justify-end mb-1">
-            {isLast && (
-              <Avatar 
-                name={conv.name} 
-                colorClass={conv.colorClass} 
-                sizeClass="w-8 h-8" 
-                textClass="text-[10px]" 
-                showStatus={false}
-              />
-            )}
-          </div>
-        )}
-        
-        <div className={`flex flex-col ${isMe ? "items-end" : "items-start"} max-w-[85%]`}>
-          <div
-            className={`
-              px-4 py-2.5 text-[14.5px] leading-relaxed shadow-sm
-              ${isMe
-                ? "bg-teal-600 text-white shadow-[0_2px_8px_rgba(20,184,166,0.15)]"
-                : "bg-white border border-[#E5E7EB] text-[#111827] shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
-              }
-              ${isMe
-                ? `rounded-2xl ${isLast ? "rounded-br-sm" : "rounded-br-2xl"} ${isGrouped ? "rounded-tr-md" : "rounded-tr-2xl"}`
-                : `rounded-2xl ${isLast ? "rounded-bl-sm" : "rounded-bl-2xl"} ${isGrouped ? "rounded-tl-md" : "rounded-tl-2xl"}`
-              }
-              transition-all duration-200
-            `}
-          >
-            {msg.text}
-          </div>
-
-          {isLast && (
-            <div className={`flex items-center gap-1.5 mt-1.5 px-1 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
-              <span className="text-[11px] font-medium text-[#94A3B8]">{msg.time}</span>
-              {isMe && (
-                <span className={msg.read ? "text-teal-600" : "text-[#CBD5E1]"}>
-                  {msg.read ? <CheckCheck className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
-                </span>
-              )}
-            </div>
-          )}
+    <motion.div initial={{ opacity: 0, y: 6, scale: 0.99 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.18, ease: "easeOut" }} className={`flex ${isMe ? "justify-end" : "justify-start"} px-4 sm:px-6 ${isGrouped ? "mt-0.5" : "mt-4"}`}>
+      <div className={`flex flex-col max-w-[75%] sm:max-w-[60%] ${isMe ? "items-end" : "items-start"}`}>
+        <div className={`relative px-4 py-2.5 text-[14px] leading-relaxed break-words shadow-sm ${isMe ? "bg-slate-700 text-white rounded-[20px] rounded-tr-sm" : "bg-slate-100 text-slate-900 rounded-[20px] rounded-tl-sm border border-slate-200/60"} ${msg._failed ? "ring-1 ring-rose-400 bg-rose-50 text-rose-900" : ""} ${msg._pending ? "opacity-60" : ""}`}>
+          {msg._deleted ? <span className="italic text-[13px] opacity-70 select-none">This message was deleted</span> : <span className="whitespace-pre-wrap font-medium">{msg.text}</span>}
+        </div>
+        <div className={`flex items-center gap-1.5 mt-1.5 px-1 ${isMe ? "flex-row-reverse" : ""}`}>
+          <span className="text-[10px] text-slate-400 font-bold tracking-wide">{msg.time}</span>
+          {isMe && isLast && !msg._failed && <span className="text-pink-500 font-extrabold text-[10px] select-none uppercase tracking-widest">{msg._pending ? "•" : msg.read ? "Read" : "Sent"}</span>}
         </div>
       </div>
     </motion.div>
   );
 }
 
-function TypingIndicator({ conv }) {
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: 8 }} 
-      animate={{ opacity: 1, y: 0 }} 
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.2 }}
-      className="flex w-full justify-start mt-4"
-    >
-      <div className="flex w-[85%] lg:w-[75%] xl:w-[70%] gap-3 flex-row items-end">
-        <div className="w-8 shrink-0 flex flex-col justify-end mb-1">
-          <Avatar 
-            name={conv.name} 
-            colorClass={conv.colorClass} 
-            sizeClass="w-8 h-8" 
-            textClass="text-[10px]" 
-            showStatus={false}
-          />
-        </div>
-        <div className="px-4 py-3.5 bg-white border border-[#E5E7EB] rounded-2xl rounded-bl-sm shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={i}
-              className="w-2 h-2 bg-[#CBD5E1] rounded-full"
-              animate={{ 
-                y: ["0%", "-60%", "0%"],
-                opacity: [0.5, 1, 0.5]
-              }}
-              transition={{ 
-                duration: 0.8, 
-                repeat: Infinity, 
-                ease: "easeInOut", 
-                delay: i * 0.15 
-              }}
-            />
-          ))}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function MessageList({ messages, conv, showTyping }) {
-  const bottomRef = useRef(null);
+function MessageList({ messages, conv, onRetry }) {
+  const scrollRef = useRef(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, showTyping]);
+    setTimeout(() => { scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, 50);
+  }, [messages]);
 
   const grouped = messages.map((msg, i) => ({
-    ...msg,
-    isGrouped: i > 0 && messages[i - 1].from === msg.from,
-    isLast: i === messages.length - 1 || messages[i + 1].from !== msg.from,
+    ...msg, isGrouped: i > 0 && messages[i - 1].from === msg.from, isLast: i === messages.length - 1 || messages[i + 1].from !== msg.from,
   }));
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-4 pb-4 bg-[#F8FAFC] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#CBD5E1] [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#94A3B8] [&::-webkit-scrollbar-thumb]:transition-colors">
-      <div className="flex items-center justify-center mb-6 mt-2">
-        <div className="h-px bg-[#E5E7EB] flex-1" />
-        <span className="px-4 py-1.5 bg-white border border-[#E5E7EB] rounded-full text-[11px] font-semibold text-[#64748B] tracking-wide mx-4 shadow-sm">
-          Today
-        </span>
-        <div className="h-px bg-[#E5E7EB] flex-1" />
+    <div className="flex-1 overflow-y-auto py-4 bg-[#FAFAFA] relative z-10 flex flex-col no-scrollbar">
+      <div className="flex flex-col mt-auto">
+        <AnimatePresence initial={false}>{grouped.map((msg) => <MessageBubble key={msg.id} msg={msg} conv={conv} isGrouped={msg.isGrouped} isLast={msg.isLast} onRetry={onRetry} />)}</AnimatePresence>
       </div>
-      
-      <div className="flex flex-col max-w-4xl mx-auto">
-        <AnimatePresence initial={false}>
-          {grouped.map((msg) => (
-            <MessageBubble key={msg.id} msg={msg} conv={conv} isGrouped={msg.isGrouped} isLast={msg.isLast} />
-          ))}
-          {showTyping && <TypingIndicator key="typing" conv={conv} />}
-        </AnimatePresence>
-      </div>
-      <div ref={bottomRef} className="h-4 shrink-0" />
+      <div ref={scrollRef} className="h-4 shrink-0" />
     </div>
   );
 }
 
-function MessageComposer({ onSend }) {
+function MessageComposer({ onSend, activeId, isSending }) {
   const [value, setValue] = useState("");
-  const inputRef = useRef(null);
   const textareaRef = useRef(null);
+
+  // 🚀 DEEP LINK FIX: Micro-delay to focus securely
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (textareaRef.current) textareaRef.current.focus();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [activeId]);
 
   function handleSend() {
     const trimmed = value.trim();
-    if (!trimmed) return;
+    if (!trimmed || isSending) return;
     onSend(trimmed);
     setValue("");
-    inputRef.current?.focus();
-    
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
+      textareaRef.current.focus();
     }
   }
 
-  function handleKey(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  }
-
-  function handleTextareaChange(e) {
-    setValue(e.target.value);
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 128)}px`;
-    }
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
   }
 
   return (
-    <div className="p-4 sm:p-5 bg-white shrink-0 border-t border-[#E5E7EB]">
-      <div className="flex items-end gap-2.5 bg-white border border-[#E5E7EB] rounded-2xl p-2 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200 focus-within:ring-4 focus-within:ring-teal-500/10 focus-within:border-teal-500/30">
-        <button className="p-2.5 text-[#94A3B8] hover:text-[#111827] hover:bg-[#F8FAFC] rounded-xl transition-all duration-200 shrink-0">
-          <Paperclip className="w-5 h-5" />
-        </button>
-        
-        <textarea
-          ref={(el) => {
-            inputRef.current = el;
-            textareaRef.current = el;
-          }}
-          value={value}
-          onChange={handleTextareaChange}
-          onKeyDown={handleKey}
-          placeholder="Write a message..."
-          className="
-            flex-1 max-h-32 min-h-[44px] 
-            bg-transparent resize-none outline-none 
-            py-2.5 px-2 
-            text-[14.5px] text-[#111827] 
-            placeholder:text-[#94A3B8] 
-            leading-relaxed
-            [&::-webkit-scrollbar]:w-1 
-            [&::-webkit-scrollbar-track]:bg-transparent 
-            [&::-webkit-scrollbar-thumb]:bg-[#E5E7EB] 
-            [&::-webkit-scrollbar-thumb]:rounded-full
-            self-center
-          "
-          rows={1}
-        />
-        
-        <button className="p-2.5 text-[#94A3B8] hover:text-[#111827] hover:bg-[#F8FAFC] rounded-xl transition-all duration-200 shrink-0">
-          <Smile className="w-5 h-5" />
-        </button>
-        
-        <button
-          onClick={handleSend}
-          disabled={!value.trim()}
-          className={`
-            flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-200 shrink-0
-            ${value.trim() 
-              ? "bg-teal-600 text-white shadow-sm hover:bg-teal-700 hover:shadow-md active:scale-95" 
-              : "bg-[#F8FAFC] text-[#94A3B8] cursor-not-allowed border border-[#E5E7EB]"
-            }
-          `}
-        >
-          <Send className="w-4.5 h-4.5 ml-0.5" />
-        </button>
+    <div className="p-3 sm:p-4 bg-white border-t border-slate-200 shrink-0 relative z-20">
+      <div className="px-3 flex items-end gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-1.5 transition-all focus-within:bg-white focus-within:ring-1 focus-within:ring-pink-500 focus-within:border-pink-500 shadow-sm">
+        <textarea ref={textareaRef} value={value} onChange={(e) => { setValue(e.target.value); e.target.style.height = "auto"; e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`; }} onKeyDown={handleKeyDown} placeholder="Write a message..." rows={1} className="flex-1 max-h-28 min-h-[44px] bg-transparent resize-none outline-none py-2.5 px-2 text-[14px] font-medium text-black placeholder:text-slate-400 leading-relaxed self-center no-scrollbar" />
+        <motion.button whileTap={value.trim() && !isSending ? { scale: 0.95 } : {}} onClick={handleSend} disabled={!value.trim() || isSending} className={`flex items-center justify-center w-11 h-11 rounded-xl transition-all shrink-0 mb-0.5 ${value.trim() && !isSending ? "bg-black text-white hover:bg-slate-800 shadow-md" : "bg-slate-100 text-slate-400 cursor-not-allowed"}`}>{isSending ? <Loader2 className="w-5 h-5 animate-spin text-slate-400" /> : <Send className="w-4 h-4 ml-0.5" />}</motion.button>
       </div>
     </div>
   );
 }
 
-function EmptyState() {
+function EmptyState({ onOpenNewChat }) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 bg-[#F8FAFC]">
-      <div className="relative">
-        <div className="w-20 h-20 bg-white border border-[#E5E7EB] shadow-sm rounded-2xl flex items-center justify-center relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#F8FAFC] to-white rounded-2xl" />
-          <MessageSquare className="w-8 h-8 text-[#94A3B8] relative z-10" />
-        </div>
-        <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-teal-500 rounded-lg flex items-center justify-center shadow-sm">
-          <Users className="w-3.5 h-3.5 text-white" />
-        </div>
+    <div className="flex-1 flex flex-col items-center justify-center p-8 bg-[#FAFAFA] relative z-10 select-none">
+      <div className="relative mb-6">
+        <div className="w-24 h-24 bg-white border border-slate-200 shadow-sm rounded-3xl flex items-center justify-center relative"><div className="absolute inset-0 bg-gradient-to-tr from-slate-50/50 to-white rounded-3xl" /><MessageSquare className="w-9 h-9 text-slate-300 relative z-10" /></div>
+        <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-black rounded-xl flex items-center justify-center shadow-md shadow-black/20"><Users className="w-4 h-4 text-white" /></div>
       </div>
-      
-      <h3 className="text-xl font-bold text-[#111827] tracking-tight mt-6 mb-2">Welcome to your workspace</h3>
-      <p className="text-[14px] text-[#64748B] text-center max-w-sm leading-relaxed">
-        Select an existing conversation from the sidebar or start a new one to collaborate with your team.
-      </p>
+      <h3 className="font-['Manrope',_sans-serif] text-[22px] font-extrabold text-black tracking-tight mt-2 mb-2">Connect with partners</h3>
+      <p className="text-[14px] text-slate-500 text-center max-w-sm leading-relaxed mb-8 font-medium">Select a chat from the sidebar or start a new conversation with your connected buyers and sellers.</p>
+      <motion.button whileHover={{ scale: 1.02, y: -0.5 }} whileTap={{ scale: 0.98 }} onClick={onOpenNewChat} className="flex items-center gap-2 bg-black hover:bg-slate-800 text-white px-6 py-3.5 rounded-xl font-bold text-[13px] shadow-md transition-all duration-200 active:scale-95"><Sparkles className="w-4 h-4 text-pink-400" /><span>Start a Conversation</span></motion.button>
     </div>
   );
 }
 
-// ─── ROOT COMPONENT ──────────────────────────────────────────
+function NewChatModal({ isOpen, onClose, onSelectPartner, onNotify }) {
+  const [partners, setPartners] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  // --- ADDED STATE FOR DATA FETCH ERROR ---
+  const [fetchError, setFetchError] = useState(false);
+
+  const fetchPartners = () => {
+    setLoading(true);
+    setFetchError(false);
+    networkApi.getConnectedSuppliers()
+      .then((res) => {
+        const normalized = (res.data?.data || res.data || []).map(p => ({
+          id: p.userId || p.id,
+          name: p.name || "Unknown Partner",
+          businessName: p.businessName || p.category || "Verified Workspace",
+          profileImage: p.profileImage || null
+        }));
+        setPartners(normalized);
+      })
+      .catch((err) => {
+        console.error(err);
+        setFetchError(true);
+        if (onNotify) onNotify('error', 'Failed to load connections.');
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    fetchPartners();
+  }, [isOpen]);
+
+  const filteredPartners = partners.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.businessName.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 flex items-center justify-center z-[100] px-4 font-['Inter',_sans-serif]">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+          <motion.div initial={{ opacity: 0, scale: 0.96, y: 15 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 15 }} transition={{ type: "spring", duration: 0.4 }} className="relative bg-white w-full max-w-md rounded-[24px] shadow-2xl border border-slate-200/60 overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-white shrink-0"><div className="flex items-center gap-2.5"><UserPlus className="w-5 h-5 text-pink-500" /><h3 className="font-['Manrope',_sans-serif] font-extrabold text-[18px] text-black tracking-tight">New Conversation</h3></div><button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-black transition-colors"><X className="w-4 h-4" /></button></div>
+            <div className="p-4 border-b border-slate-100 bg-slate-50/50 shrink-0"><div className="relative"><Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><input type="text" placeholder="Search active connections..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 rounded-xl text-[13px] font-medium outline-none transition-all shadow-sm" /></div></div>
+            <div className="flex-1 overflow-y-auto p-2 min-h-[250px] no-scrollbar">
+              {fetchError ? (
+                <div className="scale-75 origin-top -mt-8">
+                  <DataFetchError onRetry={fetchPartners} errorTitle="Network Error" errorMessage="Failed to load connections." />
+                </div>
+              ) : loading ? <div className="flex flex-col items-center justify-center h-48 gap-3 text-slate-400"><Loader2 className="w-6 h-6 animate-spin text-black" /><span className="text-[12px] font-bold tracking-wide">Loading network...</span></div>
+              : filteredPartners.length === 0 ? <div className="flex flex-col items-center justify-center h-48 text-center px-6"><HelpCircle className="w-8 h-8 text-slate-300 mb-3" /><p className="font-['Manrope',_sans-serif] text-[15px] font-extrabold text-black">No connections found</p></div>
+              : filteredPartners.map((partner) => (
+                <motion.div key={partner.id} whileHover={{ x: 2, backgroundColor: "#F8FAFC" }} onClick={() => onSelectPartner(partner)} className="flex items-center gap-3.5 p-3 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-slate-100">
+                  <Avatar name={partner.name} colorClass="from-slate-700 to-black" sizeClass="w-11 h-11" textClass="text-[13px]" showStatus={false} />
+                  <div className="flex-1 min-w-0"><h4 className="text-[14px] font-bold text-black truncate leading-snug">{partner.name}</h4><p className="text-[12px] font-medium text-slate-500 truncate leading-normal mt-0.5">{partner.businessName}</p></div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export default function Messenger() {
-  const [activeId, setActiveId] = useState(1);
-  const [convs, setConvs] = useState(CONVERSATIONS);
-  const [msgMap, setMsgMap] = useState(MESSAGES_BY_CONV);
-  const [showTyping, setShowTyping] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  const [activeId, setActiveId] = useState(null);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
-  const typingTimer = useRef(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const activeConv = convs.find((c) => c.id === activeId) || null;
-  const messages = activeId ? msgMap[activeId] || msgMap.default : [];
+  // --- ADDED STATE FOR PREMIUM TOAST ---
+  const [notification, setNotification] = useState(null);
+  const showNotification = useCallback((type, msg) => {
+    setNotification({ type, msg });
+  }, []);
+
+  const { conversations, loading: convsLoading, clearUnread, patchConversationPreview, refresh: refreshConversations } = useConversations();
+  const activeConv = conversations.find((c) => c.id === activeId) || null;
+
+  const { messages, sendMessage, retrySend, markRead, isSending } = useMessages(activeId, activeConv?._counterpartId, { 
+    onSent: ({ lastMsg, time }) => patchConversationPreview(activeId, { lastMsg, time }) 
+  });
+
+  useEffect(() => {
+    const client = new Client({
+      webSocketFactory: () => new SockJS('http://localhost:8080/ws', null, { withCredentials: true }),
+      onConnect: () => { client.subscribe('/user/queue/chat', () => { refreshConversations(); }); }
+    });
+    client.activate();
+    return () => client.deactivate();
+  }, [refreshConversations]);
 
   function selectConversation(id) {
     setActiveId(id);
     setMobileChatOpen(true);
-    setConvs((prev) => prev.map((c) => (c.id === id ? { ...c, unread: 0 } : c)));
+    clearUnread(id);
   }
 
-  const sendMessage = useCallback((text) => {
-    if (!activeId) return;
-    const newMsg = {
-      id: Date.now(),
-      from: "me",
-      text,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      read: false,
-    };
-    
-    setMsgMap((prev) => ({
-      ...prev,
-      [activeId]: [...(prev[activeId] || prev.default), newMsg],
-    }));
-    
-    setConvs((prev) =>
-      prev.map((c) =>
-        c.id === activeId ? { ...c, lastMsg: text, time: newMsg.time } : c
-      )
-    );
+  const handleSelectPartner = useCallback((partner) => {
+    setIsModalOpen(false);
+    createOrGetConversation({
+      counterpartId: partner.id,
+      counterpartName: partner.name,
+      counterpartBusinessName: partner.businessName,
+      counterpartProfileImage: partner.profileImage
+    }).then((createdDto) => {
+      showNotification('success', `Chat started with ${partner.name}`);
+      refreshConversations().then(() => selectConversation(createdDto.id));
+    }).catch((err) => {
+      console.error("Failed to generate system conversation tunnel:", err);
+      showNotification('error', 'Failed to start conversation.');
+    });
+  }, [refreshConversations, showNotification]);
 
-    clearTimeout(typingTimer.current);
-    setShowTyping(true);
-    
-    typingTimer.current = setTimeout(() => {
-      setShowTyping(false);
-      const replies = [
-        "Got it, thanks! 👍",
-        "Interesting point! Let me think about that.",
-        "Absolutely, that makes perfect sense.",
-        "Ha, that's a good one 😄",
-        "Sure, I'll get back to you on that shortly.",
-        "That's a great question!",
-        "I appreciate the context, thank you.",
-        "Let me review and come back to this.",
-      ];
-      const reply = {
-        id: Date.now() + 1,
-        from: "them",
-        text: replies[Math.floor(Math.random() * replies.length)],
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        read: true,
-      };
-      
-      setMsgMap((prev) => ({
-        ...prev,
-        [activeId]: [...(prev[activeId] || prev.default), reply],
-      }));
-      
-      setConvs((prev) =>
-        prev.map((c) =>
-          c.id === activeId ? { ...c, lastMsg: reply.text, time: reply.time, unread: c.id === activeId ? c.unread : c.unread + 1 } : c
-        )
-      );
-    }, 1500 + Math.random() * 1000);
+  useEffect(() => {
+    if (location.state?.partnerToMessage) {
+      const partner = location.state.partnerToMessage;
+      handleSelectPartner(partner);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, handleSelectPartner]);
+
+  useEffect(() => {
+    if (activeId) markRead();
   }, [activeId]);
 
   return (
-   <div className="w-full h-full flex overflow-hidden bg-[#F8FAFC] text-[#111827] antialiased relative" style={{ fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-      
-      {/* Premium SaaS Ambient Background - Minimal & Clean */}
-      <div className="absolute inset-0 bg-[#F8FAFC] pointer-events-none" />
+    <>
+      <style dangerouslySetInnerHTML={{__html: `
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}} />
 
-      {/* Conversation List */}
-      <ConversationList
-        convs={convs}
-        activeId={activeId}
-        onSelect={selectConversation}
-        isMobileHidden={mobileChatOpen}
+      {/* --- REPLACED OLD NOTIFICATION WITH PREMIUM TOAST --- */}
+      <PremiumToast 
+        isVisible={!!notification} 
+        type={notification?.type || 'info'} 
+        message={notification?.msg} 
+        onClose={() => setNotification(null)} 
       />
 
-      {/* Chat Area */}
-      <div className={`
-        flex-1 flex flex-col min-w-0 h-full overflow-hidden relative z-10 bg-white
-        ${!mobileChatOpen ? "hidden lg:flex" : "flex"}
-      `}>
-        {activeConv ? (
-          <>
-            <ChatHeader conv={activeConv} onBack={() => setMobileChatOpen(false)} />
-            <MessageList messages={messages} conv={activeConv} showTyping={showTyping} />
-            <MessageComposer onSend={sendMessage} />
-          </>
-        ) : (
-          <EmptyState />
-        )}
+      <div className="w-full h-full 2xl:mx-[10px] gap-5 mb-8 my-3 lg:mb-0 flex overflow-hidden bg-white text-[#0F1626] font-['Inter',_sans-serif] antialiased relative">
+        <div className="absolute inset-0 bg-[#FAFAFA] pointer-events-none z-0" />
+        <ConversationList convs={conversations} activeId={activeId} onSelect={selectConversation} isMobileHidden={mobileChatOpen} onOpenNewChat={() => setIsModalOpen(true)} isInitialLoad={convsLoading} />
+        <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden relative z-10 bg-white ${!mobileChatOpen ? "hidden lg:flex" : "flex"}`}>
+          {activeConv ? (
+            <>
+              <ChatHeader conv={activeConv} onBack={() => setMobileChatOpen(false)} />
+              <MessageList messages={messages} conv={activeConv} onRetry={retrySend} />
+              <MessageComposer activeId={activeId} onSend={sendMessage} isSending={isSending} />
+            </>
+          ) : <EmptyState onOpenNewChat={() => setIsModalOpen(true)} />}
+        </div>
+        <NewChatModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSelectPartner={handleSelectPartner} onNotify={showNotification} />
       </div>
-
-    </div>
+    </>
   );
 }

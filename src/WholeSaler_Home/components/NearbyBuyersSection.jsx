@@ -6,7 +6,7 @@ import { networkApi } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import SectionHeader from "./SectionHeader";
 
-export default function NearbyBuyersSection() {
+export default function NearbyBuyersSection({ onError }) {
   const scrollRef = useRef(null);
   const navigate = useNavigate();
   const [buyers, setBuyers] = useState([]);
@@ -21,13 +21,14 @@ export default function NearbyBuyersSection() {
         if (isMounted) setBuyers(data);
       } catch (error) {
         console.error("Failed to fetch buyers", error);
+        if (isMounted && onError) onError(); // Trigger Full Page Error
       } finally {
         if (isMounted) setIsLoading(false);
       }
     };
     fetchNearbyBuyers();
     return () => { isMounted = false; };
-  }, []);
+  }, [onError]);
 
   const scrollBy = useCallback((dir) => {
     scrollRef.current?.scrollBy({ left: dir * 260, behavior: "smooth" });

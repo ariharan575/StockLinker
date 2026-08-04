@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
-import { ArrowLeft, ArrowRight, Sparkles, Check, Loader2,AlertCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, Check, Loader2, AlertCircle } from "lucide-react";
 import { STEPS, fadeUp } from "./constants";
 import { BusinessStep, AddressStep, MarketplaceStep, SuccessScreen } from "./Steps";
 import { onboardingApi } from "../Authentication/services/api";
@@ -36,7 +36,7 @@ export default function StockLinkerEnterpriseOnboarding() {
   }, []);
 
   const [formData, setFormData] = useState({
-    ownerName: "", businessName: "", mobile: "", deliveryRadius: "", businessEmail: "", gstNumber: "",
+    ownerName: "", businessName: "", mobile: "", deliveryRadius: "", yearsInBusiness: "", businessEmail: "", gstNumber: "",
     address1: "", address2: "", area: "", cityOrTown: "", district: "", pincode: "",
     categoryIds: [], deliverySupport: "", storeSize: "",
   });
@@ -54,7 +54,10 @@ export default function StockLinkerEnterpriseOnboarding() {
       if (!formData.ownerName) missing.push("ownerName");
       if (!formData.businessName) missing.push("businessName");
       if (!formData.mobile) missing.push("mobile");
-      if (!formData.deliveryRadius) missing.push("deliveryRadius");
+      
+      // FIX: Only require delivery radius if the user is a WHOLESALER
+      if (role === "WHOLESALER" && !formData.deliveryRadius) missing.push("deliveryRadius");
+      
       if (!formData.businessEmail) missing.push("businessEmail");
       if (missing.length > 0) { setErrorMsg("Please fill in all required business details."); setErrorFields(missing); return false; }
     }
@@ -82,10 +85,15 @@ export default function StockLinkerEnterpriseOnboarding() {
     setErrorMsg(null);
     try {
       if (step === 0) {
+        // FIX: Included yearsInBusiness in payload & safely handled deliveryRadius
         await onboardingApi.saveBusiness({
-          ownerName: formData.ownerName, businessName: formData.businessName,
-          mobile: formData.mobile, deliveryRadius: parseInt(formData.deliveryRadius),
-          businessEmail: formData.businessEmail, gstNumber: formData.gstNumber,
+          ownerName: formData.ownerName, 
+          businessName: formData.businessName,
+          mobile: formData.mobile, 
+          deliveryRadius: formData.deliveryRadius ? parseInt(formData.deliveryRadius) : null,
+          yearsInBusiness: formData.yearsInBusiness || null,
+          businessEmail: formData.businessEmail, 
+          gstNumber: formData.gstNumber,
         });
         setStep(1);
       } else if (step === 1) {
