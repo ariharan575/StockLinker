@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // --- Global UI States ---
-import GlobalNetworkState from './GlobalNetworkState'
+import GlobalNetworkState from './components/GlobalNetworkState'
 // --- Context & Route Guards ---
 import { AuthProvider, useAuth } from './Authentication/context/AuthContext';
 import PrivateRoute from './Authentication/components/PrivateRoute'; 
