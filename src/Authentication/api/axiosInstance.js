@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create a centralized Axios instance
 export const axiosInstance = axios.create({
-  baseURL: 'https://stocklinker-backend.onrender.com/api',
+  baseURL: 'https://stocklinker.onrender.com/api',
   withCredentials: true,
 });
 
