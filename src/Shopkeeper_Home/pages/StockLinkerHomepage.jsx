@@ -5,7 +5,7 @@ import MainLayout from '../../Layout/MainLayout';
 import Footer from '../../Layout/Footer';
 
 // --- PREMIUM COMPONENTS ---
-import { DataFetchError } from '../../Components/DataFetchError';
+import { DataFetchError } from '../../components/DataFetchError';
 
 // --- DIRECT IMPORTS (Replacing Barrel File) ---
 import Hero from '../sections/Hero';

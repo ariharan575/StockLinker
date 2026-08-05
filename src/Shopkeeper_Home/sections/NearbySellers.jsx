@@ -7,7 +7,7 @@ import { networkApi } from '../Services/api';
 import { fadeUp, CTA_GRAD } from '../../Layout/common/constants';
 
 // --- PREMIUM TOAST ADDED ---
-import { PremiumToast } from '../../Components/PremiumToast';
+import { PremiumToast } from '../../components/PremiumToast';
 
 export default function NearbySellers({ onError }) {
   const navigate = useNavigate();

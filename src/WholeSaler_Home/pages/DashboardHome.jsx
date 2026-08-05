@@ -16,8 +16,8 @@ import WholesalerHero from '../components/HeroSection';
 import { dashboardApi } from '../../Shopkeeper_Home/Services/api';
 
 // --- PREMIUM COMPONENTS ---
-import { DataFetchError } from "../../Components/DataFetchError";
-import { PremiumToast } from "../../Components/PremiumToast";
+import { DataFetchError } from "../../components/DataFetchError";
+import { PremiumToast } from "../../components/PremiumToast";
 
 // ============================================================================
 // 🌍 WORLD-CLASS GLOBAL NETWORK ERROR STATE (PREMIUM SAAS DESIGN)

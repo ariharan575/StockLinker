@@ -9,8 +9,8 @@ import {
 import { storefrontApi, orderApi, profileApi, networkApi } from '../../Authentication/services/api';
 
 // --- ADDED PREMIUM COMPONENTS IMPORTS ---
-import { PremiumToast } from '../../Components/PremiumToast';
-import { DataFetchError } from '../../Components/DataFetchError';
+import { PremiumToast } from '../../components/PremiumToast';
+import { DataFetchError } from '../../components/DataFetchError';
 
 // ============================================================
 // IMAGE UTILS FOR CATEGORIES

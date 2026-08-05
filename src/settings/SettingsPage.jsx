@@ -11,8 +11,8 @@ import { DeliveryInsightsSection } from "./sections/DeliveryInsightsSection";
 import { profileApi } from "../Authentication/services/api";
 
 // --- ADDED PREMIUM COMPONENTS IMPORTS ---
-import { PremiumToast } from "../Components/PremiumToast"; 
-import { DataFetchError } from "../Components/DataFetchError"; 
+import { PremiumToast } from "../components/PremiumToast"; 
+import { DataFetchError } from "../components/DataFetchError"; 
 
 export default function SettingsPage({ activeSection = "account", onSectionChange }) {
   const { role } = useAuth(); // SECURE JWT ROLE

@@ -5,8 +5,8 @@ import { Plus, Package, X, CheckCircle2, Save, RotateCcw, RefreshCw, Download, C
 import { inventoryApi } from '../Services/api';
 
 // --- ADDED PREMIUM COMPONENTS IMPORTS ---
-import { PremiumToast } from "../../Components/PremiumToast";
-import { DataFetchError } from "../../Components/DataFetchError";
+import { PremiumToast } from "../../components/PremiumToast";
+import { DataFetchError } from "../../components/DataFetchError";
 
 /* ─────────────────────────────────────────────
    PREMIUM THEME SYSTEM & CSS
