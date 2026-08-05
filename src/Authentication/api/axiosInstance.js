@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // Create a centralized Axios instance
 export const axiosInstance = axios.create({
-  baseURL: 'https://stocklinker.onrender.com/api',
-  withCredentials: true,
+  baseURL: `${import.meta.env.VITE_API_URL}/api`,
+  withCredentials:true,
 });
 
 // Refresh state trackers to prevent race conditions and infinite loops
