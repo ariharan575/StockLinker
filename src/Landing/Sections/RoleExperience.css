@@ -1,0 +1,454 @@
+/* ==========================================================================
+   CSS VARIABLES & DESIGN TOKENS
+   ========================================================================== */
+:root {
+  --sl-bg-base: #050505;
+  --sl-bg-surface: rgba(20, 20, 22, 0.6);
+  --sl-text-primary: #ffffff;
+  --sl-text-secondary: #9ca3af;
+  --sl-border-glass: rgba(255, 255, 255, 0.08);
+  
+  /* Shopkeeper Theme - Blues/Cyans */
+  --sl-blue-main: #3b82f6;
+  --sl-blue-light: #60a5fa;
+  --sl-cyan-main: #06b6d4;
+  --sl-indigo-main: #6366f1;
+  --sl-blue-gradient: linear-gradient(135deg, var(--sl-blue-light), var(--sl-cyan-main));
+  --sl-blue-glow: rgba(59, 130, 246, 0.15);
+
+  /* Wholesaler Theme - Purples/Pinks */
+  --sl-purple-main: #a855f7;
+  --sl-purple-light: #c084fc;
+  --sl-pink-main: #ec4899;
+  --sl-rose-main: #f43f5e;
+  --sl-purple-gradient: linear-gradient(135deg, var(--sl-purple-light), var(--sl-pink-main));
+  --sl-purple-glow: rgba(168, 85, 247, 0.15);
+}
+
+/* Base resets for the section */
+.role-experience-section {
+  position: relative;
+  width: 100%;
+  background-color: var(--sl-bg-base);
+  color: var(--sl-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding: clamp(4rem, 8vw, 8rem) 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.role-experience-section *,
+.role-experience-section *::before,
+.role-experience-section *::after {
+  box-sizing: inherit;
+}
+
+/* ==========================================================================
+   BACKGROUND & EFFECTS
+   ========================================================================== */
+.bg-elements {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bg-gradient-mesh {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.05), transparent 40%),
+    radial-gradient(circle at 85% 50%, rgba(168, 85, 247, 0.05), transparent 40%);
+  filter: blur(80px);
+}
+
+.bg-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   LAYOUT CONTAINERS
+   ========================================================================== */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 4vw, 3rem);
+  position: relative;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   HEADER SECTION
+   ========================================================================== */
+.section-header {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto clamp(3rem, 6vw, 5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 100px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--sl-border-glass);
+  backdrop-filter: blur(10px);
+  margin-bottom: 1.5rem;
+}
+
+.main-heading {
+  font-size: clamp(34px, 5vw, 60px);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 1.5rem;
+}
+
+.gradient-text {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+.main-gradient {
+  background-image: linear-gradient(90deg, var(--sl-blue-light), var(--sl-purple-light));
+}
+
+.main-description {
+  font-size: clamp(16px, 1.5vw, 20px);
+  color: var(--sl-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ==========================================================================
+   PANELS GRID & CARDS
+   ========================================================================== */
+.panels-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.tilt-card-wrapper {
+  height: 100%;
+  display: flex;
+}
+
+.experience-panel {
+  position: relative;
+  width: 100%;
+  border-radius: 24px;
+  background: var(--sl-bg-surface);
+  border: 1px solid var(--sl-border-glass);
+  padding: clamp(2rem, 4vw, 3.5rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+.panel-glow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 200px;
+  filter: blur(100px);
+  opacity: 0.5;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.experience-panel:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.experience-panel:hover .panel-glow {
+  opacity: 0.8;
+}
+
+/* Theme specifics */
+.blue-theme .panel-glow { background: var(--sl-blue-glow); }
+.blue-theme:hover { box-shadow: 0 20px 40px -20px var(--sl-blue-glow); }
+.blue-badge { color: var(--sl-blue-light); border-color: rgba(59, 130, 246, 0.3); }
+
+.purple-theme .panel-glow { background: var(--sl-purple-glow); }
+.purple-theme:hover { box-shadow: 0 20px 40px -20px var(--sl-purple-glow); }
+.purple-badge { color: var(--sl-purple-light); border-color: rgba(168, 85, 247, 0.3); }
+
+/* Panel Content */
+.panel-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.panel-heading {
+  font-size: clamp(32px, 3.5vw, 48px);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 1rem;
+}
+
+.panel-description {
+  font-size: clamp(16px, 1.2vw, 18px);
+  color: var(--sl-text-secondary);
+  line-height: 1.6;
+  margin: 0 0 2rem;
+  max-width: 90%;
+}
+
+/* ==========================================================================
+   DASHBOARD PREVIEW & WIDGETS
+   ========================================================================== */
+.dashboard-preview {
+  position: relative;
+  height: 320px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.widget {
+  position: absolute;
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(25, 25, 30, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  min-width: 180px;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  cursor: default;
+}
+
+.widget-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.widget-icon-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.blue-bg { background: rgba(59, 130, 246, 0.2); color: var(--sl-blue-light); }
+.cyan-bg { background: rgba(6, 182, 212, 0.2); color: var(--sl-cyan-main); }
+.indigo-bg { background: rgba(99, 102, 241, 0.2); color: var(--sl-indigo-main); }
+.purple-bg { background: rgba(168, 85, 247, 0.2); color: var(--sl-purple-light); }
+.pink-bg { background: rgba(236, 72, 153, 0.2); color: var(--sl-pink-main); }
+.rose-bg { background: rgba(244, 63, 94, 0.2); color: var(--sl-rose-main); }
+
+.widget-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--sl-text-secondary);
+}
+
+.widget-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--sl-text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.widget-subtext {
+  font-size: 0.75rem;
+  color: var(--sl-text-secondary);
+}
+
+/* ==========================================================================
+   WORKFLOW SECTION
+   ========================================================================== */
+.workflow-section {
+  margin-bottom: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: auto;
+}
+
+.workflow-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.workflow-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 2;
+}
+
+.workflow-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sl-bg-base);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.workflow-icon.blue { color: var(--sl-blue-light); border-color: rgba(59, 130, 246, 0.3); }
+.workflow-icon.purple { color: var(--sl-purple-light); border-color: rgba(168, 85, 247, 0.3); }
+
+.workflow-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--sl-text-secondary);
+}
+
+.workflow-connector {
+  flex: 1;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  margin: 0 0.5rem;
+  position: relative;
+  top: -10px;
+}
+
+.workflow-connector-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  transform-origin: left;
+}
+
+.blue-line { background: var(--sl-blue-gradient); }
+.purple-line { background: var(--sl-purple-gradient); }
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+.explore-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1.25rem;
+  border-radius: 100px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.explore-btn .btn-icon {
+  transition: transform 0.3s ease;
+}
+
+.explore-btn:hover .btn-icon {
+  transform: translateX(4px);
+}
+
+.blue-btn {
+  background: var(--sl-blue-gradient);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.purple-btn {
+  background: var(--sl-purple-gradient);
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+}
+
+/* ==========================================================================
+   MEDIA QUERIES
+   ========================================================================== */
+/* 1440px+ already handled by clamp and max-width */
+
+@media (max-width: 1200px) {
+  .widget { min-width: 160px; padding: 0.75rem; }
+  .dashboard-preview { height: 280px; }
+}
+
+@media (max-width: 1024px) {
+  .panels-grid {
+    grid-template-columns: 1fr;
+  }
+  .tilt-card-wrapper {
+    /* Disable aggressive 3D tilt on stacked layouts to avoid clipping */
+    transform: none !important;
+  }
+  .dashboard-preview { height: 320px; }
+}
+
+@media (max-width: 992px) {
+  .widget-title { font-size: 0.75rem; }
+  .widget-value { font-size: 1.125rem; }
+}
+
+@media (max-width: 768px) {
+  .dashboard-preview { 
+    height: auto; 
+    min-height: 250px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    background: transparent;
+    border: none;
+  }
+  .widget {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 100%;
+    transform: none !important; /* Disable floating on mobile grid */
+  }
+}
+
+@media (max-width: 576px) {
+  .workflow-label { display: none; }
+  .workflow-connector { margin: 0 0.25rem; }
+  .dashboard-preview { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .experience-panel { padding: 1.5rem; }
+  .badge { margin-bottom: 1rem; }
+  .explore-btn { padding: 1rem; font-size: 0.875rem; }
+}
+
+@media (max-width: 360px) {
+  .workflow-icon { width: 32px; height: 32px; }
+  .workflow-icon svg { width: 16px; height: 16px; }
+}
