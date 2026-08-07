@@ -9,6 +9,9 @@ import HowStockLinkerWorks from '../Sections/HowStockLinkerWorks'
 import RoleExperience from '../Sections/RoleExperience'
 
 export const LandingPage = () => {
+
+  console.log(`${import.meta.env.VITE_API_URL}`)
+
   return (
     <>
       <Navbar />

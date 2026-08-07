@@ -107,7 +107,7 @@ export default function FeaturesSection() {
       <div className="relative z-20 w-full max-w-[1536px] mx-auto lg:px-16">
         
         {/* PREMIUM ENTERPRISE CONTAINER */}
-        <div className="w-full rounded-[32px] p-6 sm:p-12 lg:p-2 xl:p-16 relative overflow-hidden">
+        <div className="w-full rounded-[32px] px-2 sm:p-12 lg:p-2 xl:p-16 relative overflow-hidden">
           
           {/* Internal Glow Details */}
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-pink-400/5 blur-[120px] rounded-full pointer-events-none" />

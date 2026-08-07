@@ -9,7 +9,7 @@ import { onboardingApi } from "../Authentication/services/api";
 import { useAuth } from "../Authentication/context/AuthContext";
 
 export default function StockLinkerEnterpriseOnboarding() {
-  const { role, verifySession } = useAuth();
+  const { role, verifySession, setProfileData } = useAuth();
   const [step, setStep] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -55,7 +55,6 @@ export default function StockLinkerEnterpriseOnboarding() {
       if (!formData.businessName) missing.push("businessName");
       if (!formData.mobile) missing.push("mobile");
       
-      // FIX: Only require delivery radius if the user is a WHOLESALER
       if (role === "WHOLESALER" && !formData.deliveryRadius) missing.push("deliveryRadius");
       
       if (!formData.businessEmail) missing.push("businessEmail");
@@ -85,7 +84,6 @@ export default function StockLinkerEnterpriseOnboarding() {
     setErrorMsg(null);
     try {
       if (step === 0) {
-        // FIX: Included yearsInBusiness in payload & safely handled deliveryRadius
         await onboardingApi.saveBusiness({
           ownerName: formData.ownerName, 
           businessName: formData.businessName,
@@ -109,12 +107,20 @@ export default function StockLinkerEnterpriseOnboarding() {
           deliveryAvailable: formData.deliverySupport === "Yes, We Deliver",
           storeSize: formData.storeSize ? formData.storeSize.toUpperCase().replace(/\s+/g, "_") : null,
         });
+        
+        setProfileData(prev => ({
+          ...prev,
+          ownerName: formData.ownerName,
+          role: role || 'Partner'
+        }));
+
         await verifySession();
         setStep(3);
         setCompleted(true);
       }
     } catch (err) {
-      setErrorMsg(err.response?.data?.message || "Failed to save data. Please check your inputs.");
+      // ✅ Custom Spring Boot error extraction injected directly to the UI
+      setErrorMsg(err.response?.data?.message || err.response?.data?.error || "Failed to save data. Please check your inputs.");
     } finally {
       setApiLoading(false);
     }
@@ -146,7 +152,6 @@ export default function StockLinkerEnterpriseOnboarding() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(236,72,153,0.08),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.08),transparent_35%)]" />
       <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] bg-[size:45px_45px]" />
       
-      {/* FLOATING */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div animate={{ x: [0, 50, 0], y: [0, -40, 0] }} transition={{ duration: 14, repeat: Infinity }} className="absolute -top-20 -left-20 w-[320px] h-[320px] rounded-full bg-pink-100/50 blur-3xl" />
         <motion.div animate={{ x: [0, -40, 0], y: [0, 30, 0] }} transition={{ duration: 12, repeat: Infinity }} className="absolute bottom-0 right-0 w-[320px] h-[320px] rounded-full bg-sky-100/50 blur-3xl" />
@@ -156,7 +161,6 @@ export default function StockLinkerEnterpriseOnboarding() {
         <div className="max-w-[1520px] mx-auto w-full">
           <div className="grid lg:grid-cols-1 xl:grid-cols-[300px_1fr] gap-6 xl:gap-8 items-stretch">
             
-            {/* LAPTOP SIDEBAR (1024px) - HOVER EXPANDING DESIGN */}
             <motion.aside initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }} className="hidden lg:block xl:hidden fixed left-0 top-4 z-[80] h-screen pointer-events-none">
               <motion.div initial={false} whileHover={{ width: 280 }} transition={{ type: "spring", stiffness: 150, damping: 14 }} className="group relative pointer-events-auto h-screen w-[96px] overflow-hidden rounded-r-[36px] border-r border-t border-b flex flex-col bg-gradient-to-b from-slate-800 via-slate-900 to-slate-900 border-slate-700 shadow-[0_20px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
                 <motion.div animate={{ opacity: [0.2, 0.55, 0.2], scale: [1, 1.15, 1] }} transition={{ duration: 7, repeat: Infinity }} className="absolute -top-20 -right-20 w-[220px] h-[220px] rounded-full bg-pink-500/20 blur-3xl" />
@@ -212,7 +216,6 @@ export default function StockLinkerEnterpriseOnboarding() {
               </motion.div>
             </motion.aside>
 
-            {/* DESKTOP SIDEBAR (1440px) */}
             <motion.aside initial={{ opacity: 0, x: -60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="hidden xl:flex flex-col h-full rounded-2xl overflow-hidden border bg-white/80 border-slate-200 backdrop-blur-xl">
               <div className="relative p-7 overflow-hidden flex-1 flex flex-col">
                 <div className="absolute inset-0 bg-gradient-to-b from-[#132238] via-[#17304d] to-[#1b1b3a] border-[#20324a]" />
@@ -291,7 +294,6 @@ export default function StockLinkerEnterpriseOnboarding() {
               {/* BODY */}
               <div className="p-5 sm:p-7 lg:p-8 xl:p-9 flex-1 flex flex-col">
                 
-                {/* Global Error Notice */}
                 {errorMsg && (
                   <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 p-4 rounded-xl bg-red-50 text-red-600 text-sm font-semibold border border-red-200 flex items-center gap-2">
                     <span className="shrink-0"><AlertCircle size={18}/></span>{errorMsg}

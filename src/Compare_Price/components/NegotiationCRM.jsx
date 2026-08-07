@@ -26,13 +26,13 @@ export default function NegotiationCRM({ qty, metrics, masterProductId, onShowTo
       onShowToast("Success: Negotiation Request Broadcasted!", "success");
       setPrice(""); setMsg("");
     } catch (e) {
-      onShowToast("Error: Failed to send request. Try again.", "error");
+      // ✅ Intercepts backend error and shows custom error toast
+      onShowToast(e.response?.data?.message || "Error: Failed to send request. Try again.", "error");
     } finally {
       setIsSending(false);
     }
   }
 
-  // Premium input styling class
   const inputBaseCls = "w-full bg-slate-50 sm:bg-white border border-slate-200 rounded-[12px] outline-none text-[14px] font-sora font-semibold text-[#0F172A] placeholder:text-slate-400 placeholder:font-inter placeholder:font-normal focus:bg-white focus:border-pink-400 focus:ring-[3px] focus:ring-pink-500/10 transition-all shadow-sm";
 
   return (
@@ -43,19 +43,12 @@ export default function NegotiationCRM({ qty, metrics, masterProductId, onShowTo
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} 
       className="w-full mx-auto pb-12 sm:pb-16 mt-4 sm:mt-8"
     >
-      {/* 
-        MAIN CONTAINER 
-        Mobile: Seamless flow (no border/shadow)
-        Tablet/Desktop: Premium bordered card with decorative top gradient
-      */}
       <FloatingSurface className="relative overflow-hidden bg-white sm:bg-slate-50/50 sm:border border-slate-200 sm:rounded-[24px] sm:shadow-sm">
         
         <div className="p-4 sm:p-6 lg:p-8 xl:p-10">
           
-          {/* Header & Product Summary Section */}
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 sm:gap-8 mb-8 sm:mb-10">
             
-            {/* Title Block */}
             <div className="flex-1">
               <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-[8px] bg-pink-50 border border-pink-100 mb-3 sm:mb-4 text-[9px] sm:text-[10px] font-sora font-bold uppercase tracking-[0.10em] text-pink-700 shadow-sm w-max">
                 <Zap size={12} className="text-pink-500 fill-pink-500" /> Global Supplier Negotiation
@@ -68,7 +61,6 @@ export default function NegotiationCRM({ qty, metrics, masterProductId, onShowTo
               </p>
             </div>
 
-            {/* Product Summary Card */}
             <div className="w-full lg:w-[360px] xl:w-[400px] shrink-0 p-4 sm:p-5 rounded-[16px] bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow group">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.10em] font-bold text-slate-400">Product Subject</p>
@@ -91,12 +83,10 @@ export default function NegotiationCRM({ qty, metrics, masterProductId, onShowTo
             </div>
           </div>
 
-          {/* Form Section */}
           <div className="bg-white sm:p-6 lg:p-8 sm:rounded-[20px] sm:border border-slate-100 sm:shadow-[0_4px_20px_-10px_rgba(15,23,42,0.05)]">
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 mb-5 sm:mb-6">
               
-              {/* Quantity Input */}
               <div>
                 <label className="block text-[10px] sm:text-[11px] font-inter font-bold text-slate-500 uppercase tracking-[0.08em] mb-1.5 sm:mb-2 ml-1 sm:ml-0">
                   Required Quantity
@@ -117,7 +107,6 @@ export default function NegotiationCRM({ qty, metrics, masterProductId, onShowTo
                 </div>
               </div>
               
-              {/* Target Price Input */}
               <div>
                 <label className="block text-[10px] sm:text-[11px] font-inter font-bold text-slate-500 uppercase tracking-[0.08em] mb-1.5 sm:mb-2 ml-1 sm:ml-0">
                   Target Total Price (INR)
@@ -137,7 +126,6 @@ export default function NegotiationCRM({ qty, metrics, masterProductId, onShowTo
               </div>
             </div>
 
-            {/* Message Textarea */}
             <div className="mb-6 sm:mb-8">
               <label className="block text-[10px] sm:text-[11px] font-inter font-bold text-slate-500 uppercase tracking-[0.08em] mb-1.5 sm:mb-2 ml-1 sm:ml-0">
                 Message To Suppliers
@@ -156,7 +144,6 @@ export default function NegotiationCRM({ qty, metrics, masterProductId, onShowTo
               </div>
             </div>
             
-            {/* Submit Action */}
             <div className="flex items-center justify-end">
               <GradientButton 
                 onClick={handleSend} 

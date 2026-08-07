@@ -254,19 +254,18 @@ export default function Navbar() {
     );
   }), []);
 
-  // Animation variants for Mobile Menu Staggering
+  // Optimized Mobile Animation Variants for zero lag
   const mobileContainerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.08, delayChildren: 0.1 }
-    },
-    exit: { opacity: 0, transition: { duration: 0.2 } }
+      transition: { staggerChildren: 0.06, delayChildren: 0.05 }
+    }
   };
 
   const mobileItemVariants = {
-    hidden: { opacity: 0, x: -10 },
-    visible: { opacity: 1, x: 0, transition: TRANSITION_ENTERPRISE }
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" } }
   };
 
   return (
@@ -313,7 +312,7 @@ export default function Navbar() {
           <BrandLogo />
 
           {/* Desktop & Tablet Navigation */}
-          <nav className="hidden relative z-10 md:flex items-center gap-[10px] lg:gap-1.5 xl:gap-2 mx-auto md:mx-4 p-1 rounded-2xl bg-slate-50/50 border border-slate-100/50 whitespace-nowrap">
+          <nav className="hidden relative z-10 md:flex items-center gap-[8px] lg:gap-1.5 xl:gap-2 mx-auto md:mx-4 p-1 rounded-2xl bg-slate-50/50 border border-slate-100/50 whitespace-nowrap">
             {NAV_ITEMS.map((item) => {
               const isSelected = activeTab === item.id;
               return (
@@ -359,7 +358,7 @@ export default function Navbar() {
               <MagneticWrapper>
                 <button 
                   onClick={() => navigate('/login')}
-                  className="relative group md:px-3 md:py-1.5 lg:px-4 lg:py-2 xl:px-5 xl:py-2 overflow-hidden rounded-xl bg-slate-900 text-white md:text-[12px] lg:text-[13px] xl:text-[14px] font-medium tracking-wide shadow-[0_4px_12px_rgba(15,23,42,0.15)] transition-all duration-300 hover:shadow-[0_8px_20px_rgba(15,23,42,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 whitespace-nowrap translate-z-0"
+                  className="relative group md:px-1 md:py-1.5 lg:px-4 lg:py-2 xl:px-5 xl:py-2 overflow-hidden rounded-xl bg-slate-900 text-white md:text-[12px] lg:text-[13px] xl:text-[14px] font-medium tracking-wide shadow-[0_4px_12px_rgba(15,23,42,0.15)] transition-all duration-300 hover:shadow-[0_8px_20px_rgba(15,23,42,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 whitespace-nowrap translate-z-0"
                 >
                   <span className="absolute inset-0 w-full h-full transition-opacity duration-300 opacity-0 bg-gradient-to-r from-pink-500/20 to-sky-400/20 group-hover:opacity-100" />
                   <span className="relative z-10 flex items-center gap-1.5">
@@ -430,7 +429,7 @@ export default function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={TRANSITION_ENTERPRISE}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
             className="fixed inset-0 z-[150] flex flex-col bg-white md:hidden translate-z-0"
           >
             {/* Header */}
@@ -450,7 +449,6 @@ export default function Navbar() {
               variants={mobileContainerVariants}
               initial="hidden"
               animate="visible"
-              exit="exit"
               className="flex-1 px-6 py-8 overflow-y-auto"
             >
               <div className="flex flex-col gap-6">
@@ -472,14 +470,14 @@ export default function Navbar() {
                             <ChevronDown size={24} className="text-slate-300" />
                           </motion.div>
                         </button>
-                        <AnimatePresence>
+                        <AnimatePresence initial={false}>
                           {mobileAccordion && (
                             <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -10 }}
-                              transition={TRANSITION_MICRO}
-                              className="overflow-hidden will-change-transform"
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                              className="overflow-hidden"
                             >
                               <div className="flex flex-col gap-5 pt-3 pb-2 pl-4 mt-2 border-l-2 border-slate-100">
                                 {Object.values(MEGA_MENU_DATA).map((col) => (

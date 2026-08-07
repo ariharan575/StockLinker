@@ -23,6 +23,16 @@ import { authApi } from "../services/api";
 // Premium SaaS Easing for smooth animations
 const easePremium = [0.16, 1, 0.3, 1];
 
+// ✅ Helper to parse ugly Firebase errors into user-friendly messages
+const getAuthErrorMessage = (error) => {
+  if (error.code === 'auth/invalid-phone-number') return 'Invalid mobile number format.';
+  if (error.code === 'auth/too-many-requests') return 'Too many attempts. Please try again later.';
+  if (error.code === 'auth/invalid-verification-code') return 'Invalid OTP. Please check and try again.';
+  if (error.code === 'auth/code-expired') return 'OTP has expired. Please request a new one.';
+  if (error.code === 'auth/network-request-failed') return 'Network error. Please check your connection.';
+  return error.message || "Authentication failed. Please try again.";
+};
+
 export default function SaaSAuthUI() {
   const [phone, setPhone] = useState("");
   const [showOtp, setShowOtp] = useState(false);
@@ -45,8 +55,8 @@ export default function SaaSAuthUI() {
   ========================================= */
   const setupRecaptcha = async () => {
     if (window.recaptchaVerifier) {
-      await window.recaptchaVerifier.clear();
-      delete window.recaptchaVerifier;
+      window.recaptchaVerifier.clear();
+      window.recaptchaVerifier = null;
     }
     window.recaptchaVerifier = new RecaptchaVerifier(
       auth,
@@ -59,6 +69,16 @@ export default function SaaSAuthUI() {
     );
     await window.recaptchaVerifier.render();
   };
+
+  // Cleanup recaptcha on unmount
+  useEffect(() => {
+    return () => {
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = null;
+      }
+    };
+  }, []);
 
   /* =========================================
       PHONE FORMAT
@@ -113,7 +133,7 @@ export default function SaaSAuthUI() {
     } catch (error) {
       console.error(error);
       setError(true);
-      setErrorMessage(error.message || "Failed to send OTP");
+      setErrorMessage(getAuthErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -136,7 +156,7 @@ export default function SaaSAuthUI() {
       if (loginResult.success) {
         if (loginResult.needsRole) navigate("/role-selection");
         else if (loginResult.needsOnboarding) navigate("/onboarding");
-        else navigate("/dash");
+        else navigate("/dashboard");
       } else {
         setError(true);
         setErrorMessage(loginResult.error || "Login failed");
@@ -146,7 +166,7 @@ export default function SaaSAuthUI() {
     } catch (error) {
       console.error(error);
       setError(true);
-      setErrorMessage("Invalid OTP");
+      setErrorMessage(getAuthErrorMessage(error));
       setOtp(Array(6).fill(""));
       inputsRef.current[0]?.focus();
     } finally {
@@ -208,23 +228,25 @@ export default function SaaSAuthUI() {
       GOOGLE / GUEST LOGIN
   ========================================= */
   const handleGoogleLogin = () => {
-  window.location.href =
-    `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
-};
+    // ✅ DYNAMIC ENVIRONMENT VARIABLE FOR GOOGLE URI
+    const backendUri = import.meta.env.VITE_BACKEND_URI || 'http://localhost:8080';
+    window.location.href = `${backendUri}/oauth2/authorization/google`;
+  };
+
   const handleGuestLogin = async () => {
     setLoading(true);
     setError(false);
     setErrorMessage("");
     try {
       const loginResult = await login(authApi.guestLogin());
-      if (loginResult.success) navigate("/dash");
+      if (loginResult.success) navigate("/dashboard");
       else {
         setError(true);
         setErrorMessage(loginResult.error || "Guest login failed");
       }
     } catch (err) {
       setError(true);
-      setErrorMessage("Guest login failed");
+      setErrorMessage(err.response?.data?.message || "Guest login failed");
     } finally {
       setLoading(false);
     }
@@ -243,13 +265,12 @@ export default function SaaSAuthUI() {
     setConfirmationResult(null);
     if (window.recaptchaVerifier) {
       window.recaptchaVerifier.clear();
-      delete window.recaptchaVerifier;
+      window.recaptchaVerifier = null;
     }
   };
 
   return (
     <>
-      {/* Reduced outer padding on mobile */}
       <div className="relative min-h-screen overflow-hidden flex items-center justify-center p-3 sm:p-4 md:px-4 md:py-8 bg-slate-50 font-sans">
         
         {/* BG Grid */}

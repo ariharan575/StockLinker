@@ -12,6 +12,8 @@ export const categoryApi = {
     try {
       // Make sure this matches your Spring Boot endpoint
       const response = await axiosInstance.get('/v1/categories');
+
+      console.log(response)
       return response.data;
     } catch (error) {
       console.error("Error fetching categories:", error);

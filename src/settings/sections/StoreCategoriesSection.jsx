@@ -70,12 +70,15 @@ export function StoreCategoriesSection({ editedData, handleFieldChange, isEditin
           </div>
           <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-3 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200 hover:[&::-webkit-scrollbar-thumb]:bg-slate-300">
             {(!editedData.subCategories || editedData.subCategories.length === 0) && (
-              <div className="flex flex-col items-center justify-center h-full text-center p-6 border border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
-                <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center border border-slate-100 shadow-sm mb-4">
-                  <PackageSearch size={24} className="text-slate-400" />
+              // ✅ WORLD CLASS SAAS EMPTY STATE
+              <div className="flex flex-col items-center justify-center h-full text-center p-8 border border-dashed border-slate-200 rounded-2xl bg-gradient-to-b from-slate-50 to-white relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 opacity-20" />
+                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-5 relative">
+                  <div className="absolute inset-0 bg-slate-100/50 rounded-2xl animate-pulse" />
+                  <PackageSearch size={28} className="text-slate-300 relative z-10" />
                 </div>
-                <p className="text-[15px] font-bold text-slate-900">No categories found</p>
-                <p className="text-[13px] font-medium text-slate-500 mt-1 max-w-[200px]">Your approved product categories will appear here.</p>
+                <p className="text-[18px] font-extrabold text-slate-800 tracking-tight">No categories assigned</p>
+                <p className="text-[14px] font-medium text-slate-500 mt-2 max-w-[240px] leading-relaxed">Your approved product categories will appear here once you list products.</p>
               </div>
             )}
             

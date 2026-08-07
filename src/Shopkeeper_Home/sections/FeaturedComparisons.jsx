@@ -1,32 +1,54 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { TrendingUp } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query'; 
 import { SectionHead } from '../../Layout/common';
 import { compareApi } from '../Services/api';
 import Surf from '../../assets/SurfExcel.jpg';
 
+// ============================================================
+// ✅ PREMIUM SKELETON LOADER
+// ============================================================
+const FeaturedSkeleton = () => (
+  <div className="w-[220px] xs:w-[240px] sm:w-[260px] md:w-[280px] shrink-0 bg-white rounded-[16px] p-3 border border-slate-100 shadow-sm animate-pulse flex flex-col h-full">
+    <div className="flex gap-2.5 mb-3">
+      <div className="w-10 h-10 bg-slate-200/80 rounded-[8px]" />
+      <div className="flex-1 space-y-1.5 py-0.5">
+        <div className="h-3.5 bg-slate-200/80 rounded-md w-3/4" />
+        <div className="h-2.5 bg-slate-100 rounded-md w-1/2" />
+      </div>
+    </div>
+    <div className="space-y-1.5 mb-3 flex-1">
+      {[...Array(3)].map((_, j) => <div key={j} className="h-7 bg-slate-100 rounded-[6px]" />)}
+    </div>
+    <div className="h-9 bg-slate-200/80 rounded-[8px] w-full" />
+  </div>
+);
+
 export default function FeaturedComparisons({ onError }) {
   const navigate = useNavigate();
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
+  // ✅ TANSTACK QUERY INTEGRATION (Extracting 'error' object now)
+  const { 
+    data: featuredProducts = [], 
+    isLoading, 
+    isError,
+    error 
+  } = useQuery({
+    queryKey: ['homeFeaturedComparisons'],
+    queryFn: async () => {
+      return await compareApi.getFeaturedComparisons();
+    },
+    staleTime: 5 * 60 * 1000, // Keep fresh for 5 minutes
+  });
+
+  // ✅ Pass the exact error object to the parent to extract Spring Boot messages
   useEffect(() => {
-    let isMounted = true;
-    const fetchFeatured = async () => {
-      try {
-        setIsLoading(true);
-        const data = await compareApi.getFeaturedComparisons();
-        if (isMounted) setFeaturedProducts(data);
-      } catch (err) {
-        if (isMounted && onError) onError(); // Trigger Full Page Error
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-    fetchFeatured();
-    return () => { isMounted = false; };
-  }, [onError]);
+    if (isError && onError) {
+      onError(error);
+    }
+  }, [isError, error, onError]);
 
   const handleCompareClick = (masterProductId) => {
     navigate('/Compare', { state: { masterProductId: masterProductId, requestedQty: 10 } });
@@ -40,6 +62,7 @@ export default function FeaturedComparisons({ onError }) {
           title="Today's Best Deals" 
           sub="Live bulk pricing on top-moving goods" 
           action="View All" 
+          actionPath="/compare"
         />
       </div>
 
@@ -53,38 +76,23 @@ export default function FeaturedComparisons({ onError }) {
             exit={{ opacity: 0 }} 
             className="flex flex-row overflow-x-auto no-scrollbar gap-2.5 sm:gap-3 md:gap-4 px-1 sm:px-2 md:px-3 pb-5 pt-1"
           >
-            {[...Array(5)].map((_, i) => (
-              <div 
-                key={i} 
-                className="w-[220px] xs:w-[240px] sm:w-[260px] md:w-[280px] shrink-0 bg-white rounded-[16px] p-3 border border-slate-100 shadow-sm animate-pulse"
-              >
-                <div className="flex gap-2.5 mb-3">
-                  <div className="w-10 h-10 bg-slate-200 rounded-[8px]" />
-                  <div className="flex-1 space-y-1.5 py-0.5">
-                    <div className="h-2.5 bg-slate-200 rounded w-3/4" />
-                    <div className="h-2 bg-slate-200 rounded w-1/2" />
-                  </div>
-                </div>
-                <div className="space-y-1.5 mb-3">
-                  {[...Array(3)].map((_, j) => <div key={j} className="h-7 bg-slate-100 rounded-[6px]" />)}
-                </div>
-                <div className="h-8 bg-slate-200 rounded-[8px] w-full" />
-              </div>
-            ))}
+            {[...Array(5)].map((_, i) => <FeaturedSkeleton key={i} />)}
           </motion.div>
         )}
 
-        {/* EMPTY STATE */}
-        {!isLoading && featuredProducts.length === 0 && (
+        {/* ✅ WORLD-CLASS SAAS EMPTY STATE */}
+        {!isLoading && featuredProducts.length === 0 && !isError && (
           <motion.div 
             key="empty" 
-            className="mx-1 sm:mx-2 md:mx-3 my-2 flex flex-col items-center justify-center p-8 bg-white rounded-[16px] border-2 border-dashed border-slate-200 shadow-sm"
+            className="mx-1 sm:mx-2 md:mx-3 my-2 flex flex-col items-center justify-center p-12 bg-gradient-to-b from-white to-slate-50 rounded-[24px] border border-slate-200 shadow-sm relative overflow-hidden text-center"
           >
-            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center mb-2">
-              <TrendingUp className="w-5 h-5 text-slate-400" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 opacity-20" />
+            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-4 relative">
+              <div className="absolute inset-0 bg-slate-100/50 rounded-2xl animate-pulse" />
+              <TrendingUp className="w-8 h-8 text-slate-300 relative z-10" />
             </div>
-            <p className="text-[13px] sm:text-[15px] font-sora font-bold text-slate-800">Analyzing Market Prices...</p>
-            <p className="text-[11px] sm:text-[12px] font-inter text-slate-500 mt-1">Check back soon for today's top deals.</p>
+            <p className="text-[16px] sm:text-[18px] font-sora font-extrabold text-slate-800 tracking-tight mb-1">Analyzing Market Prices...</p>
+            <p className="text-[13px] font-inter text-slate-500">Check back soon for today's top wholesale deals.</p>
           </motion.div>
         )}
 

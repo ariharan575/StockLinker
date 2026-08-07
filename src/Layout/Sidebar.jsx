@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, LogOut, X } from 'lucide-react';
 import { getNavItems } from './data/index'; 
 import { useAuth } from '../Authentication/context/AuthContext';
-import { profileApi } from '../Authentication/services/api';
 
 // Helper to get 2 initials safely
 const getInitials = (name) => {
@@ -244,33 +243,8 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const { role, logout, isAuthenticated } = useAuth();
-  
-  // Profile State
-  const [profileData, setProfileData] = useState({ ownerName: 'Loading...', role: 'Loading...' });
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchProfileFromDB = async () => {
-      try {
-        const res = await profileApi.getProfile();
-        if (isMounted) {
-          const data = res.data.data;
-          setProfileData({
-            ownerName: data.ownerName || 'User',
-            role: data.businessType || 'Partner'
-          });
-        }
-      } catch (err) {
-        console.error("Failed to load profile from DB", err);
-      }
-    };
-
-    if (isAuthenticated) fetchProfileFromDB();
-
-    return () => { isMounted = false; };
-  }, [isAuthenticated]);
+  // Auth Context: Extracting profileData globally
+  const { role, logout, isAuthenticated, profileData } = useAuth();
   
   const NAV_ITEMS = getNavItems(role);
 
@@ -304,14 +278,14 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
           <div className="mt-2 flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-[800] text-[13px] shadow-[0_0_12px_rgba(99,102,241,0.4)] border border-white/20">
-                {getInitials(profileData.ownerName)}
+                {getInitials(profileData?.ownerName)}
               </div>
               <div className="flex flex-col">
                 <span className="text-[14px] font-[700] text-white leading-tight truncate max-w-[110px]">
-                  {profileData.ownerName}
+                  {profileData?.ownerName || 'Loading...'}
                 </span>
                 <span className="text-[11px] font-[600] text-pink-400 uppercase tracking-wide mt-0.5 truncate capitalize">
-                  {profileData.role}
+                  {profileData?.role || 'Partner'}
                 </span>
               </div>
             </div>
@@ -383,14 +357,14 @@ export default function Sidebar({ open, setOpen, active, setActive }) {
                 <div className="w-full bg-white border border-slate-200 rounded-[24px] p-3 shadow-[0_8px_30px_rgba(15,23,42,0.06)] flex items-center justify-between group">
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white font-[700] text-[15px] shadow-sm shrink-0">
-                      {getInitials(profileData.ownerName)}
+                      {getInitials(profileData?.ownerName)}
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[15px] font-[800] text-slate-900 leading-tight truncate max-w-[140px]">
-                        {profileData.ownerName}
+                        {profileData?.ownerName || 'Loading...'}
                       </span>
                       <span className="text-[13px] font-[500] text-slate-500 mt-0.5 capitalize truncate">
-                        {profileData.role}
+                        {profileData?.role || 'Partner'}
                       </span>
                     </div>
                   </div>

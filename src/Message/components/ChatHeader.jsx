@@ -54,7 +54,7 @@ export function mapMessage(dto) {
     _status: dto.status,
     _deleted: dto.deleted,
     _edited: dto.edited,
-    _senderId: dto.senderId, // 🚀 ADDED: Required to prevent WebSocket echo bugs
+    _senderId: dto.senderId, // 🚀 Required to prevent WebSocket echo bugs
   };
 }
 

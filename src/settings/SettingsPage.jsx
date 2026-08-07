@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery, useQueryClient } from "@tanstack/react-query"; // --- ADDED TANSTACK QUERY ---
 import { useAuth } from "../Authentication/context/AuthContext";
 
 import { AccountSection } from "./sections/AccountSection";
@@ -14,16 +14,26 @@ import { profileApi } from "../Authentication/services/api";
 import { PremiumToast } from "../components/PremiumToast"; 
 import { DataFetchError } from "../components/DataFetchError"; 
 
+// ============================================================
+// ✅ PREMIUM SETTINGS SKELETON
+// ============================================================
+const SettingsSkeleton = () => (
+  <div className="animate-pulse flex flex-col gap-6">
+    <div className="h-[120px] sm:h-[160px] bg-slate-200/80 rounded-[24px] border border-slate-100" />
+    <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
+      <div className="h-[400px] bg-slate-200/80 rounded-[24px] border border-slate-100" />
+      <div className="h-[400px] bg-slate-200/80 rounded-[24px] border border-slate-100" />
+    </div>
+  </div>
+);
+
 export default function SettingsPage({ activeSection = "account", onSectionChange }) {
-  const { role } = useAuth(); // SECURE JWT ROLE
+  const { role } = useAuth(); 
+  const queryClient = useQueryClient();
   const isWholesaler = role?.toUpperCase() === "WHOLESALER";
 
   const [editingSection, setEditingSection] = useState(null);
   const [active, setActive] = useState(activeSection);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // --- ADDED STATE FOR DATA FETCH ERROR ---
-  const [fetchError, setFetchError] = useState(false); 
   
   const [isSaving, setIsSaving] = useState(false);
   const [notification, setNotification] = useState(null);
@@ -40,7 +50,6 @@ export default function SettingsPage({ activeSection = "account", onSectionChang
   });
 
   useEffect(() => { 
-    // Protection fallback
     if (activeSection === "delivery-insights" && !isWholesaler) {
       setActive("store");
       if (onSectionChange) onSectionChange("store");
@@ -49,59 +58,64 @@ export default function SettingsPage({ activeSection = "account", onSectionChang
     }
   }, [activeSection, isWholesaler, onSectionChange]);
 
+  // ✅ TANSTACK QUERY INTEGRATION
+  const { 
+    data: profileData, 
+    isLoading, 
+    isError, 
+    refetch 
+  } = useQuery({
+    queryKey: ['userSettingsProfile'],
+    queryFn: async () => {
+      const res = await profileApi.getProfile();
+      return res.data.data;
+    },
+    staleTime: 5 * 60 * 1000, // Instant cache access for 5 minutes
+  });
+
+  // Sync React Query cache into local state for editing
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setFetchError(false); // Reset error state before fetch
-        const res = await profileApi.getProfile();
-        const data = res.data.data;
-        setEditedData({
-          userName: data.ownerName || "",
-          userId: data.userId || "",
-          phone: data.mobileNumber || "",
-          email: data.businessEmail || "",
-          MemberSince: "Active", 
-          companyName: data.businessName || "",
-          businessType: data.businessType || "",
-          gstNumber: data.gstNumber || "",
-          altPhone: data.alternateMobileNumber || "",
-          businessEmail: data.businessEmail || "",
-          location: `${data.city || ''}, ${data.state || ''}`,
-          yearsInBusiness: data.yearsInBusiness ? `${data.yearsInBusiness} Years` : "",
-          operatingTiming: (data.openingTime && data.closingTime) ? `${data.openingTime} - ${data.closingTime}` : "",
-          addressLine1: data.addressLine1 || "",
-          addressLine2: data.addressLine2 || "",
-          city: data.city || "",
-          district: data.district || "",
-          state: data.state || "",
-          pincode: data.pincode || "",
-          landmark: data.landmark || "",
-          deliveryRadius: data.coverageRadiusKm ? `${data.coverageRadiusKm}` : "",
-          minOrder: data.minimumOrderValue ? `${data.minimumOrderValue}` : "",
-          deliveryCharges: data.deliveryCharge ? `${data.deliveryCharge}` : "",
-          deliveryDays: data.operatingDays || "",
-          routeSchedule: data.routeSchedule || "",
-          trustScore: data.trustScore || 0,
-          marketplaceRank: data.marketplaceRank || 0,
-          verificationStatus: data.verificationStatus || "Pending",
-          subCategories: data.subCategories || [],
-          totalProducts: data.totalProducts || 0,
-          lowStockCount: data.lowStockCount || 0,
-          bestSellingProduct: data.bestSellingProduct || "",
-          fastMovingCategory: data.fastMovingCategory || ""
-        });
-      } catch (error) {
-        setFetchError(true); // --- TRIGGER ERROR COMPONENT ON FAIL ---
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProfile();
-  }, []);
+    if (profileData) {
+      setEditedData({
+        userName: profileData.ownerName || "",
+        userId: profileData.userId || "",
+        phone: profileData.mobileNumber || "",
+        email: profileData.businessEmail || "",
+        MemberSince: "Active", 
+        companyName: profileData.businessName || "",
+        businessType: profileData.businessType || "",
+        gstNumber: profileData.gstNumber || "",
+        altPhone: profileData.alternateMobileNumber || "",
+        businessEmail: profileData.businessEmail || "",
+        location: `${profileData.city || ''}, ${profileData.state || ''}`,
+        yearsInBusiness: profileData.yearsInBusiness ? `${profileData.yearsInBusiness} Years` : "",
+        operatingTiming: (profileData.openingTime && profileData.closingTime) ? `${profileData.openingTime} - ${profileData.closingTime}` : "",
+        addressLine1: profileData.addressLine1 || "",
+        addressLine2: profileData.addressLine2 || "",
+        city: profileData.city || "",
+        district: profileData.district || "",
+        state: profileData.state || "",
+        pincode: profileData.pincode || "",
+        landmark: profileData.landmark || "",
+        deliveryRadius: profileData.coverageRadiusKm ? `${profileData.coverageRadiusKm}` : "",
+        minOrder: profileData.minimumOrderValue ? `${profileData.minimumOrderValue}` : "",
+        deliveryCharges: profileData.deliveryCharge ? `${profileData.deliveryCharge}` : "",
+        deliveryDays: profileData.operatingDays || "",
+        routeSchedule: profileData.routeSchedule || "",
+        trustScore: profileData.trustScore || 0,
+        marketplaceRank: profileData.marketplaceRank || 0,
+        verificationStatus: profileData.verificationStatus || "Pending",
+        subCategories: profileData.subCategories || [],
+        totalProducts: profileData.totalProducts || 0,
+        lowStockCount: profileData.lowStockCount || 0,
+        bestSellingProduct: profileData.bestSellingProduct || "",
+        fastMovingCategory: profileData.fastMovingCategory || ""
+      });
+    }
+  }, [profileData]);
 
   const showNotification = (type, msg) => {
     setNotification({ type, msg });
-    // setTimeout(() => setNotification(null), 3000); // Removed inline timeout since PremiumToast handles it smoothly
   };
 
   const handleEditClick = (section) => setEditingSection(section);
@@ -126,6 +140,10 @@ export default function SettingsPage({ activeSection = "account", onSectionChang
             fastMovingCategory: editedData.fastMovingCategory
         });
       }
+      
+      // Tell TanStack Query that the data has changed, so it updates the cache
+      queryClient.invalidateQueries({ queryKey: ['userSettingsProfile'] });
+      
       showNotification("success", "Changes saved successfully!");
       setEditingSection(null);
     } catch (error) {
@@ -138,18 +156,14 @@ export default function SettingsPage({ activeSection = "account", onSectionChang
   const handleFieldChange = (field, value) => setEditedData((prev) => ({ ...prev, [field]: value }));
 
   const renderContent = () => {
-    // --- ADDED CHECK TO SHOW PREMIUM ERROR STATE ---
-    if (fetchError) {
-      return <DataFetchError onRetry={() => window.location.reload()} />;
+    // --- SHOW PREMIUM ERROR STATE ---
+    if (isError) {
+      return <DataFetchError onRetry={() => refetch()} />;
     }
 
+    // --- SHOW PREMIUM SKELETON ---
     if (isLoading) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[50vh] text-slate-500">
-          <Loader2 className="w-10 h-10 sm:w-12 sm:h-12 animate-spin text-pink-500 mb-4" />
-          <p className="font-semibold text-sm sm:text-base">Loading enterprise profile...</p>
-        </div>
-      );
+      return <SettingsSkeleton />;
     }
 
     const sharedProps = { editedData, handleFieldChange, isEditing: !isSaving && editingSection === active, isSaving, handleEditClick, handleSaveClick };
@@ -170,8 +184,6 @@ export default function SettingsPage({ activeSection = "account", onSectionChang
       `}} />
 
       <div className="relative min-h-screen overflow-hidden transition-all duration-500 font-['Inter',_sans-serif] antialiased">
-        
-        {/* --- REPLACED OLD NOTIFICATION WITH PREMIUM TOAST --- */}
         <PremiumToast 
           isVisible={!!notification} 
           type={notification?.type || 'info'} 
@@ -183,7 +195,17 @@ export default function SettingsPage({ activeSection = "account", onSectionChang
         <div className="relative flex px-3 sm:px-5 lg:px-8 2xl:px-12 pb-6 sm:pb-8">
           <main className="min-w-0 flex-1">
             <div className="mx-auto w-full max-w-7xl">
-              {renderContent()}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={active}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {renderContent()}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </main>
         </div>

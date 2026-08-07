@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useQueryClient } from '@tanstack/react-query'; 
 import { Plus, Package, X, CheckCircle2, Save, RotateCcw, RefreshCw, Download, ChevronDown, Pencil, Trash2, PackageSearch, Search } from 'lucide-react';
 import { inventoryApi } from '../Services/api';
 
-// --- ADDED PREMIUM COMPONENTS IMPORTS ---
 import { PremiumToast } from "../../components/PremiumToast";
 import { DataFetchError } from "../../components/DataFetchError";
 
@@ -36,8 +36,6 @@ const typographyStyles = `
   .table-header-shadow {
     box-shadow: 0 4px 20px -10px rgba(15,23,42,0.05);
   }
-  
-  @keyframes shimmer { 100% { transform: translateX(100%); } }
 `;
 
 /* ─────────────────────────────────────────────
@@ -177,26 +175,25 @@ const ActionButtons = React.memo(({ onEdit, onDelete }) => (
   </div>
 ));
 
-const EmptyState = ({ onAddProduct, isFiltered, onReset }) => (
-  <div className="flex flex-col items-center justify-center text-center p-8 sm:p-16 w-full mt-4 mb-8 border-2 border-dashed border-slate-200 bg-[#F8FAFC]/50 rounded-[20px] min-h-[300px] sm:min-h-[400px]">
-    <div className="relative flex items-center justify-center w-20 h-20 sm:w-28 sm:h-28 mb-5 sm:mb-6">
-      <div className="absolute w-full h-full rounded-full border border-pink-200 animate-[ping_3s_ease-out_infinite] opacity-60" />
-      <div className="absolute w-[60px] h-[60px] sm:w-[80px] sm:h-[80px] rounded-full bg-pink-50 border border-pink-100" />
-      <div className="relative flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-white border border-pink-200 rounded-full text-pink-500 shadow-sm">
-        <PackageSearch size={24} strokeWidth={2} />
-      </div>
+// ✅ WORLD-CLASS SAAS EMPTY STATE
+const PremiumEmptyState = ({ isFiltered, onAddProduct, onReset }) => (
+  <div className="flex flex-col items-center justify-center py-20 px-6 text-center rounded-[24px] bg-gradient-to-b from-white to-slate-50 border border-slate-200 shadow-sm relative overflow-hidden min-h-[450px] w-full mt-4 mb-8">
+    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 opacity-20" />
+    <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-6 relative">
+      <div className="absolute inset-0 bg-pink-500/5 rounded-2xl animate-pulse" />
+      <PackageSearch className="w-10 h-10 text-slate-300 relative z-10" />
     </div>
-    <h3 className="font-sora text-[18px] sm:text-[22px] font-bold text-[#0F172A] mb-2 tracking-[-0.02em]">No Products Found</h3>
-    <p className="font-inter text-[13px] sm:text-[15px] text-[#475569] font-normal max-w-md mb-6 sm:mb-8 leading-[1.6]">
+    <h3 className="text-[20px] sm:text-[22px] font-sora font-extrabold tracking-tight text-slate-900 mb-2">No Products Found</h3>
+    <p className="text-[14px] text-slate-500 max-w-md mb-8 leading-relaxed font-inter">
       {isFiltered ? 'No products match your current filters. Try adjusting or resetting them.' : 'Start adding products to build your wholesale inventory and scale your business.'}
     </p>
     {isFiltered ? (
-      <button onClick={onReset} className="font-inter px-6 sm:px-8 py-3 sm:py-3.5 text-[13px] sm:text-[14px] font-bold text-[#0F172A] bg-white border border-slate-200 rounded-[12px] hover:bg-[#F8FAFC] transition-colors shadow-sm active:scale-95">
-        Reset Filters
+      <button onClick={onReset} className="rounded-xl bg-pink-50 text-pink-600 px-8 py-3.5 text-[14px] font-bold transition-all hover:bg-pink-100 shadow-sm active:scale-95 border border-pink-100 flex items-center gap-2">
+        <RotateCcw size={16} strokeWidth={2.5} /> Reset Filters
       </button>
     ) : (
-      <button onClick={onAddProduct} className="flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 bg-gray-900 hover:bg-black text-white text-[13px] sm:text-[14px] font-bold font-inter rounded-[12px] transition-all shadow-sm active:scale-95">
-        <Plus size={18} /> Add Product
+      <button onClick={onAddProduct} className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-black text-white text-[14px] font-bold font-inter rounded-xl transition-all shadow-md active:scale-95">
+        <Plus size={18} strokeWidth={2.5} /> Add Product
       </button>
     )}
   </div>
@@ -243,13 +240,46 @@ const StatusBadge = React.memo(({ status }) => {
   );
 });
 
-const SkeletonLoader = ({ rows = 5 }) => (
-  <div className="flex flex-col gap-3 mt-4">
-    {Array.from({ length: rows }).map((_, i) => (
-      <div key={i} className="h-[80px] sm:h-[90px] w-full bg-white border border-slate-100 rounded-[12px] overflow-hidden p-0 relative">
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-slate-100/60 to-transparent" />
-      </div>
-    ))}
+// ✅ PREMIUM HIGH-FIDELITY SKELETON LOADER
+const PremiumSkeletonLoader = ({ rows = 5 }) => (
+  <div className="flex flex-col w-full animate-pulse mt-4">
+    <div className="hidden lg:block w-full">
+       {Array.from({ length: rows }).map((_, i) => (
+         <div key={i} className="flex items-center gap-4 px-8 py-5 border-b border-slate-100 bg-white">
+           <div className="w-[28%] flex flex-col gap-2 pr-2">
+             <div className="h-4 bg-slate-200/80 w-3/4 rounded" />
+             <div className="h-3 bg-slate-100 w-1/2 rounded" />
+           </div>
+           <div className="w-[12%]"><div className="h-4 bg-slate-200/80 w-full rounded" /></div>
+           <div className="w-[13%]"><div className="h-6 bg-slate-100 w-16 rounded-md" /></div>
+           <div className="w-[13%]"><div className="h-5 bg-slate-200/80 w-20 rounded" /></div>
+           <div className="w-[15%]"><div className="h-8 bg-slate-100 w-full rounded-md" /></div>
+           <div className="w-[9%]"><div className="h-6 bg-slate-200/80 w-10 mx-auto rounded-md" /></div>
+           <div className="w-[10%]"><div className="h-8 bg-slate-200/80 w-full rounded-md" /></div>
+         </div>
+       ))}
+    </div>
+    <div className="lg:hidden flex flex-col gap-4">
+       {Array.from({ length: rows }).map((_, i) => (
+         <div key={i} className="bg-white border border-slate-200 rounded-[16px] p-5 flex flex-col gap-4">
+            <div className="flex justify-between">
+              <div className="flex flex-col gap-2 w-1/2">
+                <div className="h-3 bg-slate-100 w-1/2 rounded" />
+                <div className="h-4 bg-slate-200/80 w-full rounded" />
+              </div>
+              <div className="flex flex-col gap-2 w-1/4 items-end">
+                <div className="h-5 bg-slate-200/80 w-full rounded" />
+                <div className="h-3 bg-slate-100 w-3/4 rounded" />
+              </div>
+            </div>
+            <div className="h-8 bg-slate-100 w-full rounded-md" />
+            <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+              <div className="h-6 bg-slate-200/80 w-1/3 rounded-md" />
+              <div className="h-6 bg-slate-200/80 w-1/4 rounded-md" />
+            </div>
+         </div>
+       ))}
+    </div>
   </div>
 );
 
@@ -270,7 +300,6 @@ const Select = ({ value, onChange, options, label }) => (
 const FilterBar = ({ categories, brands, filters, onFilterChange, onReset, onRefresh, onExport, isRefreshing }) => {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 w-full">
-      {/* Hidden scrollbar on mobile but still swipeable */}
       <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar pb-1 w-full lg:w-auto">
         <span className="text-[10px] sm:text-[11px] bg-slate-100 text-[#64748B] px-3 py-2 rounded-[8px] font-inter font-bold uppercase tracking-[0.1em] shrink-0 border border-slate-200">Filters</span>
         <div className="w-px h-6 bg-slate-200 shrink-0 mx-1" />
@@ -331,42 +360,51 @@ const DEFAULT_FILTERS = { category: 'all', brand: 'all', availability: 'all', so
 
 export default function ProductListPage() {
   const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
-  const [filterOptions, setFilterOptions] = useState({ brands: [], categories: [] });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const queryClient = useQueryClient();
+  
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
 
-  // --- ADDED STATE FOR DATA FETCH ERROR & NOTIFICATION ---
-  const [fetchError, setFetchError] = useState(false);
+  // --- GLOBAL FETCH ERROR STATE & NOTIFICATION ---
   const [notification, setNotification] = useState(null);
-
-  // Modal State
   const [editingProduct, setEditingProduct] = useState(null);
 
-  // --- NOTIFICATION HANDLER ---
   const showNotification = (type, msg) => {
     setNotification({ type, msg });
   };
 
+  // Debounce search term
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchProducts();
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
     }, 400);
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, filters]);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
-  useEffect(() => {
-    fetchFilterOptions();
-  }, []);
+  // ✅ 1. TANSTACK QUERY: FETCH FILTER OPTIONS
+  const { data: filterOptions = { brands: [], categories: [] } } = useQuery({
+    queryKey: ['inventoryFilters'],
+    queryFn: async () => {
+      const res = await inventoryApi.getFilters();
+      return res.data;
+    },
+    staleTime: 10 * 60 * 1000, 
+  });
 
-  const fetchProducts = async () => {
-    setIsLoading(true);
-    setFetchError(false);
-    try {
+  // ✅ 2. TANSTACK QUERY: FETCH PRODUCTS
+  const { 
+    data: products = [], 
+    isLoading, 
+    isError: isFetchError,
+    error: fetchError,
+    isFetching: isRefreshing,
+    refetch 
+  } = useQuery({
+    queryKey: ['inventoryProducts', debouncedSearch, filters],
+    queryFn: async () => {
       const params = {
-        search: searchTerm,
+        search: debouncedSearch,
         category: filters.category,
         brand: filters.brand,
         availability: filters.availability,
@@ -374,28 +412,15 @@ export default function ProductListPage() {
         sortStock: filters.sortStock
       };
       const res = await inventoryApi.getProducts(params);
-      setProducts(res.data);
-    } catch (error) {
-      console.error("Failed to fetch products", error);
-      setFetchError(true);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  const fetchFilterOptions = async () => {
-    try {
-      const res = await inventoryApi.getFilters();
-      setFilterOptions(res.data);
-    } catch (error) {
-      console.error("Failed to fetch filters", error);
-    }
-  };
+      return res.data;
+    },
+    keepPreviousData: true,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const handleFilterChange = useCallback((key, value) => setFilters(prev => ({ ...prev, [key]: value })), []);
   const handleReset = useCallback(() => { setFilters(DEFAULT_FILTERS); setSearchTerm(''); }, []);
-  const handleRefresh = useCallback(() => { setIsRefreshing(true); fetchProducts(); }, [filters, searchTerm]);
+  const handleRefresh = useCallback(() => refetch(), [refetch]);
 
   const handleExport = useCallback(async () => {
     try {
@@ -409,8 +434,7 @@ export default function ProductListPage() {
       link.remove();
       showNotification('success', "Export successful!");
     } catch (error) {
-      console.error("Export failed", error);
-      showNotification('error', "Export failed. Please try again.");
+      showNotification('error', error.response?.data?.message || "Export failed. Please try again.");
     }
   }, []);
 
@@ -418,10 +442,13 @@ export default function ProductListPage() {
     if(!window.confirm("Are you sure you want to permanently delete this asset?")) return;
     try {
       await inventoryApi.deleteProduct(id);
-      setProducts(prev => prev.filter(p => p.id !== id));
+      // Optimistically update cache
+      queryClient.setQueryData(['inventoryProducts', debouncedSearch, filters], (old) => 
+        old ? old.filter(p => p.id !== id) : []
+      );
       showNotification('success', "Product successfully deleted from catalog.");
     } catch (error) {
-      showNotification('error', "Failed to delete product.");
+      showNotification('error', error.response?.data?.message || "Failed to delete product.");
     }
   };
 
@@ -430,12 +457,15 @@ export default function ProductListPage() {
       const response = await inventoryApi.updateProduct(id, updatedData);
       const updatedProduct = response.data;
       
-      setProducts(prev => prev.map(p => (p.id === id ? updatedProduct : p)));
+      // Optimistically update cache
+      queryClient.setQueryData(['inventoryProducts', debouncedSearch, filters], (old) => 
+        old ? old.map(p => (p.id === id ? updatedProduct : p)) : []
+      );
       
       setEditingProduct(null);
       showNotification('success', "Product details updated and synced across catalog.");
     } catch (error) {
-      showNotification('error', "Failed to update product details. Please try again.");
+      showNotification('error', error.response?.data?.message || "Failed to update product details. Please try again.");
     }
   };
 
@@ -460,9 +490,13 @@ export default function ProductListPage() {
           transition={{ duration: 0.5 }}
           className="w-full max-w-[1440px] mx-auto flex flex-col flex-1 h-full"
         >
-          {/* --- ADDED CHECK TO RENDER ERROR COMPONENT AS FULL PAGE REPLACEMENT --- */}
-          {fetchError ? (
-            <DataFetchError onRetry={fetchProducts} />
+          {/* --- RENDER ERROR COMPONENT AS FULL PAGE REPLACEMENT --- */}
+          {isFetchError ? (
+            <DataFetchError 
+              errorTitle="Connection Failed"
+              errorMessage={fetchError?.response?.data?.message || fetchError?.message || "An unexpected error occurred."} 
+              onRetry={refetch} 
+            />
           ) : (
             <div className="flex flex-col w-full flex-1 bg-white sm:border sm:border-slate-200 min-h-[calc(100vh-40px)] overflow-hidden">
               
@@ -480,7 +514,7 @@ export default function ProductListPage() {
                   <div className="inline-flex items-center gap-2 sm:gap-3 px-4 py-2.5 sm:py-3 rounded-[12px] bg-slate-50 border border-slate-200 shadow-sm shrink-0">
                     <Package size={18} className="text-gray-900" />
                     <span className="text-[11px] sm:text-[12px] font-sora font-bold uppercase tracking-[0.1em] text-[#0F172A]">
-                      {products.length.toLocaleString('en-IN')} Active
+                      {isLoading ? "..." : products.length.toLocaleString('en-IN')} Active
                     </span>
                   </div>
                 </div>
@@ -517,13 +551,16 @@ export default function ProductListPage() {
               {/* 4. Data Grid Area */}
               <div className="w-full flex flex-col flex-1 bg-white">
                 {isLoading ? (
-                  <div className="px-4 sm:px-8 pb-10"><SkeletonLoader rows={6} /></div>
+                  <div className="px-4 sm:px-8 pb-10"><PremiumSkeletonLoader rows={6} /></div>
                 ) : products.length === 0 ? (
-                  <div className="px-4 sm:px-8 pb-10 flex-1 flex flex-col justify-center"><EmptyState isFiltered={isFiltered} onAddProduct={() => navigate('/add')} onReset={handleReset} /></div>
+                  // ✅ WORLD CLASS SAAS EMPTY STATE
+                  <div className="px-4 sm:px-8 pb-10 flex-1 flex flex-col justify-center">
+                    <PremiumEmptyState isFiltered={isFiltered} onAddProduct={() => navigate('/add')} onReset={handleReset} />
+                  </div>
                 ) : (
                   <div className="w-full flex flex-col flex-1 h-full">
                     
-                    {/* DESKTOP VIEW - Using strictly defined percentage widths to prevent horizontal scroll */}
+                    {/* DESKTOP VIEW */}
                     <div className="hidden lg:block w-full flex-1">
                       <table className="w-full text-left border-collapse table-fixed">
                         <colgroup>
@@ -622,8 +659,8 @@ export default function ProductListPage() {
                       </table>
                     </div>
 
-                    {/* MOBILE / TABLET VIEW - Perfect for 320px to 768px */}
-                    <div className="flex flex-col gap-4 lg:hidden w-full px-3 sm:px-4 py-2 bg-slate-50 min-h-screen">
+                    {/* MOBILE / TABLET VIEW */}
+                    <div className="flex flex-col gap-4 lg:hidden w-full px-3 sm:px-4 py-4 bg-slate-50 min-h-screen border-t border-slate-100">
                       {products.map((product) => {
                         const status = getStockStatus(product.availableStock, product.minimumOrderQuantity);
                         return (

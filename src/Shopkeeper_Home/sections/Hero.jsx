@@ -1,35 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Loader2, Package, LayoutGrid, Store, ChevronRight, Camera, Mic } from 'lucide-react';
+import { Search, Loader2, Package, LayoutGrid, Store, ChevronRight, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { C, EASE } from '../../Layout/common/constants';
 import HeroImges from '../../assets/Store.png';
 import { dashboardApi } from '../Services/api';
+// ADDED: Import AuthContext
+import { useAuth } from '../../Authentication/context/AuthContext';
 
 export default function Hero({ onError }) {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
-  const [ownerName, setOwnerName] = useState("Loading...");
+  // ADDED: Consume global profileData
+  const { profileData } = useAuth();
+
   const [query, setQuery] = useState("");
   const [results, setResults] = useState({ products: [], categories: [], sellers: [] });
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-
-  useEffect(() => {
-    let isMounted = true;
-    const fetchWelcome = async () => {
-      try {
-        const data = await dashboardApi.getWelcomeInfo();
-        if (isMounted) setOwnerName(data.ownerName || "Arun");
-      } catch (err) {
-        if (isMounted) setOwnerName("Partner");
-        // Opting not to crash full page for missing welcome name
-      }
-    };
-    fetchWelcome();
-    return () => { isMounted = false; };
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -109,7 +98,8 @@ export default function Hero({ onError }) {
             <h1 className="text-[23px] xs:text-[24px] sm:text-[28px] md:text-[30px] lg:text-[25px] xl:text-[36px] font-sora font-bold text-slate-900 leading-tight flex items-center flex-wrap gap-x-1.5 sm:gap-x-2">
               Welcome back,
               <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
-                {ownerName}
+                {/* USE CONTEXT DATA HERE */}
+                {profileData?.ownerName || 'Loading...'}
               </span>
               <span className="text-black inline-block origin-bottom-right hover:animate-[wave_1s_ease-in-out_infinite]">👋</span>
             </h1>
@@ -143,7 +133,7 @@ export default function Hero({ onError }) {
                       className="w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] md:w-[44px] md:h-[44px] rounded-[10px] sm:rounded-full flex items-center justify-center text-white transition-transform duration-300 hover:scale-105 active:scale-95 shadow-sm" 
                       style={{ background: "linear-gradient(135deg, #EC4899, #F43F5E)" }}
                     >
-                      <Mic size={16} strokeWidth={2.5} />
+                      <Search size={16} strokeWidth={2.5} />
                     </button>
                   </div>
                 )}

@@ -1,9 +1,12 @@
 import axios from 'axios';
 
 // Create a centralized Axios instance
+// ✅ FIX: Dynamically maps to Render backend in production, or localhost in development
+const backendUri = import.meta.env.VITE_BACKEND_URI || 'http://localhost:8080';
+
 export const axiosInstance = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}/api`,
-  withCredentials:true,
+  baseURL: `${backendUri}/api`,
+  withCredentials: true,
 });
 
 // Refresh state trackers to prevent race conditions and infinite loops
@@ -25,11 +28,16 @@ const processQueue = (error) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Guard against pure network errors (Server down / CORS) where response is undefined
+    if (!error.response) {
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config;
 
     // If 401 Unauthorized, not previously retried, and not the refresh/login endpoint itself
     if (
-      error.response?.status === 401 &&
+      error.response.status === 401 &&
       !originalRequest._retry &&
       !originalRequest.url.includes('/auth/refresh') &&
       !originalRequest.url.includes('/auth/login')

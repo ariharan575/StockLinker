@@ -2,51 +2,76 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Star, Navigation, Clock, CheckCircle, MapPin, UserPlus, MessageSquare } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query'; 
 import { SectionHead } from '../../Layout/common';
 import { networkApi } from '../Services/api';
 import { fadeUp, CTA_GRAD } from '../../Layout/common/constants';
-
-// --- PREMIUM TOAST ADDED ---
 import { PremiumToast } from '../../components/PremiumToast';
+
+// ============================================================
+// ✅ PREMIUM SKELETON LOADER
+// ============================================================
+const NearbySkeleton = () => (
+  <div className="w-[260px] xs:w-[280px] sm:w-[300px] lg:w-[340px] shrink-0 bg-white rounded-[16px] sm:rounded-[20px] p-4 sm:p-5 border border-slate-100 shadow-sm animate-pulse space-y-4">
+    <div className="flex items-center gap-3">
+      <div className="w-12 h-12 bg-slate-200/80 rounded-[12px]" />
+      <div className="space-y-2 flex-1"><div className="h-4 bg-slate-200/80 rounded w-3/4" /><div className="h-3 bg-slate-100 rounded w-1/2" /></div>
+    </div>
+    <div className="h-6 bg-slate-100 rounded-full w-1/3" />
+    <div className="flex gap-2"><div className="h-9 bg-slate-200/80 rounded-[10px] flex-1" /><div className="h-9 bg-slate-200/80 rounded-[10px] flex-1" /></div>
+  </div>
+);
 
 export default function NearbySellers({ onError }) {
   const navigate = useNavigate();
-  const [sellers, setSellers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [connectingId, setConnectingId] = useState(null);
-
-  // Toast Notification State
   const [notification, setNotification] = useState(null);
 
   const showNotification = (type, msg) => {
     setNotification({ type, msg });
   };
 
+  // ✅ TANSTACK QUERY INTEGRATION
+  const { 
+    data: sellers = [], 
+    isLoading, 
+    isError 
+  } = useQuery({
+    queryKey: ['homeNearbySellers'],
+    queryFn: async () => {
+      const response = await networkApi.getNearbySellers();
+      
+      // FIXED: Safely extract the array from the new Paginated Spring Boot response
+      const responseData = response.data?.data;
+      const sellersArray = Array.isArray(responseData) 
+          ? responseData 
+          : (responseData?.content || []);
+          
+      return sellersArray.slice(0, 5);
+    },
+    staleTime: 5 * 60 * 1000, 
+  });
+
   useEffect(() => {
-    let isMounted = true;
-    const fetchNearby = async () => {
-      try {
-        setIsLoading(true);
-        const data = await networkApi.getNearbySellers();
-        if (isMounted) setSellers(data.slice(0, 5));
-      } catch (err) {
-        if (isMounted && onError) onError(); // Trigger Full Page Error
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-    fetchNearby();
-    return () => { isMounted = false; };
-  }, [onError]);
+    if (isError && onError) {
+      onError();
+    }
+  }, [isError, onError]);
 
   const handleConnect = async (partnerId) => {
     try {
       setConnectingId(partnerId);
-      await networkApi.sendConnectionRequest(partnerId);
-      setSellers(prev => prev.map(s => s.id === partnerId ? { ...s, connectionStatus: 'PENDING' } : s));
+      await networkApi.requestConnection(partnerId);
+      
+      // Update local cache optimistically
+      queryClient.setQueryData(['homeNearbySellers'], (old) => 
+        old ? old.map(s => s.id === partnerId ? { ...s, connectionStatus: 'PENDING' } : s) : []
+      );
+      
       showNotification('success', 'Connection request sent successfully!');
     } catch (err) {
-      showNotification('error', 'Could not send connection request. Try again.');
+      showNotification('error', err.response?.data?.message || 'Could not send connection request. Try again.');
     } finally {
       setConnectingId(null);
     }
@@ -55,7 +80,6 @@ export default function NearbySellers({ onError }) {
   return (
     <section className="mb-6 sm:mb-8 md:mb-10 w-full overflow-hidden">
       
-      {/* PREMIUM TOAST */}
       <PremiumToast 
         isVisible={!!notification} 
         type={notification?.type || 'info'} 
@@ -68,6 +92,7 @@ export default function NearbySellers({ onError }) {
           title="Nearby Sellers" 
           sub="Suppliers within your district delivery zone" 
           action="View All" 
+          actionPath="/nearby"
         />
       </div>
 
@@ -81,33 +106,26 @@ export default function NearbySellers({ onError }) {
             exit={{ opacity: 0 }} 
             className="flex flex-row overflow-x-auto no-scrollbar gap-3 sm:gap-4 px-1 sm:px-2 md:px-3 pb-5 pt-1"
           >
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="w-[260px] xs:w-[280px] sm:w-[300px] lg:w-[340px] shrink-0 bg-white rounded-[16px] sm:rounded-[20px] p-4 sm:p-5 border border-slate-100 shadow-sm animate-pulse space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-slate-200 rounded-[12px]" />
-                  <div className="space-y-2 flex-1"><div className="h-4 bg-slate-200 rounded w-3/4" /><div className="h-3 bg-slate-200 rounded w-1/2" /></div>
-                </div>
-                <div className="h-6 bg-slate-100 rounded-full w-1/3" />
-                <div className="flex gap-2"><div className="h-9 bg-slate-200 rounded-[10px] flex-1" /><div className="h-9 bg-slate-200 rounded-[10px] flex-1" /></div>
-              </div>
-            ))}
+            {[...Array(4)].map((_, i) => <NearbySkeleton key={i} />)}
           </motion.div>
         )}
 
-        {/* EMPTY STATE */}
-        {!isLoading && sellers.length === 0 && (
+        {/* ✅ WORLD-CLASS SAAS EMPTY STATE */}
+        {!isLoading && sellers.length === 0 && !isError && (
           <motion.div 
             key="empty" 
-            className="mx-1 sm:mx-2 md:mx-3 my-2 flex flex-col items-center justify-center p-8 sm:p-12 bg-white rounded-[16px] sm:rounded-[20px] border-2 border-dashed border-slate-200 text-center shadow-sm"
+            className="mx-1 sm:mx-2 md:mx-3 my-2 flex flex-col items-center justify-center p-8 sm:p-12 bg-gradient-to-b from-white to-slate-50 rounded-[16px] sm:rounded-[20px] border border-slate-200 text-center shadow-sm relative overflow-hidden"
           >
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full sm:rounded-[16px] bg-slate-50 flex items-center justify-center mb-3 sm:mb-4 border border-slate-100">
-              <MapPin className="w-6 h-6 text-slate-400" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 opacity-20" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white flex items-center justify-center mb-4 sm:mb-5 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative">
+              <div className="absolute inset-0 bg-slate-100/50 rounded-2xl animate-pulse" />
+              <MapPin className="w-8 h-8 text-slate-300 relative z-10" />
             </div>
-            <h3 className="text-[14px] sm:text-[16px] font-sora font-bold text-slate-800 mb-1">No Nearby Sellers Found</h3>
-            <p className="text-[12px] sm:text-[13px] font-inter text-slate-500 max-w-sm mb-4 sm:mb-5">There are currently no active wholesalers registered in your district zone. Expand your radar or check back soon.</p>
+            <h3 className="text-[16px] sm:text-[18px] font-sora font-extrabold text-slate-800 mb-2 tracking-tight">No Nearby Sellers Found</h3>
+            <p className="text-[13px] sm:text-[14px] font-inter text-slate-500 max-w-md mb-6 sm:mb-8 leading-relaxed">There are currently no active wholesalers registered in your district zone. Expand your radar or check back soon.</p>
             <button 
               onClick={() => navigate('/nearby')}
-              className="px-5 sm:px-6 py-2.5 text-[11px] sm:text-[12px] font-sora font-bold text-white rounded-[10px] sm:rounded-[12px] shadow-sm transition-transform active:scale-95"
+              className="px-6 sm:px-8 py-3 text-[12px] sm:text-[13px] font-sora font-bold text-white rounded-[12px] sm:rounded-[14px] shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
               style={{ background: CTA_GRAD }}
             >
               Explore Full Network Directory

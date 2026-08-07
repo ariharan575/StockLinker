@@ -1,8 +1,37 @@
 import {
   Home, LayoutGrid, BarChart2, MapPin, ShoppingCart, 
   MessageSquare, Bookmark, Settings, HelpCircle, 
-  Package, User, Briefcase, Store, Truck
+  Package, User, Briefcase, Store, Truck, Search ,
+  FileText,TrendingUp, Zap, Clock,Bell,Users
 } from 'lucide-react';
+
+import { C } from '../common/constants';
+
+
+export const getQuickActions = (role, C) => {
+  const isWholesaler = role?.toUpperCase() === 'WHOLESALER';
+
+  if (isWholesaler) {
+    return [
+      { id: 1, label: 'Find Products',   desc: 'Browse wholesale items',    Icon: Search,         path: '/category' },
+      { id: 2, label: 'Inventory',       desc: 'Manage your products',      Icon: Package,        path: '/product' },
+      { id: 3, label: 'Nearby Buyers',   desc: '24 buyers within 5km',      Icon: MapPin,         path: '/nearby' },
+      { id: 4, label: 'My Orders',       desc: '3 orders in progress',      Icon: ShoppingCart,   path: '/orders' },
+      { id: 5, label: 'Saved Buyers',    desc: '12 saved for quick access', Icon: Bookmark,       path: '/saved' },
+      { id: 6, label: 'Message',         desc: '3 unread conversations',    Icon: MessageSquare,  path: '/message' },
+    ];
+  }
+
+  // Default actions for Shopkeeper
+  return [
+    { id: 1, label: 'Find Products',   desc: 'Browse wholesale items',    Icon: Search,        path: '/category' },
+    { id: 2, label: 'Compare Price',   desc: 'Best deals with suppliers', Icon: BarChart2,     path: '/compare' },
+    { id: 3, label: 'Nearby Sellers',  desc: '24 suppliers within 5km',   Icon: MapPin,        path: '/nearby' },
+    { id: 4, label: 'My Orders',       desc: '3 orders in progress',      Icon: ShoppingCart,  path: '/orders' },
+    { id: 5, label: 'Saved Suppliers', desc: '12 saved for quick access', Icon: Bookmark,      path: '/saved' },
+    { id: 6, label: 'Message',         desc: '3 unread conversations',    Icon: MessageSquare, path: '/message' },
+  ];
+};
 
 export const getNavItems = (role) => {
   const isWholesaler = role?.toUpperCase() === 'WHOLESALER';

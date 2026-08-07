@@ -1,48 +1,56 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query"; 
 import SectionHeader from "./SectionHeader";
 import StatusBadge from "./StatusBadge";
 import EmptyState from "./EmptyState";
 import { orderApi } from "../services/api";
 
+const OrderSkeleton = () => (
+  <div className="w-[260px] xs:w-[280px] sm:w-[300px] md:w-[320px] shrink-0 bg-white border border-slate-200 rounded-[16px] sm:rounded-[20px] p-4 sm:p-5 h-[190px] shadow-sm animate-pulse flex flex-col justify-between">
+    <div className="flex justify-between">
+      <div className="w-20 h-4 bg-slate-200/80 rounded" />
+      <div className="w-16 h-4 bg-slate-100 rounded" />
+    </div>
+    <div className="w-32 h-5 bg-slate-200/80 rounded mt-2" />
+    <div className="w-full h-10 bg-slate-50 rounded-[8px] mt-4" />
+    <div className="flex justify-between items-end mt-4 pt-3 border-t border-slate-50">
+      <div className="w-16 h-3 bg-slate-100 rounded" />
+      <div className="w-24 h-6 bg-slate-200/80 rounded" />
+    </div>
+  </div>
+);
+
 export default function OrdersTable({ onError }) {
-  const [orders, setOrders] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchOrders = async () => {
-      try {
-        setIsLoading(true);
-        const response = await orderApi.getDashboardOrders();
-        
-        // FIX 1: Safely extract the array from various possible API response structures
-        let fetchedOrders = [];
-        if (Array.isArray(response)) {
-          fetchedOrders = response;
-        } else if (response?.data && Array.isArray(response.data)) {
-          fetchedOrders = response.data;
-        } else if (response?.orders && Array.isArray(response.orders)) {
-          fetchedOrders = response.orders;
-        } else if (response?.data?.orders && Array.isArray(response.data.orders)) {
-          fetchedOrders = response.data.orders;
-        }
-
-        if (isMounted) setOrders(fetchedOrders);
-      } catch (err) {
-        console.error(err);
-        if (isMounted && onError) onError(); // Trigger Full Page Error
-      } finally {
-        if (isMounted) setIsLoading(false);
+  const { 
+    data: orders = [], 
+    isLoading, 
+    isError,
+    error // ✅ Extracted the error object
+  } = useQuery({
+    queryKey: ['dashboardRecentOrders'],
+    queryFn: async () => {
+      const response = await orderApi.getDashboardOrders();
+      let fetchedOrders = [];
+      if (Array.isArray(response)) {
+        fetchedOrders = response;
+      } else if (response?.data && Array.isArray(response.data)) {
+        fetchedOrders = response.data;
+      } else if (response?.orders && Array.isArray(response.orders)) {
+        fetchedOrders = response.orders;
+      } else if (response?.data?.orders && Array.isArray(response.data.orders)) {
+        fetchedOrders = response.data.orders;
       }
-    };
-    
-    fetchOrders();
-    return () => { isMounted = false; };
-    
-    // FIX 2: Remove `onError` from dependency array to prevent infinite loading loop when parent re-renders
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+      return fetchedOrders;
+    },
+    staleTime: 5 * 60 * 1000, 
+  });
+
+  // ✅ Passed the exact error up to the global layout
+  useEffect(() => {
+    if (isError && onError) onError(error);
+  }, [isError, error, onError]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "Pending";
@@ -66,34 +74,22 @@ export default function OrdersTable({ onError }) {
             exit={{ opacity: 0 }}
             className="flex flex-row overflow-x-auto no-scrollbar gap-3 sm:gap-4 px-1 sm:px-2 md:px-3 pb-6 pt-2 mt-4"
           >
-            {[...Array(4)].map((_, i) => (
-              <div 
-                key={i} 
-                className="w-[260px] xs:w-[280px] sm:w-[300px] md:w-[320px] shrink-0 bg-white border border-slate-100 rounded-[16px] sm:rounded-[20px] p-4 sm:p-5 h-[190px] shadow-sm animate-pulse flex flex-col justify-between"
-              >
-                <div className="flex justify-between">
-                  <div className="w-20 h-4 bg-slate-200 rounded" />
-                  <div className="w-16 h-4 bg-slate-100 rounded" />
-                </div>
-                <div className="w-32 h-5 bg-slate-200 rounded mt-2" />
-                <div className="w-full h-10 bg-slate-50 rounded-[8px] mt-4" />
-                <div className="flex justify-between items-end mt-4 pt-3 border-t border-slate-50">
-                  <div className="w-16 h-3 bg-slate-100 rounded" />
-                  <div className="w-24 h-6 bg-slate-200 rounded" />
-                </div>
-              </div>
-            ))}
+            {[...Array(4)].map((_, i) => <OrderSkeleton key={i} />)}
           </motion.div>
         )}
 
-        {!isLoading && orders.length === 0 && (
+        {!isLoading && orders.length === 0 && !isError && (
           <motion.div 
             key="empty" 
             initial={{ opacity: 0, y: 10 }} 
             animate={{ opacity: 1, y: 0 }} 
-            className="mt-4 mx-1 sm:mx-2 md:mx-3 bg-white rounded-[20px] p-6 border-2 border-dashed border-slate-200 shadow-sm"
+            className="mt-4"
           >
-            <EmptyState title="No orders yet" description="When buyers place orders, they will appear here." />
+            <EmptyState 
+              title="No orders yet" 
+              description="When buyers place orders for your products, they will appear here." 
+              actionLabel={null} 
+            />
           </motion.div>
         )}
 
@@ -109,7 +105,6 @@ export default function OrdersTable({ onError }) {
                 ? `${order.items[0].productName} ${order.items.length > 1 ? `+${order.items.length - 1} more` : ''}`
                 : "No items";
 
-              // FIX 3: Add safe fallback for orderNumber to prevent substring crashes
               const safeOrderNumber = order.orderNumber || order.id || "0000000000";
 
               return (

@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query'; 
 import { 
   Star, Navigation, Phone, MessageSquare, Clock, Sparkles, CheckCircle2, 
   Building2, Search, ArrowRight, AlertCircle, Loader2, Users, Compass, 
@@ -10,14 +11,12 @@ import {
 } from 'lucide-react';
 import { networkApi } from '../Authentication/services/api'; 
 
-// --- ADDED PREMIUM COMPONENTS IMPORTS ---
 import { PremiumToast } from "../components/PremiumToast";
 import { DataFetchError } from "../components/DataFetchError";
 
 // ============================================================
 // IMAGE UTILS FOR CATEGORIES
 // ============================================================
-// Safely import subcategory images based on the reference provided
 const subcategoryImages = import.meta.glob(
   "../assets/subcategories/*", 
   { eager: true, import: "default" }
@@ -27,14 +26,38 @@ const getSubcategoryImageUrl = (imageName) => {
   if (!imageName) return null;
   if (imageName.startsWith('http') || imageName.startsWith('data:')) return imageName;
   
-  // Try to match the filename across different potential path depths
   const matchingKey = Object.keys(subcategoryImages).find(key => key.includes(imageName));
   return matchingKey ? subcategoryImages[matchingKey] : null;
 };
 
 const CTA_GRAD = "linear-gradient(135deg, #0F172A, #334155)";
-
 const fadeUp = (delay = 0) => ({ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5, ease: "easeOut", delay } });
+
+const SupplierCardSkeleton = () => (
+  <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm animate-pulse flex flex-col h-full">
+    <div className="flex items-start justify-between mb-4">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-xl bg-slate-200 shrink-0" />
+        <div>
+          <div className="h-4 bg-slate-200 rounded-md w-32 mb-2" />
+          <div className="h-3 bg-slate-100 rounded-md w-20" />
+        </div>
+      </div>
+    </div>
+    <div className="h-4 bg-slate-100 rounded-md w-3/4 mb-4" />
+    <div className="mt-auto">
+      <div className="flex gap-2 mb-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="w-10 h-10 rounded-md bg-slate-100 shrink-0" />
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <div className="h-10 bg-slate-100 rounded-lg w-full" />
+        <div className="h-10 bg-slate-200 rounded-lg w-full" />
+      </div>
+    </div>
+  </div>
+);
 
 function SupplierCard({ supplier, index, isConnected, onAccept, isPendingReq, onNotify, onShowMore }) {
   const navigate = useNavigate();
@@ -118,7 +141,7 @@ function SupplierCard({ supplier, index, isConnected, onAccept, isPendingReq, on
           })}
           {remainingCount > 0 && (
             <div 
-              onClick={() => onShowMore(supplier)} 
+              onClick={() => onShowMore && onShowMore(supplier)} 
               className="border border-dashed border-zinc-300 rounded-md w-10 h-10 flex items-center justify-center text-xs text-zinc-500 font-bold bg-zinc-50 cursor-pointer hover:bg-zinc-100 transition-colors"
             >
               +{remainingCount}
@@ -152,22 +175,59 @@ function SupplierCard({ supplier, index, isConnected, onAccept, isPendingReq, on
 
 export default function ConnectedSupplierPage() {
   const navigate = useNavigate();
-  const [connectedSuppliers, setConnectedSuppliers] = useState([]);
-  const [pendingRequests, setPendingRequests] = useState([]);
-  const [discoverSuppliers, setDiscoverSuppliers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   
   const [searchQuery, setSearchQuery] = useState("");
   const [showRequests, setShowRequests] = useState(false);
-
-  // --- ADDED STATES FOR PREMIUM COMPONENTS ---
-  const [fetchError, setFetchError] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [selectedSupplierForModal, setSelectedSupplierForModal] = useState(null);
   
   const showNotification = (type, msg) => {
     setNotification({ type, msg });
   };
 
+  const { 
+    data: networkData, 
+    isLoading, 
+    isError,
+    error: fetchError,
+    refetch 
+  } = useQuery({
+    queryKey: ['connectedNetworkData'],
+    queryFn: async () => {
+      const [connectedRes, pendingRes, discoverRes] = await Promise.all([
+        networkApi.getConnectedSuppliers(),
+        networkApi.getPendingRequests().catch(() => ({ data: { data: [] } })),
+        // FIXED: Catch block now returns a valid mock Page object with content array
+        networkApi.getNearbySellers().catch(() => ({ data: { data: { content: [] } } }))
+      ]);
+      
+      const connectedData = connectedRes.data?.data || [];
+      const pendingData = pendingRes.data?.data || [];
+      
+      // FIXED: Safely extract array from Spring Boot's Page object response
+      const nearbyRawData = discoverRes.data?.data;
+      const nearby = Array.isArray(nearbyRawData) 
+          ? nearbyRawData 
+          : (nearbyRawData?.content || []);
+      
+      const connectedIds = connectedData.map(c => c.id);
+      const filteredNearby = nearby.filter(user => !connectedIds.includes(user.id));
+
+      return {
+        connectedSuppliers: connectedData,
+        pendingRequests: pendingData,
+        discoverSuppliers: filteredNearby.slice(0, 6)
+      };
+    },
+    staleTime: 60 * 1000, // Fresh cache for 1 minute
+  });
+
+  const connectedSuppliers = networkData?.connectedSuppliers || [];
+  const pendingRequests = networkData?.pendingRequests || [];
+  const discoverSuppliers = networkData?.discoverSuppliers || [];
+
+  // WebSocket real-time updates subscription
   useEffect(() => {
     const client = new Client({
       webSocketFactory: () => new SockJS('http://localhost:8080/ws', null, { withCredentials: true }),
@@ -175,55 +235,23 @@ export default function ConnectedSupplierPage() {
       onConnect: () => {
         client.subscribe('/user/queue/notifications', (message) => {
           const notif = JSON.parse(message.body);
-          
-          // Map WS notification to PremiumToast format
           const title = notif.type === 'NEW_REQUEST' ? 'New Connection Request' : 'Connection Accepted';
           showNotification('info', `${title}: ${notif.message}`);
 
-          if (notif.type === 'NEW_REQUEST') setPendingRequests(prev => [notif.payload, ...prev]);
-          else if (notif.type === 'ACCEPTED') fetchNetworkData();
+          // Invalidate and seamlessly refetch TanStack Query cache on live event
+          queryClient.invalidateQueries({ queryKey: ['connectedNetworkData'] });
         });
       }
     });
     client.activate();
     return () => { if (client.active) client.deactivate(); };
-  }, []);
-
-  const fetchNetworkData = async () => {
-    setIsLoading(true);
-    setFetchError(false);
-    try {
-      const [connectedRes, pendingRes, discoverRes] = await Promise.all([
-        networkApi.getConnectedSuppliers(),
-        networkApi.getPendingRequests().catch(() => ({ data: { data: [] } })),
-        networkApi.getNearbySellers().catch(() => ({ data: { data: [] } }))
-      ]);
-      
-      const connectedData = connectedRes.data?.data || [];
-      setConnectedSuppliers(connectedData);
-      setPendingRequests(pendingRes.data?.data || []);
-
-      // 🧠 SMART SUGGESTION ENGINE: Strict Max 6, Hide Connected, Newest Top.
-      const connectedIds = connectedData.map(c => c.id);
-      const nearby = discoverRes.data?.data || [];
-      
-      const filteredNearby = nearby.filter(user => !connectedIds.includes(user.id));
-      setDiscoverSuppliers(filteredNearby.slice(0, 6)); // Cap at 6
-    } catch (err) { 
-      console.error("Failed to fetch data", err); 
-      setFetchError(true);
-    } finally { 
-      setIsLoading(false); 
-    }
-  };
-
-  useEffect(() => { fetchNetworkData(); }, []);
+  }, [queryClient]);
 
   const handleAccept = async (connectionId) => {
     try {
       await networkApi.acceptConnection(connectionId);
       showNotification('success', 'Connection request accepted!');
-      fetchNetworkData(); 
+      queryClient.invalidateQueries({ queryKey: ['connectedNetworkData'] }); 
     } catch (err) { 
       console.error(err); 
       showNotification('error', 'Failed to accept connection request.');
@@ -237,17 +265,14 @@ export default function ConnectedSupplierPage() {
 
   const hasConnections = connectedSuppliers.length > 0;
 
-  // --- TRIGGER ENTERPRISE ERROR COMPONENT ON FAIL ---
-  if (fetchError) {
-    return <DataFetchError onRetry={() => fetchNetworkData()} />;
-  }
-
-  if (isLoading) {
+  // ✅ HANDLES SPRING BOOT CUSTOM ERRORS PERFECTLY
+  if (isError) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center">
-        <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
-        <p className="text-slate-500 font-semibold">Loading your supply network...</p>
-      </div>
+      <DataFetchError 
+        errorTitle="Connection Failed"
+        errorMessage={fetchError?.response?.data?.message || fetchError?.message || "An unexpected error occurred."} 
+        onRetry={refetch} 
+      />
     );
   }
 
@@ -260,7 +285,6 @@ export default function ConnectedSupplierPage() {
       `}} />
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 min-h-screen bg-[#FAFAFA]" style={{ fontFamily: "'Inter', sans-serif" }}>
-        {/* --- REPLACED OLD NOTIFICATION WITH PREMIUM TOAST --- */}
         <PremiumToast 
           isVisible={!!notification} 
           type={notification?.type || 'info'} 
@@ -305,7 +329,11 @@ export default function ConnectedSupplierPage() {
             <h2 className="text-xl font-bold text-slate-900">Active Connections <span className="text-slate-400 text-base font-normal ml-2">({filteredConnections.length})</span></h2>
           </motion.div>
 
-          {filteredConnections.length > 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => <SupplierCardSkeleton key={i} />)}
+            </div>
+          ) : filteredConnections.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <AnimatePresence>
                 {filteredConnections.map((supplier, i) => <SupplierCard key={supplier.id} supplier={supplier} index={i} isConnected={true} onNotify={showNotification}  />)}
@@ -314,13 +342,16 @@ export default function ConnectedSupplierPage() {
           ) : hasConnections ? (
             <div className="text-center py-10 text-slate-500">No connections match your search.</div>
           ) : (
-            <motion.div {...fadeUp(0.3)} className="bg-white border border-slate-200 shadow-sm rounded-3xl p-10 text-center max-w-4xl mx-auto relative overflow-hidden">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-indigo-50 rounded-full blur-3xl opacity-60" />
-              <div className="relative z-10">
-                <div className="w-20 h-20 bg-slate-100 text-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-indigo-100"><Compass className="w-10 h-10" /></div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-3">Your network is currently empty</h3>
-                <p className="text-slate-500 max-w-md mx-auto mb-8 leading-relaxed text-sm">You haven't connected with any verified businesses yet. Establish connections to view pricing and chat directly.</p>
-                <button onClick={() => navigate('/nearby')} className="px-8 py-3.5 bg-gray-800 text-white shadow-lg text-white rounded-xl font-bold hover:scale-[1.02] flex items-center gap-2 mx-auto">
+            <motion.div {...fadeUp(0.3)} className="bg-gradient-to-b from-white to-slate-50 border border-slate-200 shadow-sm rounded-[24px] p-12 text-center max-w-4xl mx-auto relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 opacity-20" />
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative">
+                  <div className="absolute inset-0 bg-indigo-500/5 rounded-2xl animate-pulse" />
+                  <Compass className="w-10 h-10 text-indigo-500 relative z-10" />
+                </div>
+                <h3 className="font-sora text-[22px] font-extrabold text-slate-900 mb-2 tracking-tight">Your network is currently empty</h3>
+                <p className="text-slate-500 max-w-md mx-auto mb-8 leading-relaxed text-[14px]">You haven't connected with any verified businesses yet. Establish connections to view pricing and chat directly.</p>
+                <button onClick={() => navigate('/nearby')} className="px-8 py-3.5 bg-black text-white shadow-lg rounded-xl font-bold hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-2">
                   Discover Nearby Partners <Navigation className="w-4 h-4" />
                 </button>
               </div>
@@ -328,7 +359,14 @@ export default function ConnectedSupplierPage() {
           )}
         </section>
 
-        {discoverSuppliers.length > 0 && (
+        {isLoading ? (
+          <div className="pt-6 border-t border-slate-200">
+            <div className="h-6 bg-slate-200 rounded w-48 mb-6 animate-pulse" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => <SupplierCardSkeleton key={i} />)}
+            </div>
+          </div>
+        ) : discoverSuppliers.length > 0 && (
           <section className="pt-6 border-t border-slate-200">
             <motion.div {...fadeUp(0.4)} className="flex items-end justify-between mb-8 mt-6">
               <div>
@@ -347,9 +385,6 @@ export default function ConnectedSupplierPage() {
           </section>
         )}
       </div>
-
-      {/* --- SUBCATEGORY EXPAND MODAL (LARGE SQUARE GRID) --- */}
-
     </>
   );
 }

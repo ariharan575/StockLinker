@@ -1,34 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, RefreshCw, ShoppingBag } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query'; // --- ADDED TANSTACK QUERY ---
 import { SectionHead } from '../../Layout/common';
 import { orderApi } from '../Services/api';
 import { fadeUp } from '../../Layout/common/constants';
 
+// ============================================================
+// ✅ PREMIUM SKELETON LOADER
+// ============================================================
+const ReorderSkeleton = () => (
+  <div className="w-[260px] xs:w-[280px] sm:w-[300px] md:w-[320px] shrink-0 bg-white rounded-[16px] sm:rounded-[20px] p-4 sm:p-5 border border-slate-100 shadow-sm animate-pulse flex flex-col justify-between h-[210px]">
+    <div>
+      <div className="flex justify-between mb-4">
+        <div className="space-y-2">
+          <div className="h-4 bg-slate-200/80 rounded w-24" />
+          <div className="h-3 bg-slate-100 rounded w-32" />
+        </div>
+        <div className="h-5 w-16 bg-slate-100 rounded-md" />
+      </div>
+      <div className="h-12 bg-slate-100/50 rounded-lg w-full" />
+    </div>
+    <div className="flex gap-2.5 mt-4">
+      <div className="h-9 bg-slate-200/80 rounded-[10px] flex-1" />
+      <div className="h-9 bg-slate-200/80 rounded-[10px] flex-1" />
+    </div>
+  </div>
+);
+
 export default function ReorderSection({ onError }) {
   const navigate = useNavigate();
-  const [reorders, setReorders] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  // ✅ TANSTACK QUERY INTEGRATION
+  const { 
+    data: reorders = [], 
+    isLoading, 
+    isError 
+  } = useQuery({
+    queryKey: ['homeReorderSummary'],
+    queryFn: async () => {
+      return await orderApi.getReorderSummary();
+    },
+    staleTime: 5 * 60 * 1000, 
+  });
 
   useEffect(() => {
-    let isMounted = true;
-    const fetchReorders = async () => {
-      try {
-        setIsLoading(true);
-        const data = await orderApi.getReorderSummary();
-        if (isMounted) setReorders(data);
-      } catch (err) {
-        console.error(err);
-        if (isMounted && onError) onError(); // Trigger Full Page Error
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-    fetchReorders();
-    return () => { isMounted = false; };
-  }, [onError]);
+    if (isError && onError) {
+      onError();
+    }
+  }, [isError, onError]);
 
+  // Keep original logic: hide if less than 3 orders to preserve layout integrity
   if (!isLoading && reorders.length < 3) {
     return null;
   }
@@ -53,6 +76,7 @@ export default function ReorderSection({ onError }) {
           title="Quick Reorder" 
           sub="Repeat your recent purchases instantly" 
           action="Order History" 
+          actionPath="/orders"
         />
       </div>
 
@@ -65,12 +89,7 @@ export default function ReorderSection({ onError }) {
             exit={{ opacity: 0 }} 
             className="flex flex-row overflow-x-auto no-scrollbar gap-3 sm:gap-4 px-1 sm:px-2 md:px-3 pb-5 pt-1"
           >
-            {[...Array(4)].map((_, i) => (
-              <div 
-                key={i} 
-                className="w-[260px] xs:w-[280px] sm:w-[300px] md:w-[320px] shrink-0 bg-white rounded-[16px] sm:rounded-[20px] p-4 sm:p-5 border border-slate-100 animate-pulse shadow-sm h-[200px]" 
-              />
-            ))}
+            {[...Array(4)].map((_, i) => <ReorderSkeleton key={i} />)}
           </motion.div>
         ) : (
           <motion.div 

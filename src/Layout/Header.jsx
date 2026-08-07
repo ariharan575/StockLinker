@@ -7,11 +7,13 @@ import {
   User, LogOut, MonitorSmartphone 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { profileApi } from '../Authentication/services/api';
-import {dashboardApi, notificationApi} from '../Shopkeeper_Home/Services/api'
+import { useQuery, useQueryClient } from '@tanstack/react-query'; 
+import { dashboardApi, notificationApi } from '../Shopkeeper_Home/Services/api';
 import { useAuth } from '../Authentication/context/AuthContext';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
+
+import { PremiumToast } from "../components/PremiumToast";
 
 // Helper to get 2 initials safely
 const getInitials = (name) => {
@@ -201,93 +203,84 @@ const SmartSearchBar = ({ isMobile }) => {
 
 export default function Header({ open, setOpen }) {
   const navigate = useNavigate(); 
+  const queryClient = useQueryClient();
   
   // Auth Context
-  const { logout, logoutAll, isAuthenticated } = useAuth(); 
+  const { logout, logoutAll, isAuthenticated, profileData } = useAuth(); 
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [profOpen, setProfOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   
-  // Notification States
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  // Profile State (Fetched securely from DB, stored locally in Header)
-  const [profileData, setProfileData] = useState({ 
-    ownerName: 'Loading...', 
-    role: 'Loading...', 
-    businessProfileId: null 
-  });
+  const [toast, setToast] = useState(null);
 
   const notifRef = useRef(null);
   const profRef = useRef(null);
 
-  // 1. Fetch Profile Data directly from DB
-  useEffect(() => {
-    let isMounted = true;
+  // ✅ TANSTACK QUERY: FETCH NOTIFICATIONS
+  const { data: notifData = { notifications: [], unreadCount: 0 }, refetch: refetchNotifs } = useQuery({
+    queryKey: ['userNotifications'],
+    queryFn: async () => {
+      const res = await notificationApi.getNotifications();
+      return {
+        notifications: res.data.notifications || [],
+        unreadCount: res.data.unreadCount || 0
+      };
+    },
+    enabled: isAuthenticated,
+    staleTime: 60 * 1000, 
+  });
 
-    const fetchProfileFromDB = async () => {
-      try {
-        const res = await profileApi.getProfile();
-        if (isMounted) {
-          const data = res.data.data;
-          setProfileData({
-            ownerName: data.ownerName || 'User',
-            role: data.businessType || 'Partner',
-            businessProfileId: data.businessProfileId || ''
-          });
-        }
-      } catch (err) {
-        console.error("Failed to load profile from DB", err);
-      }
-    };
+  const notifications = notifData.notifications;
+  const unreadCount = notifData.unreadCount;
 
-    if (isAuthenticated) fetchProfileFromDB();
-
-    return () => { isMounted = false; };
-  }, [isAuthenticated]);
-
-  // 2. Load Notifications & STOMP Hook
+  // ✅ STOMP WebSocket Live Connection
   useEffect(() => {
     if (!isAuthenticated) return;
-
-    const loadNotifications = async () => {
-      try {
-        const res = await notificationApi.getNotifications();
-        setNotifications(res.data.notifications || []);
-        setUnreadCount(res.data.unreadCount || 0);
-      } catch (error) {
-        console.error("Failed to load notifications", error);
-      }
-    };
-    loadNotifications();
 
     const client = new Client({
       webSocketFactory: () => new SockJS('http://localhost:8080/ws', null, { withCredentials: true }),
       onConnect: () => {
         client.subscribe('/user/queue/notifications', (message) => {
           const newNotif = JSON.parse(message.body);
-          setNotifications(prev => [newNotif, ...prev]);
-          setUnreadCount(prev => prev + 1);
+          
+          // Optimistically inject into TanStack cache for instant UI response
+          queryClient.setQueryData(['userNotifications'], (old) => {
+            if (!old) return { notifications: [newNotif], unreadCount: 1 };
+            return {
+              notifications: [newNotif, ...old.notifications],
+              unreadCount: old.unreadCount + 1
+            };
+          });
         });
       }
     });
     client.activate();
     
     return () => client.deactivate();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, queryClient]);
 
-  // 3. Handlers
+  // Handlers
   const handleNotificationClick = async (notif) => {
     setNotifOpen(false); 
-    if (!notif.read) {
+    if (!notif.read && !notif.isRead) {
+      // Optimistic Update
+      queryClient.setQueryData(['userNotifications'], (old) => {
+         if(!old) return old;
+         return {
+           notifications: old.notifications.map(n => n.id === notif.id ? { ...n, read: true, isRead: true } : n),
+           unreadCount: Math.max(0, old.unreadCount - 1)
+         }
+      });
+
       try {
         await notificationApi.markAsRead(notif.id);
-        setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      } catch (e) {}
+      } catch (e) {
+        setToast({ type: 'error', msg: e.response?.data?.message || 'Failed to update notification status' });
+        refetchNotifs(); // Rollback if failed
+      }
     }
+
     if (notif.type === 'ORDER') navigate('/orders');
     else if (notif.type === 'CONNECTION') navigate('/network');
     else if (notif.type === 'MESSAGE') navigate('/message');
@@ -295,11 +288,21 @@ export default function Header({ open, setOpen }) {
   };
 
   const handleMarkAllRead = async () => {
+    // Optimistic Update
+    queryClient.setQueryData(['userNotifications'], (old) => {
+      if(!old) return old;
+      return {
+        notifications: old.notifications.map(n => ({...n, read: true, isRead: true})),
+        unreadCount: 0
+      }
+    });
+
     try {
       await notificationApi.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      setUnreadCount(0);
-    } catch (e) {}
+    } catch (e) {
+      setToast({ type: 'error', msg: e.response?.data?.message || 'Failed to clear notifications' });
+      refetchNotifs(); // Rollback if failed
+    }
   };
 
   const handleMenuAction = (action) => {
@@ -333,6 +336,7 @@ export default function Header({ open, setOpen }) {
   };
 
   const calculateTimeAgo = (dateStr) => {
+    if(!dateStr) return 'Just now';
     const minutes = Math.floor((new Date() - new Date(dateStr)) / 60000);
     if (minutes < 60) return `${minutes || 1}m ago`;
     const hours = Math.floor(minutes / 60);
@@ -342,6 +346,13 @@ export default function Header({ open, setOpen }) {
 
   return (
     <>
+      <PremiumToast 
+        isVisible={!!toast} 
+        type={toast?.type || 'info'} 
+        message={toast?.msg} 
+        onClose={() => setToast(null)} 
+      />
+
       {/* DESKTOP HEADER */}
       <header className="hidden lg:flex fixed top-0 inset-x-0 h-[72px] z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/80 items-center">
         <div className="w-[280px] 2xl:w-[300px] h-full flex items-center px-6 border-r border-slate-200/80 shrink-0"><Logo /></div>
@@ -378,7 +389,7 @@ export default function Header({ open, setOpen }) {
                         <div 
                           key={notif.id} 
                           onClick={() => handleNotificationClick(notif)}
-                          className={`px-5 py-3.5 flex gap-3.5 hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-50 last:border-0 group ${!notif.read ? 'bg-sky-50/30' : ''}`}
+                          className={`px-5 py-3.5 flex gap-3.5 hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-50 last:border-0 group ${(!notif.read && !notif.isRead) ? 'bg-sky-50/30' : ''}`}
                         >
                           {getNotifIcon(notif.type)}
                           <div className="flex-1 min-w-0 pt-0.5">
@@ -389,7 +400,7 @@ export default function Header({ open, setOpen }) {
                               <p className="text-[10px] font-medium">{calculateTimeAgo(notif.createdAt)}</p>
                             </div>
                           </div>
-                          {!notif.read && <div className="w-2 h-2 rounded-full bg-pink-500 mt-1.5 shrink-0 shadow-sm" />}
+                          {(!notif.read && !notif.isRead) && <div className="w-2 h-2 rounded-full bg-pink-500 mt-1.5 shrink-0 shadow-sm" />}
                         </div>
                       ))
                     )}
@@ -399,7 +410,7 @@ export default function Header({ open, setOpen }) {
             </AnimatePresence>
           </div>
 
-          <PremiumIconButton onClick={() => navigate('/settings')} active={false}><Settings size={18} strokeWidth={2} /></PremiumIconButton>
+          <PremiumIconButton onClick={() => navigate('/settings/:section')} active={false}><Settings size={18} strokeWidth={2} /></PremiumIconButton>
           <div className="h-8 w-[1px] bg-slate-200 mx-2" />
 
           {/* DYNAMIC PROFILE DROPDOWN */}
@@ -411,11 +422,11 @@ export default function Header({ open, setOpen }) {
               `}
             >
               <div className="w-9 h-9 rounded-[12px] flex items-center justify-center text-[13px] font-bold text-white bg-gradient-to-br from-slate-700 to-slate-900 shadow-sm shrink-0">
-                {getInitials(profileData.ownerName)}
+                {getInitials(profileData?.ownerName)}
               </div>
               <div className="text-left hidden xl:block">
-                <p className="text-[14px] font-[700] text-slate-900 leading-none">{profileData.ownerName}</p>
-                <p className="text-[12px] mt-1.5 text-slate-500 font-[500] leading-none capitalize">{profileData.role}</p>
+                <p className="text-[14px] font-[700] text-slate-900 leading-none">{profileData?.ownerName || 'Loading...'}</p>
+                <p className="text-[12px] mt-1.5 text-slate-500 font-[500] leading-none capitalize">{profileData?.role || 'Partner'}</p>
               </div>
               <ChevronDown size={14} className="text-slate-400 ml-1 hidden xl:block" />
             </button>
@@ -429,18 +440,18 @@ export default function Header({ open, setOpen }) {
                 >
                   <div className="px-4 py-4 bg-slate-50 border-b border-slate-100 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-pink-100 text-pink-600 font-bold flex items-center justify-center text-[14px] shadow-sm shrink-0">
-                      {getInitials(profileData.ownerName)}
+                      {getInitials(profileData?.ownerName)}
                     </div>
                     <div className="overflow-hidden">
-                      <p className="text-[14px] font-[700] text-slate-900 leading-tight truncate">{profileData.ownerName}</p>
-                      <p className="text-[12px] text-slate-500 font-medium capitalize mt-0.5 truncate">{profileData.role}</p>
+                      <p className="text-[14px] font-[700] text-slate-900 leading-tight truncate">{profileData?.ownerName || 'Loading...'}</p>
+                      <p className="text-[12px] text-slate-500 font-medium capitalize mt-0.5 truncate">{profileData?.role || 'Partner'}</p>
                     </div>
                   </div>
                   
                   <div className="p-2">
                     <button 
                       onClick={() => {
-                        if(profileData.businessProfileId) {
+                        if(profileData?.businessProfileId) {
                           handleMenuAction(() => navigate(`/storefront/${profileData.businessProfileId}`));
                         }
                       }} 
@@ -485,7 +496,7 @@ export default function Header({ open, setOpen }) {
             {/* Tablet Profile Trigger */}
             <div className="hidden md:flex relative" ref={profRef}>
                <button onClick={() => { setProfOpen(!profOpen); setNotifOpen(false); }} className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 text-white font-bold flex items-center justify-center text-[13px] shadow-sm">
-                 {getInitials(profileData.ownerName)}
+                 {getInitials(profileData?.ownerName)}
                </button>
             </div>
 

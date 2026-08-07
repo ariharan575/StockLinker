@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WifiOff, RefreshCw, Package, Truck, MessageSquare } from "lucide-react";
+import { useQuery } from "@tanstack/react-query"; // --- ADDED TANSTACK QUERY ---
 
 import ProductTable from "../components/ProductTable";
 import InquirySection from "../components/InquirySection";
@@ -12,10 +13,8 @@ import Footer from '../../Layout/Footer';
 import QuickAction from '../../Shopkeeper_Home/sections/QuickActions';
 import WholesalerHero from '../components/HeroSection'; 
 
-// API
 import { dashboardApi } from '../../Shopkeeper_Home/Services/api';
-
-// --- PREMIUM COMPONENTS ---
+import { useAuth } from '../../Authentication/context/AuthContext';
 import { DataFetchError } from "../../components/DataFetchError";
 import { PremiumToast } from "../../components/PremiumToast";
 
@@ -108,20 +107,13 @@ const GlobalNetworkState = () => {
 // ============================================================================
 
 function DashboardHome() {
-  const { isLoading, products: initialProducts, orders, orderTabs, enquiries, error: dashboardError } = useDashboardData();
+  const { profileData } = useAuth();
+  
+  const { isLoading: isMockLoading, products: initialProducts, orders, orderTabs, enquiries, error: dashboardError } = useDashboardData();
   const [products, setProducts] = useState(initialProducts);
 
-  // --- ADDED GLOBAL FETCH ERROR STATE ---
   const [hasGlobalError, setHasGlobalError] = useState(false);
   const [notification, setNotification] = useState(null);
-
-  // --- WELCOME API DATA STATE ---
-  const [welcomeData, setWelcomeData] = useState({
-    ownerName: "Loading...",
-    activeProducts: 0,
-    fulfilledOrders: 0,
-    recentEnquiries: 0
-  });
 
   const handleFetchFailure = () => {
     setHasGlobalError(true);
@@ -131,65 +123,38 @@ function DashboardHome() {
     setNotification({ type, msg });
   };
 
-  // Sync Data error to global error
   useEffect(() => {
-    if (dashboardError) {
-      handleFetchFailure();
-    }
+    if (dashboardError) handleFetchFailure();
   }, [dashboardError]);
 
   useEffect(() => {
-    if (initialProducts) {
-      setProducts(initialProducts);
-    }
+    if (initialProducts) setProducts(initialProducts);
   }, [initialProducts]);
 
-  // ✅ PROPERLY FETCH DASHBOARD KPIs 
-  useEffect(() => {
-    const fetchWelcomeKpis = async () => {
-      try {
-        const data = await dashboardApi.getWelcomeInfo();
-        
-        // Ensure data exists and update state
-        if (data) {
-          setWelcomeData({
-            ownerName: data.ownerName || "User", // Dynamically injects actual DB name
-            activeProducts: data.activeProducts || 0,
-            fulfilledOrders: data.fulfilledOrders || 0,
-            recentEnquiries: data.recentEnquiries || 0
-          });
-        }
-      } catch (error) {
-        console.error("Failed to fetch Welcome KPIs", error);
-      }
-    };
-    fetchWelcomeKpis();
-  }, []);
+  // ✅ TANSTACK QUERY INTEGRATION FOR KPIs
+  const { data: welcomeData = { activeProducts: 0, fulfilledOrders: 0, recentEnquiries: 0 } } = useQuery({
+    queryKey: ['dashboardWelcomeKpis'],
+    queryFn: async () => {
+      const data = await dashboardApi.getWelcomeInfo();
+      return {
+        activeProducts: data?.activeProducts || 0,
+        fulfilledOrders: data?.fulfilledOrders || 0,
+        recentEnquiries: data?.recentEnquiries || 0
+      };
+    },
+    staleTime: 5 * 60 * 1000, 
+  });
 
-  // Map the raw API numbers into the visual KPI format
   const mappedKpis = [
-    {
-      label: "Products",
-      value: welcomeData.activeProducts.toLocaleString(),
-      icon: Package
-    },
-    {
-      label: "Orders",
-      value: welcomeData.fulfilledOrders.toLocaleString(),
-      icon: Truck
-    },
-    {
-      label: "Enquiries",
-      value: welcomeData.recentEnquiries.toLocaleString(),
-      icon: MessageSquare
-    }
+    { label: "Products", value: welcomeData.activeProducts.toLocaleString(), icon: Package },
+    { label: "Orders", value: welcomeData.fulfilledOrders.toLocaleString(), icon: Truck },
+    { label: "Enquiries", value: welcomeData.recentEnquiries.toLocaleString(), icon: MessageSquare }
   ];
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-inter">
       <GlobalNetworkState />
 
-      {/* --- PREMIUM TOAST GLOBAL REPLACEMENT --- */}
       <PremiumToast 
         isVisible={!!notification} 
         type={notification?.type || 'info'} 
@@ -198,17 +163,15 @@ function DashboardHome() {
       />
 
       <div className="mx-auto flex max-w-[1440px] flex-col gap-6 sm:gap-8 lg:gap-10 px-2 ">
-        {/* --- IF FETCH FAILS, SHOW FULL PAGE ERROR --- */}
         {hasGlobalError ? (
           <DataFetchError onRetry={() => window.location.reload()} />
         ) : (
           <>
-            {/* Passes the correct fetched ownerName to the isolated hero component */}
-            <WholesalerHero userName={welcomeData.ownerName} kpis={mappedKpis} />
+            <WholesalerHero userName={profileData?.ownerName || "Loading..."} kpis={mappedKpis} />
             <QuickAction/>
             
             <div>
-              {isLoading ? (
+              {isMockLoading ? (
                 <div className="space-y-4 border border-gray-100 rounded-xl p-4">
                   {Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)}
                 </div>
@@ -218,17 +181,11 @@ function DashboardHome() {
             </div>
 
             <div>
-              {isLoading ? (
-                <div className="flex gap-6 overflow-x-hidden pt-4">
-                  {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
-                </div>
-              ) : (
-                <InquirySection enquiries={enquiries} onError={handleFetchFailure} showNotification={showNotification} />
-              )}
+              <InquirySection onError={handleFetchFailure} showNotification={showNotification} />
             </div>
 
             <div>
-              <OrdersTable orders={orders} tabs={orderTabs} onError={handleFetchFailure} showNotification={showNotification} />
+              <OrdersTable onError={handleFetchFailure} showNotification={showNotification} />
             </div>
 
             <div>

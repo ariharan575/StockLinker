@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { LayoutGrid } from 'lucide-react';
+import { LayoutGrid, PackageSearch } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query'; 
 import { SectionHead } from '../../Layout/common';
 import { categoryApi } from '../Services/api';
 
@@ -16,34 +17,37 @@ const getImageUrl = (imageName) => {
   return localImages[`../../assets/categories/${imageName}`] || null;
 };
 
+// ============================================================
+// ✅ PREMIUM SKELETON LOADER
+// ============================================================
+const CategorySkeleton = () => (
+  <div className="w-[120px] xs:w-[130px] md:w-auto animate-pulse rounded-[16px] md:rounded-[24px] bg-white border border-slate-100 p-2 sm:p-2.5 shadow-sm">
+    <div className="w-full h-[60px] md:h-[78px] rounded-[12px] md:rounded-[18px] bg-slate-200/80 mb-2 md:mb-3" />
+    <div className="h-2.5 md:h-3 w-3/4 bg-slate-200/80 rounded-full mb-1.5 md:mb-2 mx-auto" />
+    <div className="h-3.5 md:h-4 w-1/2 bg-emerald-50 rounded-full mx-auto mt-1 md:mt-2" />
+  </div>
+);
+
 export default function Categories({ onError }) {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const { 
+    data: categories = [], 
+    isLoading, 
+    isError 
+  } = useQuery({
+    queryKey: ['homeCategoriesList'],
+    queryFn: async () => {
+      return await categoryApi.getAllCategories();
+    },
+    staleTime: 10 * 60 * 1000, // Keep fresh for 10 minutes
+  });
 
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchCategories = async () => {
-      try {
-        setIsLoading(true);
-        const data = await categoryApi.getAllCategories();
-        if (isMounted) {
-          setCategories(data);
-        }
-      } catch (err) {
-        if (isMounted && onError) onError(); // Trigger Full Page Error
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    fetchCategories();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [onError]);
+    if (isError && onError) {
+      onError();
+    }
+  }, [isError, onError]);
 
   const handleCategoryClick = (categoryId) => {
     navigate('/category', { state: { selectedCategoryId: categoryId } });
@@ -55,6 +59,7 @@ export default function Categories({ onError }) {
         title="Product Categories"
         sub="Browse wholesale products by category"
         action="View All"
+        actionPath="/category"
       />
 
       <AnimatePresence mode="wait">
@@ -66,38 +71,29 @@ export default function Categories({ onError }) {
             exit={{ opacity: 0 }}
             className="grid grid-rows-2 grid-flow-col overflow-x-auto no-scrollbar md:grid-rows-none md:grid-flow-row md:grid-cols-4 lg:grid-cols-6 gap-3 pb-4 md:pb-0 pt-1 md:pt-0"
           >
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="w-[120px] xs:w-[130px] md:w-auto animate-pulse rounded-[16px] md:rounded-[24px] bg-white border border-slate-100 p-2 sm:p-2.5 shadow-sm"
-              >
-                <div className="w-full h-[60px] md:h-[78px] rounded-[12px] md:rounded-[18px] bg-slate-200 mb-2 md:mb-3" />
-                <div className="h-2.5 md:h-3 w-3/4 bg-slate-200 rounded-full mb-1.5 md:mb-2 mx-auto" />
-                <div className="h-3.5 md:h-4 w-1/2 bg-emerald-50 rounded-full mx-auto mt-1 md:mt-2" />
-              </div>
-            ))}
+            {[...Array(12)].map((_, i) => <CategorySkeleton key={i} />)}
           </motion.div>
         )}
 
-        {/* EMPTY STATE */}
-        {!isLoading && categories.length === 0 && (
+        {!isLoading && categories.length === 0 && !isError && (
           <motion.div
             key="empty"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center p-12 rounded-[24px] border-2 border-dashed border-slate-200 bg-white"
+            className="flex flex-col items-center justify-center p-12 rounded-[24px] bg-gradient-to-b from-white to-slate-50 border border-slate-200 shadow-sm relative overflow-hidden text-center"
           >
-            <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 border border-slate-100">
-              <LayoutGrid className="w-6 h-6 text-slate-400" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 opacity-20" />
+            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-5 relative">
+              <div className="absolute inset-0 bg-slate-100/50 rounded-2xl animate-pulse" />
+              <LayoutGrid className="w-8 h-8 text-slate-300 relative z-10" />
             </div>
-            <h3 className="text-base font-sora font-bold text-slate-800 mb-1">No Categories Found</h3>
-            <p className="text-sm font-inter text-slate-500 text-center max-w-sm">
-              We are currently updating our inventory. Check back soon for new wholesale categories!
+            <h3 className="text-[18px] font-sora font-extrabold text-slate-800 mb-2 tracking-tight">No Categories Found</h3>
+            <p className="text-[14px] font-inter text-slate-500 max-w-sm leading-relaxed">
+              We are currently updating our inventory mapping. Check back soon for new wholesale categories!
             </p>
           </motion.div>
         )}
 
-        {/* SUCCESS DATA RENDERING */}
         {!isLoading && categories.length > 0 && (
           <motion.div
             key="content"

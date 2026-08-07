@@ -39,7 +39,7 @@ export default function OAuthSuccess() {
       }
        else if 
       (status === 'ACTIVE') {
-        navigate('/dash', { replace: true });
+        navigate('/dashboard', { replace: true });
       }
     } else {
       navigate('/login', { replace: true });

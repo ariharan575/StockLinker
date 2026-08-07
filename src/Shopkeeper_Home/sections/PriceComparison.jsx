@@ -1,31 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, MessageSquare, Phone, ChevronDown } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query'; // --- ADDED TANSTACK QUERY ---
 import { SectionHead } from '../../Layout/common';
 import { compareApi } from '../Services/api';
 import Surf from '../../assets/SurfExcel.jpg';
 
+// ============================================================
+// ✅ PREMIUM SKELETON LOADER
+// ============================================================
+const PriceComparisonSkeleton = () => (
+  <div className="p-5 lg:p-6 flex flex-col xl:flex-row gap-5 lg:gap-6 animate-pulse">
+    {/* Left Side Skeleton */}
+    <div className="w-full xl:w-[280px] shrink-0 rounded-[20px] border border-slate-100 bg-slate-50 p-4 h-48 flex flex-col justify-between">
+      <div className="w-full h-full bg-slate-200/80 rounded-[16px]" />
+    </div>
+    {/* Right Side Skeleton */}
+    <div className="flex-1 space-y-4">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-20 bg-slate-100 rounded-[16px] w-full" />
+      ))}
+    </div>
+  </div>
+);
+
 export default function PriceComparison({ onError }) {
   const [showMore, setShowMore] = useState(false);
-  const [highlightData, setHighlightData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+
+  // ✅ TANSTACK QUERY INTEGRATION
+  const { 
+    data: highlightData = null, 
+    isLoading, 
+    isError 
+  } = useQuery({
+    queryKey: ['homeDashboardHighlight'],
+    queryFn: async () => {
+      return await compareApi.getDashboardHighlight();
+    },
+    staleTime: 5 * 60 * 1000, 
+  });
 
   useEffect(() => {
-    let isMounted = true;
-    const fetchHighlight = async () => {
-      try {
-        setIsLoading(true);
-        const data = await compareApi.getDashboardHighlight();
-        if (isMounted) setHighlightData(data);
-      } catch (err) {
-        if (isMounted && onError) onError(); // Trigger Full Page Error
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-    fetchHighlight();
-    return () => { isMounted = false; };
-  }, [onError]);
+    if (isError && onError) {
+      onError();
+    }
+  }, [isError, onError]);
 
   const suppliers = highlightData?.suppliers || [];
   const displaySuppliers = showMore ? suppliers.slice(0, 10) : suppliers.slice(0, 5);
@@ -33,21 +52,14 @@ export default function PriceComparison({ onError }) {
 
   return (
     <section className="hidden sm:block mb-8 md:mb-10 w-full px-1 sm:px-2 md:px-3">
-      <SectionHead title="Compare Supplier Prices" sub="Find the best wholesale deal instantly" action="View All" />
+      <SectionHead title="Compare Supplier Prices" sub="Find the best wholesale deal instantly" action="View All" actionPath="/compare" />
 
       <div className="bg-white rounded-[20px] lg:rounded-[24px] border border-slate-200 overflow-hidden shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
         <AnimatePresence mode="wait">
           
           {isLoading && (
-            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-5 lg:p-6 flex flex-col xl:flex-row gap-5 lg:gap-6 animate-pulse">
-              <div className="w-full xl:w-[280px] shrink-0 rounded-[20px] border border-slate-200 bg-slate-50 p-4 h-48 flex items-center justify-center">
-                <div className="w-full h-full bg-slate-200/60 rounded-[16px]" />
-              </div>
-              <div className="flex-1 space-y-4">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="h-16 bg-slate-100 rounded-[16px] w-full" />
-                ))}
-              </div>
+            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <PriceComparisonSkeleton />
             </motion.div>
           )}
 

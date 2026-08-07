@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, SearchCode,Search ,ArrowRight  } from 'lucide-react';
+import { SearchCode, Search, ArrowRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query'; // --- ADDED TANSTACK QUERY ---
 import { typographyStyles, fadeUp } from '../config/constants';
 import { compareApi } from '../Services/api';
 
@@ -10,21 +11,38 @@ import ProductSearchModal from '../components/ProductSearchModal';
 import ProductHeader from '../components/ProductHeader';
 import AiPurchaseIntelligence from '../components/AiPurchaseIntelligence';
 import SupplierTable from '../components/SupplierTable';
-import SupplierModal from '../components/SupplierModal'; // Renamed to use the new centered Modal
+import SupplierModal from '../components/SupplierModal'; 
 import NegotiationCRM from '../components/NegotiationCRM';
 
-function useQuery() { return new URLSearchParams(useLocation().search); }
+function useQueryParam() { return new URLSearchParams(useLocation().search); }
+
+// ============================================================
+// ✅ PREMIUM SKELETON LOADER (Full Page)
+// ============================================================
+const CompareSkeleton = () => (
+  <div className="w-full max-w-[1440px] mx-auto animate-pulse flex flex-col gap-6 mt-4">
+    {/* Header Skeleton */}
+    <div className="w-full h-[180px] md:h-[140px] bg-slate-200/80 rounded-[20px] md:rounded-[24px] border border-slate-100" />
+    
+    {/* AI Intelligence Skeleton */}
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 w-full">
+      <div className="h-[250px] bg-slate-200/80 rounded-[16px] xl:col-span-1 hidden lg:block border border-slate-100" />
+      <div className="h-[250px] bg-slate-200/80 rounded-[16px] xl:col-span-2 border border-slate-100" />
+    </div>
+
+    {/* Table Skeleton */}
+    <div className="w-full h-[400px] bg-slate-200/80 rounded-[24px] border border-slate-100 mt-4" />
+  </div>
+);
 
 export default function ComparePrice() {
-  const query = useQuery();
+  const queryParam = useQueryParam();
   const navigate = useNavigate();
   
-  const masterProductId = query.get("productId");
-  const initialQty = parseInt(query.get("qty") || "50", 10);
+  const masterProductId = queryParam.get("productId");
+  const initialQty = parseInt(queryParam.get("qty") || "50", 10);
 
   const [qty, setQty] = useState(initialQty);
-  const [data, setData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [searchModalOpen, setSearchModalOpen] = useState(!masterProductId);
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
@@ -33,30 +51,31 @@ export default function ComparePrice() {
   useEffect(() => {
     if (!masterProductId) { 
       setSearchModalOpen(true); 
-      setIsLoading(false); 
     } else { 
       setSearchModalOpen(false); 
     }
   }, [masterProductId]);
 
+  // ✅ TANSTACK QUERY INTEGRATION
+  const { 
+    data, 
+    isLoading, 
+    isError 
+  } = useQuery({
+    queryKey: ['compareData', masterProductId, qty],
+    queryFn: async () => {
+      const res = await compareApi.getCompareData(masterProductId, qty);
+      return res.data;
+    },
+    enabled: !!masterProductId, // Only run if we have an ID
+    staleTime: 5 * 60 * 1000, 
+  });
+
   useEffect(() => {
-    if (!masterProductId) return;
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const res = await compareApi.getCompareData(masterProductId, qty);
-        setData(res.data);
-      } catch (e) {
-        console.error("Failed to load compare data", e);
-        showToast("Error loading market data.", "error");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    // Debounce the fetch to prevent spamming the backend when rapidly changing quantity
-    const debounce = setTimeout(fetchData, 400); 
-    return () => clearTimeout(debounce);
-  }, [masterProductId, qty]);
+    if (isError) {
+      showToast("Error loading market data.", "error");
+    }
+  }, [isError]);
 
   const handleProductSearch = (newProductId, newQty) => {
     setSearchModalOpen(false);
@@ -67,8 +86,8 @@ export default function ComparePrice() {
   const showToast = (message, type) => setToast({ show: true, message, type });
   const showErrorPopup = (message) => setErrorPopup({ show: true, message });
 
-  // EMPTY STATE: No Product Selected
-if (!masterProductId && !searchModalOpen) {
+  // ✅ WORLD-CLASS SAAS EMPTY STATE: No Product Selected
+  if (!masterProductId && !searchModalOpen) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center bg-slate-50/50 relative overflow-hidden px-4 font-inter">
         {/* Background Decorative Glow */}
@@ -127,15 +146,6 @@ if (!masterProductId && !searchModalOpen) {
     );
   }
 
-  // LOADING STATE
-  if (isLoading && !data && masterProductId) {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center bg-[#F8FAFC]">
-        <Loader2 className="w-10 h-10 animate-spin text-slate-900" />
-      </div>
-    );
-  }
-
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: typographyStyles }} />
@@ -151,7 +161,10 @@ if (!masterProductId && !searchModalOpen) {
       <div className="font-inter antialiased selection:bg-pink-100 selection:text-pink-900 flex flex-col w-full mx-1 my-1 overflow-x-hidden relative">
         <ProductSearchModal isOpen={searchModalOpen} onClose={() => setSearchModalOpen(false)} onSearch={handleProductSearch} />
 
-        {masterProductId && data && (
+        {/* ✅ SHOW PREMIUM SKELETON WHILE TANSTACK FETCHES */}
+        {isLoading && masterProductId ? (
+          <CompareSkeleton />
+        ) : masterProductId && data ? (
           <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="w-full max-w-[1440px] mx-auto">
             
             <ProductHeader qty={qty} setQty={setQty} metrics={data.headerMetrics} boundaries={data.marketBoundaries} onNewSearch={() => setSearchModalOpen(true)} onShowError={showErrorPopup} />
@@ -165,7 +178,7 @@ if (!masterProductId && !searchModalOpen) {
             </motion.div>
             
           </motion.main>
-        )}
+        ) : null}
 
         <SupplierModal supplier={selectedSupplier} onClose={() => setSelectedSupplier(null)} />
       </div>

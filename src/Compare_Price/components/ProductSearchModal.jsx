@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, X, Package, ArrowRight, Minus, Plus, Loader2, SearchCode, AlertTriangle } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query'; 
 import { compareApi } from '../Services/api';
 import { GradientButton } from './SharedComponents';
 
 export default function ProductSearchModal({ isOpen, onClose, onSearch }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -28,15 +30,13 @@ export default function ProductSearchModal({ isOpen, onClose, onSearch }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 1. FIX: Grab the product from the Hero search safely without causing a wipeout loop
   useEffect(() => {
     if (location.state?.selectedProduct) {
       const p = location.state.selectedProduct;
       setSelectedProduct(p);
-      setQuery(p.name); // This fills the input field!
+      setQuery(p.name);
       setQuantity(50);
       
-      // Safely remove it from router history so it doesn't trigger again on page refresh
       const newState = { ...location.state };
       delete newState.selectedProduct;
       delete newState.openModal;
@@ -44,7 +44,6 @@ export default function ProductSearchModal({ isOpen, onClose, onSearch }) {
     }
   }, [location.state, location.pathname, navigate]);
 
-  // 2. FIX: ONLY clear the form when the modal actually closes
   useEffect(() => {
     if (!isOpen) {
       setQuery("");
@@ -56,7 +55,6 @@ export default function ProductSearchModal({ isOpen, onClose, onSearch }) {
     }
   }, [isOpen]);
 
-  // Debounced Search Logic
   useEffect(() => {
     if (query.trim().length < 2) { setResults([]); setShowDropdown(false); return; }
     if (selectedProduct && selectedProduct.name === query) return;
@@ -107,31 +105,11 @@ export default function ProductSearchModal({ isOpen, onClose, onSearch }) {
         return;
       }
       
+      queryClient.setQueryData(['compareData', selectedProduct.id, quantity], data);
       onSearch(selectedProduct.id, quantity);
     } catch (e) {
-      console.error("Backend Error Object:", e);
-      
-      // Enhanced error handling to properly catch Spring Boot RuntimeExceptions
-      let msg = "No valid sellers available for this quantity. Please adjust your request.";
-      
-      if (e.response && e.response.data) {
-        // If the backend returns a simple string message
-        if (typeof e.response.data === 'string') {
-          msg = e.response.data;
-        } 
-        // If the backend returns a JSON object (Standard Spring Boot Error format)
-        else if (e.response.data.message) {
-          msg = e.response.data.message;
-        } 
-        // Fallback for other custom JSON error properties
-        else if (e.response.data.error) {
-          msg = e.response.data.error;
-        }
-      } else if (e.message) {
-        msg = e.message;
-      }
-
-      setErrorMessage(msg);
+      // ✅ Intercepts backend custom error messages seamlessly 
+      setErrorMessage(e.response?.data?.message || e.message || "No valid sellers available for this quantity. Please adjust your request.");
     } finally {
       setIsSearching(false);
     }

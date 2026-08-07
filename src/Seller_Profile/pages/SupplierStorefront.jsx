@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useQueryClient } from '@tanstack/react-query'; 
 import { 
   Star, MapPin, Search, Minus, Plus, ShoppingCart, ShieldCheck, Info,
   Truck, X, Phone, Mail, MessageCircle, Clock, Award, Building2, 
@@ -8,14 +9,9 @@ import {
 } from 'lucide-react';
 import { storefrontApi, orderApi, profileApi, networkApi } from '../../Authentication/services/api';
 
-// --- ADDED PREMIUM COMPONENTS IMPORTS ---
 import { PremiumToast } from '../../components/PremiumToast';
 import { DataFetchError } from '../../components/DataFetchError';
 
-// ============================================================
-// IMAGE UTILS FOR CATEGORIES
-// ============================================================
-// Safely import subcategory images based on the reference provided
 const subcategoryImages = import.meta.glob(
   "../../assets/subcategories/*", 
   { eager: true, import: "default" }
@@ -25,7 +21,6 @@ const getSubcategoryImageUrl = (imageName) => {
   if (!imageName) return null;
   if (imageName.startsWith('http') || imageName.startsWith('data:')) return imageName;
   
-  // Try to match the filename across different potential path depths
   const matchingKey = Object.keys(subcategoryImages).find(key => key.includes(imageName));
   return matchingKey ? subcategoryImages[matchingKey] : null;
 };
@@ -42,11 +37,45 @@ const formatTime = (timeStr) => {
 
 const DEFAULT_DESCRIPTION = `Welcome to our center. We pride ourselves on delivering top-tier products with unmatched reliability. We ensure that your sourcing needs are met with precision, speed, and competitive pricing. Partner with us for a seamless supply chain experience.`;
 
-const StorefrontSkeleton = () => (
-  <div className="min-h-screen bg-[#FAFAFA] p-4 flex flex-col gap-6 animate-pulse w-full">
-    <div className="h-64 bg-slate-200 rounded-[24px] w-full max-w-[1440px] mx-auto border border-slate-200/60"></div>
-    <div className="max-w-[1440px] mx-auto w-full grid grid-cols-1 gap-6">
-      <div className="h-96 bg-slate-200 rounded-[24px] border border-slate-200/60"></div>
+const PremiumStorefrontSkeleton = () => (
+  <div className="max-w-[1440px] mx-auto flex my-2 flex-col gap-6 md:gap-8 p-4 animate-pulse w-full">
+    <div className="bg-white p-6 sm:p-8 md:p-10 shadow-sm border border-slate-200/60 rounded-2xl flex flex-col gap-6">
+      <div className="flex flex-row gap-5 md:gap-8 items-start w-full">
+        <div className="w-[72px] h-[72px] sm:w-24 sm:h-24 md:w-[120px] md:h-[120px] bg-slate-200/80 rounded-[20px] md:rounded-[28px] shrink-0" />
+        <div className="flex flex-col gap-3 w-full pt-2">
+          <div className="h-8 md:h-10 bg-slate-200/80 rounded-lg w-3/4 max-w-md" />
+          <div className="h-4 bg-slate-100 rounded-md w-1/2 max-w-sm" />
+          <div className="flex gap-4 mt-2">
+            <div className="h-4 bg-slate-100 rounded-md w-24" />
+            <div className="h-4 bg-slate-100 rounded-md w-24" />
+            <div className="h-4 bg-slate-100 rounded-md w-24" />
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-3 mt-4">
+        <div className="h-12 bg-slate-100 rounded-xl w-32" />
+        <div className="h-12 bg-slate-100 rounded-xl w-32" />
+        <div className="h-12 bg-slate-200/80 rounded-xl w-40" />
+      </div>
+      <div className="flex gap-8 border-b border-slate-100 mt-2">
+        <div className="h-6 w-32 bg-slate-200/80 rounded-t-md" />
+        <div className="h-6 w-32 bg-slate-100 rounded-t-md" />
+        <div className="h-6 w-32 bg-slate-100 rounded-t-md" />
+      </div>
+    </div>
+    <div className="bg-white rounded-[24px] border border-slate-200/60 shadow-sm p-6 flex flex-col gap-6 min-h-[400px]">
+      <div className="flex flex-col lg:flex-row gap-4 justify-between border-b border-slate-100 pb-6">
+        <div className="h-12 bg-slate-100 rounded-xl w-full lg:max-w-md" />
+        <div className="flex gap-3 w-full lg:w-auto">
+          <div className="h-12 bg-slate-100 rounded-xl w-32" />
+          <div className="h-12 bg-slate-100 rounded-xl w-32" />
+        </div>
+      </div>
+      <div className="space-y-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-16 bg-slate-50 rounded-xl w-full" />
+        ))}
+      </div>
     </div>
   </div>
 );
@@ -54,18 +83,8 @@ const StorefrontSkeleton = () => (
 export default function SupplierStorefront() {
   const { businessProfileId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
-  const [profile, setProfile] = useState(null);
-  const [products, setProducts] = useState([]);
-  const [filterOptions, setFilterOptions] = useState({ brands: [], categories: [] });
-  
-  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  
-  // --- ADDED GLOBAL FETCH ERROR STATE & TOAST ---
-  const [fetchError, setFetchError] = useState(false);
   const [notification, setNotification] = useState(null);
 
   const showNotification = (type, msg) => {
@@ -73,35 +92,29 @@ export default function SupplierStorefront() {
   };
   
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [activeTab, setActiveTab] = useState('profile');
   const [cart, setCart] = useState({});
+  
+  const [page, setPage] = useState(0);
 
-  // Auth & Ownership Logic
   const currentLoggedInUserId = localStorage.getItem('userId') || "user-123"; 
-  const isOwner = profile?.userId === currentLoggedInUserId;
 
-  // Role Logic: Check if the profile belongs to a Shopkeeper
-  const isShopkeeper = profile?.businessType?.toLowerCase().includes('shop') || 
-                       profile?.businessType?.toLowerCase().includes('retail');
-
-  // Description Edit States
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [descValue, setDescValue] = useState("");
   const [isSavingDesc, setIsSavingDesc] = useState(false);
-  
   const [showSubCatModal, setShowSubCatModal] = useState(false);
   
-  // Rating States
   const [hoverRating, setHoverRating] = useState(0);
   const [selectedRating, setSelectedRating] = useState(0);
   const [showRatingConfirm, setShowRatingConfirm] = useState(false);
   const [hasRatedLocally, setHasRatedLocally] = useState(false);
-
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
   const [showPlaceOrderConfirmModal, setShowPlaceOrderConfirmModal] = useState(false);
-
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -111,65 +124,80 @@ export default function SupplierStorefront() {
   }, []);
 
   useEffect(() => {
-    const fetchInitialData = async () => {
-      setFetchError(false);
-      try {
-        const [profileRes, filtersRes] = await Promise.all([
-          storefrontApi.getProfile(businessProfileId),
-          storefrontApi.getFilters(businessProfileId)
-        ]);
-        setProfile(profileRes.data);
-        setDescValue(profileRes.data.businessDescription || "");
-        setFilterOptions(filtersRes.data);
-        
-        // Setup initial tab based on role
-        const shopkeeperCheck = profileRes.data.businessType?.toLowerCase().includes('shop') || 
-                                profileRes.data.businessType?.toLowerCase().includes('retail');
-        setActiveTab(shopkeeperCheck ? 'profile' : 'catalog');
-        
-      } catch (error) {
-        console.error("Failed to load storefront profile", error);
-        setFetchError(true); // --- TRIGGER FULL PAGE ERROR ON FAIL ---
-      } finally {
-        setIsLoadingProfile(false);
-      }
-    };
-    if (businessProfileId) fetchInitialData();
-  }, [businessProfileId]);
+    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 400);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+  
+  useEffect(() => {
+    setPage(0);
+  }, [debouncedSearch, filters]);
+
+  // ✅ TANSTACK QUERY: FETCH PROFILE (WITH ERROR EXTRACTION)
+  const { 
+    data: storeData, 
+    isLoading: isLoadingProfile, 
+    isError: isProfileError,
+    error: profileError, // Extracted for UI rendering
+    refetch: refetchProfile 
+  } = useQuery({
+    queryKey: ['storefrontProfile', businessProfileId],
+    queryFn: async () => {
+      const [profileRes, filtersRes] = await Promise.all([
+        storefrontApi.getProfile(businessProfileId),
+        storefrontApi.getFilters(businessProfileId)
+      ]);
+      return { profile: profileRes.data, filterOptions: filtersRes.data };
+    },
+    enabled: !!businessProfileId,
+    staleTime: 5 * 60 * 1000, 
+  });
+
+  const profile = storeData?.profile || null;
+  const filterOptions = storeData?.filterOptions || { brands: [], categories: [] };
+  const isOwner = profile?.userId === currentLoggedInUserId;
+  const isShopkeeper = profile?.businessType?.toLowerCase().includes('shop') || 
+                       profile?.businessType?.toLowerCase().includes('retail');
 
   useEffect(() => {
-    if (isShopkeeper) {
-      setIsLoadingProducts(false); // No products for shopkeeper
-      return;
+    if (profile) {
+      setActiveTab(isShopkeeper ? 'profile' : 'catalog');
+      setDescValue(profile.businessDescription || "");
     }
-    const delayDebounceFn = setTimeout(() => fetchFilteredProducts(), 400);
-    return () => clearTimeout(delayDebounceFn);
-  }, [businessProfileId, searchTerm, filters, isShopkeeper]);
+  }, [profile?.id, isShopkeeper]);
 
-  const fetchFilteredProducts = async () => {
-    setIsLoadingProducts(true);
-    try {
-      const params = { search: searchTerm, category: filters.category, brand: filters.brand, sortPrice: filters.sortPrice };
+  // ✅ TANSTACK QUERY: FETCH PRODUCTS (WITH ERROR EXTRACTION)
+  const { 
+    data: productPageData = { content: [], totalPages: 0 }, 
+    isLoading: isLoadingProducts,
+    isError: isProductsError, // Extracted for UI rendering
+    error: productsError      // Extracted for UI rendering
+  } = useQuery({
+    queryKey: ['storefrontProducts', businessProfileId, debouncedSearch, filters.category, filters.brand, filters.sortPrice, page],
+    queryFn: async () => {
+      const params = { search: debouncedSearch, category: filters.category, brand: filters.brand, sortPrice: filters.sortPrice, page, size: 10 };
       const res = await storefrontApi.getProducts(businessProfileId, params);
-      setProducts(res.data);
-    } catch (error) {
-      console.error("Failed to fetch products");
-    } finally {
-      setIsLoadingProducts(false);
-    }
-  };
+      return res.data;
+    },
+    enabled: !!businessProfileId && !isShopkeeper && activeTab === 'catalog',
+    keepPreviousData: true,
+  });
 
-  // --- SAVE DESCRIPTION LOGIC ---
+  const products = productPageData.content || [];
+  const totalPages = productPageData.totalPages || 0;
+
   const handleSaveDescription = async () => {
     if (isSavingDesc) return;
     setIsSavingDesc(true);
     try {
       await profileApi.updateBusiness({ businessDescription: descValue });
-      setProfile(prev => ({ ...prev, businessDescription: descValue }));
+      queryClient.setQueryData(['storefrontProfile', businessProfileId], (old) => ({
+        ...old,
+        profile: { ...old.profile, businessDescription: descValue }
+      }));
       setIsEditingDesc(false);
       showNotification('success', "Description updated successfully!");
     } catch (error) {
-      showNotification('error', "Failed to update description. Please check your connection and try again.");
+      showNotification('error', error.response?.data?.message || "Failed to update description. Please check your connection and try again.");
     } finally {
       setIsSavingDesc(false);
     }
@@ -185,12 +213,15 @@ export default function SupplierStorefront() {
     try {
       await storefrontApi.submitRating(businessProfileId, { rating: selectedRating });
       setHasRatedLocally(true);
-      setProfile(prev => ({ ...prev, hasRated: true }));
+      queryClient.setQueryData(['storefrontProfile', businessProfileId], (old) => ({
+        ...old,
+        profile: { ...old.profile, hasRated: true }
+      }));
       setShowRatingConfirm(false);
       showNotification('success', "Rating submitted successfully!");
     } catch (error) {
       console.error("Failed to submit rating", error);
-      showNotification('error', "Failed to submit rating.");
+      showNotification('error', error.response?.data?.message || "Failed to submit rating.");
       setShowRatingConfirm(false);
     }
   };
@@ -208,7 +239,6 @@ export default function SupplierStorefront() {
     }
   };
 
-  // --- CART & QUANTITY LOGIC ---
   const updateQuantity = (product, newQty) => {
     setCart(prev => {
       const updated = { ...prev };
@@ -289,6 +319,19 @@ export default function SupplierStorefront() {
         { id: 'delivery', label: 'Fulfillment Details' }
       ];
 
+  // ✅ PERFECTLY HANDLES SPRING BOOT CUSTOM ERRORS FOR PROFILE
+  if (isProfileError) {
+    return (
+      <div className="pt-10 min-h-screen bg-[#FAFAFA]">
+        <DataFetchError 
+          errorTitle="Failed to Load Storefront"
+          errorMessage={profileError?.response?.data?.message || profileError?.message || "An unexpected error occurred."} 
+          onRetry={refetchProfile} 
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       <style dangerouslySetInnerHTML={{__html: `
@@ -300,7 +343,6 @@ export default function SupplierStorefront() {
       
       <div className="min-h-screen bg-[#FAFAFA] font-['Inter',_sans-serif] text-[#0F1626] pb-32">
         
-        {/* --- PREMIUM TOAST GLOBAL REPLACEMENT --- */}
         <PremiumToast 
           isVisible={!!notification} 
           type={notification?.type || 'info'} 
@@ -308,21 +350,15 @@ export default function SupplierStorefront() {
           onClose={() => setNotification(null)} 
         />
 
-        {/* --- ADDED CHECK TO RENDER ERROR COMPONENT AS FULL PAGE REPLACEMENT --- */}
-        {fetchError ? (
-          <div className="pt-10">
-            <DataFetchError onRetry={() => window.location.reload()} />
-          </div>
-        ) : isLoadingProfile ? (
-          <StorefrontSkeleton />
+        {isLoadingProfile ? (
+          <PremiumStorefrontSkeleton />
         ) : !profile ? (
           <div className="flex items-center justify-center min-h-[50vh] font-bold text-black">Profile Not Found</div>
         ) : (
           <>
             <div className="max-w-[1440px] mx-auto flex my-2 flex-col gap-6 md:gap-8">
               
-              {/* --- UNIFIED HEADER SECTION --- */}
-              <section className="bg-white p-6 sm:p-8 md:p-10 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.04)] border border-slate-200/60 flex flex-col gap-6 w-full">
+              <section className="bg-white p-6 sm:p-8 md:p-10 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.04)] border border-slate-200/60 flex flex-col gap-6 w-full md:rounded-[24px]">
                 
                 <div className="flex flex-row gap-5 md:gap-8 items-start w-full">
                   <div className="flex items-center justify-center w-[72px] h-[72px] sm:w-24 sm:h-24 md:w-[120px] md:h-[120px] bg-slate-900 rounded-[20px] md:rounded-[28px] text-white flex-shrink-0 relative">
@@ -347,7 +383,6 @@ export default function SupplierStorefront() {
                     </div>
                     <p className="text-[14px] md:text-[15px] font-medium text-slate-500">Operated by <span className="font-bold text-slate-800">{profile.ownerName}</span> • {profile.businessType}</p>
                     
-                    {/* Trust Metrics */}
                     <div className="flex flex-wrap items-center gap-4 mt-2">
                       <div className="flex items-center gap-1.5">
                         <Star size={16} className="text-yellow-400 fill-yellow-400" />
@@ -367,7 +402,6 @@ export default function SupplierStorefront() {
                   </div>
                 </div>
 
-                {/* ACTION BAR (Left Aligned, below Info) */}
                 <div className="flex flex-wrap items-center gap-3 w-full justify-start mt-2">
                   {isOwner ? (
                     <div className="flex items-center gap-2 bg-pink-50 text-pink-700 px-4 py-3 rounded-xl border border-pink-100/50">
@@ -376,7 +410,7 @@ export default function SupplierStorefront() {
                     </div>
                   ) : (
                     <>
-                      <button className="px-5 py-3 md:px-6 bg-white border border-slate-200/80 text-[13px] font-bold text-slate-700 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
+                      <button onClick={() => navigate('/message', { state: { partnerToMessage: { id: profile.userId || profile.id, name: profile.ownerName, businessName: profile.businessName } }})} className="px-5 py-3 md:px-6 bg-white border border-slate-200/80 text-[13px] font-bold text-slate-700 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
                         <MessageCircle size={16} /> <span className="hidden sm:inline">Message</span>
                       </button>
                       <button className="px-5 py-3 md:px-6 bg-white border border-slate-200/80 text-[13px] font-bold text-slate-700 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2 shadow-sm">
@@ -390,7 +424,6 @@ export default function SupplierStorefront() {
                   )}
                 </div>
 
-                {/* TABS */}
                 <div className="flex items-center justify-start gap-8 border-b border-slate-100 mt-2 overflow-x-auto hide-scrollbar w-full">
                   {availableTabs.map((tab) => (
                     <button 
@@ -407,11 +440,9 @@ export default function SupplierStorefront() {
               <AnimatePresence mode="wait">
                 <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
                   
-                  {/* --- TAB 1: PRODUCT CATALOG --- */}
                   {activeTab === 'catalog' && (
                     <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-200/60 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col">
                       
-                      {/* Integrated Search & Filter Header */}
                       <div className="p-4 md:p-6 border-b border-slate-100 bg-slate-50/30 flex flex-col lg:flex-row items-center justify-between gap-4">
                         <div className="relative flex items-center w-full lg:max-w-md bg-white border border-slate-200 rounded-xl focus-within:border-pink-500 focus-within:ring-2 focus-within:ring-pink-500/10 transition-all h-12 shadow-sm">
                           <Search className="absolute left-4 text-slate-400" size={18} />
@@ -438,30 +469,36 @@ export default function SupplierStorefront() {
                         </div>
                       </div>
 
+                      {/* ✅ PERFECTLY HANDLES SPRING BOOT CUSTOM ERRORS FOR PRODUCTS */}
                       {isLoadingProducts ? (
                         <div className="flex justify-center py-32"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>
+                      ) : isProductsError ? (
+                        <div className="flex justify-center py-32 text-rose-500 font-bold text-center">
+                          {productsError?.response?.data?.message || productsError?.message || "Failed to load products."}
+                        </div>
                       ) : products.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 px-6 text-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 min-h-[350px] m-4 md:m-8">
-                          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white mb-5 shadow-sm border border-slate-100 ring-4 ring-slate-50">
-                            <PackageSearch className="h-7 w-7 text-slate-400" />
-                          </div>
-                          <h3 className="text-[18px] sm:text-[20px] font-extrabold tracking-tight text-slate-900 mb-2">
-                            No products found
-                          </h3>
-                          <p className="text-[14px] text-slate-500 max-w-sm mb-6 leading-relaxed">
-                            We couldn't find any products matching your current filters or search terms. Try adjusting them to see more results.
-                          </p>
-                          {(searchTerm || filters.category !== 'all' || filters.brand !== 'all') && (
-                            <button
-                              onClick={() => { setFilters(DEFAULT_FILTERS); setSearchTerm(''); }}
-                              className="rounded-xl bg-pink-50 text-pink-600 px-6 py-2.5 text-[14px] font-semibold transition-all hover:bg-pink-100 shadow-sm"
-                            >
-                              Clear All Filters
-                            </button>
-                          )}
+                        <div className="flex flex-col items-center justify-center py-20 px-6 text-center rounded-2xl bg-gradient-to-b from-white to-slate-50 border border-slate-200 shadow-sm relative overflow-hidden min-h-[400px] m-4 md:m-8">
+                           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 opacity-20" />
+                           <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-6 relative">
+                              <div className="absolute inset-0 bg-slate-100/50 rounded-2xl animate-pulse" />
+                              <PackageSearch className="w-10 h-10 text-slate-300 relative z-10" />
+                           </div>
+                           <h3 className="text-[20px] sm:text-[22px] font-sora font-extrabold tracking-tight text-slate-900 mb-2">No products found</h3>
+                           <p className="text-[14px] text-slate-500 max-w-sm mb-6 leading-relaxed">
+                             We couldn't find any products matching your current filters or search terms. Try adjusting them to see more results.
+                           </p>
+                           {(searchTerm || filters.category !== 'all' || filters.brand !== 'all') && (
+                             <button
+                               onClick={() => { setFilters(DEFAULT_FILTERS); setSearchTerm(''); }}
+                               className="rounded-xl bg-pink-50 text-pink-600 px-6 py-2.5 text-[14px] font-semibold transition-all hover:bg-pink-100 border border-pink-100 shadow-sm active:scale-95"
+                             >
+                               Clear All Filters
+                             </button>
+                           )}
                         </div>
                       ) : (
                         <div className="w-full">
+                          
                           {/* DESKTOP TABLE VIEW */}
                           <div className="hidden md:block w-full overflow-x-auto">
                             <div className="min-w-[1000px]">
@@ -589,22 +626,42 @@ export default function SupplierStorefront() {
                               );
                             })}
                           </div>
+                          
+                          {/* --- NEW PAGINATION CONTROLS --- */}
+                          {totalPages > 1 && (
+                            <div className="flex items-center justify-between border-t border-slate-100 pt-6 mt-6 pb-6 px-4 md:px-8">
+                              <button
+                                onClick={() => setPage(p => Math.max(0, p - 1))}
+                                disabled={page === 0}
+                                className="px-5 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                              >
+                                Previous
+                              </button>
+                              <span className="text-[13px] font-bold text-slate-500">
+                                Page {page + 1} of {totalPages}
+                              </span>
+                              <button
+                                onClick={() => setPage(p => p + 1)}
+                                disabled={page >= totalPages - 1}
+                                className="px-5 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                              >
+                                Next
+                              </button>
+                            </div>
+                          )}
+
                         </div>
                       )}
                     </div>
                   )}
 
-                  {/* --- TAB 2: BUSINESS IDENTITY & SMART GRID --- */}
                   {activeTab === 'profile' && (
                     <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-200/60 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col">
 
-                      {/* Layout Grid inside single container */}
                       <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
                         
-                        {/* Left Column (About & Categories) */}
                         <div className="lg:col-span-2 flex flex-col divide-y divide-slate-100">
                           
-                          {/* About Section */}
                           <div className="p-6 md:p-10">
                             <div className="flex items-center justify-between mb-6">
                               <h3 className="font-['Manrope',_sans-serif] text-[18px] md:text-xl font-extrabold text-slate-900 flex items-center gap-2">
@@ -659,13 +716,11 @@ export default function SupplierStorefront() {
                             )}
                           </div>
 
-                          {/* Smart Sub-Category Grid */}
                           {subCategories.length > 0 && (
                             <div className="p-6 md:p-10">
                               <h3 className="font-['Manrope',_sans-serif] text-[18px] md:text-xl font-extrabold text-slate-900 mb-6">Sourcing Categories</h3>
                               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 md:gap-4">
                                 {displayedCats.map((cat, i) => {
-                                  // Safely resolve image
                                   const imgUrl = getSubcategoryImageUrl(cat.image) || cat.image;
                                   
                                   return (
@@ -695,10 +750,8 @@ export default function SupplierStorefront() {
                           )}
                         </div>
 
-                        {/* Right Column (Contact & Rating) */}
                         <div className="flex flex-col divide-y divide-slate-100 bg-slate-50/30">
                           
-                          {/* Community Rating Module */}
                           {!isOwner && (
                             <div className="p-6 md:p-8">
                               <h3 className="font-['Manrope',_sans-serif] text-[16px] font-extrabold text-slate-900 mb-2">Rate this Partner</h3>
@@ -729,7 +782,6 @@ export default function SupplierStorefront() {
                             </div>
                           )}
 
-                          {/* Contact & Operations Info */}
                           <div className="p-6 md:p-8 flex-1">
                             <h3 className="font-['Manrope',_sans-serif] text-[16px] font-extrabold text-slate-900 mb-6">Contact & Info</h3>
                             
@@ -788,12 +840,10 @@ export default function SupplierStorefront() {
                     </div>
                   )}
 
-                  {/* --- TAB 3: DELIVERY & TERMS (Hidden for Shopkeepers) --- */}
                   {activeTab === 'delivery' && !isShopkeeper && (
                     <div className="bg-white rounded-[24px] md:rounded-[32px] border border-slate-200/60 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.04)] overflow-hidden">
                       <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100">
                         
-                        {/* Logistics Config */}
                         <div className="p-6 md:p-10 flex flex-col h-full">
                           <div className="flex items-center gap-4 mb-8">
                             <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-700 shrink-0">
@@ -834,7 +884,6 @@ export default function SupplierStorefront() {
                           </div>
                         </div>
 
-                        {/* Dispatch Address */}
                         <div className="p-6 md:p-10 flex flex-col h-full bg-slate-50/30">
                           <div className="flex items-center gap-4 mb-8">
                             <div className="w-12 h-12 bg-pink-50 rounded-xl flex items-center justify-center text-pink-600 shrink-0">
@@ -891,7 +940,6 @@ export default function SupplierStorefront() {
               </AnimatePresence>
             </div>
 
-            {/* --- BOTTOM CART BAR (Hidden for Shopkeepers) --- */}
             {!isShopkeeper && (
               <AnimatePresence>
                 {cartTotals.items > 0 && (
@@ -921,9 +969,6 @@ export default function SupplierStorefront() {
               </AnimatePresence>
             )}
 
-            {/* --- MODALS --- */}
-            
-            {/* Subcategory Expand Modal */}
             <AnimatePresence>
               {showSubCatModal && (
                 <motion.div 
@@ -961,7 +1006,6 @@ export default function SupplierStorefront() {
               )}
             </AnimatePresence>
 
-            {/* Checkout Modal */}
             <AnimatePresence>
               {showCheckoutModal && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -1020,7 +1064,6 @@ export default function SupplierStorefront() {
               )}
             </AnimatePresence>
 
-            {/* Cancel Confirm Modal */}
             {showCancelConfirmModal && (
               <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
                 <div className="bg-white rounded-[24px] md:rounded-[32px] max-w-xs md:max-w-sm w-full p-6 md:p-8 shadow-2xl text-center space-y-4">
@@ -1035,7 +1078,6 @@ export default function SupplierStorefront() {
               </div>
             )}
 
-            {/* Place Order Confirm Modal */}
             {showPlaceOrderConfirmModal && (
               <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
                 <div className="bg-white rounded-[24px] md:rounded-[32px] max-w-xs md:max-w-md w-full p-6 md:p-8 shadow-2xl text-center space-y-4">
@@ -1052,7 +1094,6 @@ export default function SupplierStorefront() {
               </div>
             )}
 
-            {/* Rating Confirm Modal */}
             {showRatingConfirm && (
               <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
                 <div className="bg-white rounded-[24px] max-w-xs w-full p-6 shadow-2xl text-center space-y-4">

@@ -65,10 +65,7 @@ export function BusinessSection({ editedData, handleFieldChange, isEditing, isSa
 
           <div className="grid gap-4 md:grid-cols-2 flex-1">
             <EditableDetailItem label="Business Phone" value={editedData.phone} isEditing={isEditing} onChange={handleFieldChange} fieldKey="phone" />
-                        <EditableDetailItem label="Alternate Number" value={editedData.altPhone} isEditing={isEditing} onChange={handleFieldChange} fieldKey="altPhone" />
-            <div className="md:col-span-2">
             <EditableDetailItem label="Alternate Number" value={editedData.altPhone} isEditing={isEditing} onChange={handleFieldChange} fieldKey="altPhone" />
-            </div>
             <div className="md:col-span-2">
               <EditableDetailItem label="Support Email" value={editedData.businessEmail} isEditing={isEditing} onChange={handleFieldChange} fieldKey="businessEmail" />
             </div>

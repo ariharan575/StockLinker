@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authApi } from '../services/api';
+import { authApi, profileApi } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -11,6 +11,12 @@ export const AuthProvider = ({ children }) => {
     isInitialized: false,
   });
 
+  // Global Profile State
+  const [profileData, setProfileData] = useState({
+    ownerName: 'Loading...',
+    role: 'Loading...',
+    businessProfileId: null
+  });
 
   // Global listener to catch Axios 401s if a token expires mid-session
   useEffect(() => {
@@ -26,6 +32,42 @@ export const AuthProvider = ({ children }) => {
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, []);
 
+  // fetchProfile wrapped in useCallback so we can export it safely
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await profileApi.getProfile();
+      // Gracefully handle nested data structures from Spring Boot ApiResponse
+      const data = res.data?.data || res.data; 
+      
+      setProfileData({
+        ownerName: data.ownerName || 'User',
+        role: data.businessType || 'Partner',
+        businessProfileId: data.businessProfileId || ''
+      });
+    } catch (err) {
+      console.error("Failed to load global profile", err);
+      // ✅ FIX: Prevent UI from getting stuck on "Loading..." if profile fetch fails
+      setProfileData({
+        ownerName: 'User',
+        role: 'Partner',
+        businessProfileId: null
+      });
+    }
+  }, []);
+
+  // Triggers when auth status changes
+  useEffect(() => {
+    if (authState.isAuthenticated) {
+      fetchProfile();
+    } else {
+      // Reset profile data when logged out or unauthenticated
+      setProfileData({
+        ownerName: 'Loading...',
+        role: 'Loading...',
+        businessProfileId: null
+      });
+    }
+  }, [authState.isAuthenticated, fetchProfile]); 
 
   // Use useCallback to prevent unnecessary re-renders
   const verifySession = useCallback(async () => {
@@ -69,7 +111,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return { 
         success: false, 
-        error: error.response?.data?.message || 'Authentication failed.' 
+        error: error.response?.data?.message || error.message || 'Authentication failed.' 
       };
     }
   }, []);
@@ -83,9 +125,12 @@ export const AuthProvider = ({ children }) => {
         accountStatus: response.data.accountStatus,
       }));
       return { success: true };
-    } catch (error) {
-      return { success: false, error: 'Failed to assign role.' };
-    }
+     } catch (error) {
+       return { 
+           success: false, 
+           error: error.response?.data?.message || error.message || 'Failed to assign role.' 
+       };
+     }
   }, []);
 
   const logout = useCallback(async () => {
@@ -125,9 +170,11 @@ export const AuthProvider = ({ children }) => {
     });
   }, []);
 
-
   const contextValue = {
     ...authState,
+    profileData,     // Export the fetched profile data
+    setProfileData,  // EXPORTED: Allows instant injection during onboarding
+    fetchProfile,    // EXPORTED: Allows manual refreshing if ever needed
     verifySession,
     login,
     logout,

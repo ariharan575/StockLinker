@@ -1,45 +1,35 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchConversations } from "../api/chatApi";
 import { mapConversationList } from "../utils/chatMappers";
 
 /**
- * Owns the conversation list: loading/error/empty states, refresh, and
- * local optimistic patching so the sidebar preview updates instantly on send
- * without waiting for a full refetch.
+ * Owns the conversation list: instant cache, background refresh, and
+ * local optimistic patching directly into the TanStack cache so the sidebar 
+ * preview updates instantly on send without waiting for a full refetch.
  */
 export function useConversations({ keyword = "", includeArchived = false } = {}) {
-  const [conversations, setConversations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const requestIdRef = useRef(0);
+  const queryClient = useQueryClient();
+  const queryKey = useMemo(() => ['conversations', keyword, includeArchived], [keyword, includeArchived]);
 
-  const load = useCallback(() => {
-    const requestId = ++requestIdRef.current;
-    setLoading(true);
-    setError(null);
-
-    return fetchConversations({ keyword, includeArchived })
-      .then((data) => {
-        if (requestId !== requestIdRef.current) return; // stale response, ignore
-        setConversations(mapConversationList(data));
-      })
-      .catch((err) => {
-        if (requestId !== requestIdRef.current) return;
-        setError(err);
-      })
-      .finally(() => {
-        if (requestId !== requestIdRef.current) return;
-        setLoading(false);
-      });
-  }, [keyword, includeArchived]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  // ✅ TANSTACK QUERY INTEGRATION
+  const { 
+    data: conversations = [], 
+    isLoading: loading, 
+    error, 
+    refetch 
+  } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      const data = await fetchConversations({ keyword, includeArchived });
+      return mapConversationList(data);
+    },
+    staleTime: 5 * 60 * 1000, // Keep in memory for 5 minutes
+  });
 
   // Optimistically bump a conversation's preview + move it to top on new activity.
   const patchConversationPreview = useCallback((conversationId, { lastMsg, time, unreadDelta = 0 }) => {
-    setConversations((prev) => {
+    queryClient.setQueryData(queryKey, (prev = []) => {
       const idx = prev.findIndex((c) => c.id === conversationId);
       if (idx === -1) return prev;
       const updated = {
@@ -53,29 +43,29 @@ export function useConversations({ keyword = "", includeArchived = false } = {})
       next.unshift(updated);
       return next;
     });
-  }, []);
+  }, [queryClient, queryKey]);
 
   const clearUnread = useCallback((conversationId) => {
-    setConversations((prev) =>
+    queryClient.setQueryData(queryKey, (prev = []) =>
       prev.map((c) => (c.id === conversationId ? { ...c, unread: 0 } : c))
     );
-  }, []);
+  }, [queryClient, queryKey]);
 
   const upsertConversation = useCallback((conversation) => {
-    setConversations((prev) => {
+    queryClient.setQueryData(queryKey, (prev = []) => {
       const idx = prev.findIndex((c) => c.id === conversation.id);
       if (idx === -1) return [conversation, ...prev];
       const next = [...prev];
       next[idx] = conversation;
       return next;
     });
-  }, []);
+  }, [queryClient, queryKey]);
 
   return {
     conversations,
     loading,
     error,
-    refresh: load,
+    refresh: refetch,
     patchConversationPreview,
     clearUnread,
     upsertConversation,

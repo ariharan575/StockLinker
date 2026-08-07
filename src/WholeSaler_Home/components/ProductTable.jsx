@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from "react";
 import { productApi } from '../services/api';
 import { Search, ChevronDown, Trash2, Plus, Info } from 'lucide-react';
 import SectionHeader from "./SectionHeader";
+import { PremiumToast } from "../../components/PremiumToast";
 
 const UNITS = ["Kg", "Litre", "Gram", "Ml", "Bag", "Tin", "Piece", "Box", "Carton", "Dozen"];
 
@@ -19,16 +20,16 @@ const createEmptyRow = () => ({
 });
 
 export default function WholesaleProductWorkspace() {
-  // Start with empty array, we will strictly enforce 1 or 3 rows on mount
   const [products, setProducts] = useState([]);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [activeSearchRow, setActiveSearchRow] = useState(null);
   const workspaceRef = useRef(null);
+  
+  const [notification, setNotification] = useState(null);
+  const showNotification = (type, msg) => setNotification({ type, msg });
 
-  // 🚀 STRICT ROW ENFORCEMENT ON MOUNT
-  // Laptop/Desktop (>= 1024px) gets 3 rows. Mobile/Tablet gets 1 row.
   useEffect(() => {
     const handleInitialRows = () => {
       if (window.innerWidth >= 1024) {
@@ -38,11 +39,8 @@ export default function WholesaleProductWorkspace() {
       }
     };
     
-    // Set initially
     handleInitialRows();
 
-    // Optional: if you test by resizing the browser, this ensures it adjusts
-    // (Only triggers if the array is empty or hasn't been modified yet)
     const handleResize = () => {
       if (products.every(p => !p.productName && !p.brand)) {
         handleInitialRows();
@@ -50,7 +48,6 @@ export default function WholesaleProductWorkspace() {
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleKeyDown = useCallback((e) => {
@@ -124,7 +121,7 @@ export default function WholesaleProductWorkspace() {
     const rowsToValidate = products.filter(p => p.productName.trim() || p.brand.trim() || p.price || p.minQty || p.stock || p.bulkQty || p.bulkPrice);
 
     if (rowsToValidate.length === 0) {
-      alert("Fill in at least one product.");
+      showNotification("error", "Fill in at least one product.");
       return;
     }
 
@@ -137,7 +134,7 @@ export default function WholesaleProductWorkspace() {
     });
 
     setErrors(newErrors);
-    if (!isValid) return alert(missingMasterProduct ? "Select Product from dropdown." : "Fix highlighted fields.");
+    if (!isValid) return showNotification("error", missingMasterProduct ? "Select Product from dropdown." : "Fix highlighted fields.");
 
     setIsSubmitting(true);
     try {
@@ -147,26 +144,32 @@ export default function WholesaleProductWorkspace() {
       }));
       await productApi.saveBulkProducts(payload);
       
-      // Reset back to strict rules after save: 3 rows for desktop, 1 for mobile
       if (window.innerWidth >= 1024) {
         setProducts([createEmptyRow(), createEmptyRow(), createEmptyRow()]);
       } else {
         setProducts([createEmptyRow()]);
       }
       
-      alert("Catalog updated successfully.");
+      showNotification("success", "Catalog updated successfully.");
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      showNotification("error", error.response?.data?.message || "Failed to update catalog.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Prevent render until initial rows are set
   if (products.length === 0) return null;
 
   return (
     <div className="w-full font-inter" onKeyDown={handleKeyDown} ref={workspaceRef}>
+      
+      <PremiumToast 
+        isVisible={!!notification} 
+        type={notification?.type || 'info'} 
+        message={notification?.msg} 
+        onClose={() => setNotification(null)} 
+      />
+
       <div className="px-1 sm:px-2 md:px-0">
         <SectionHeader title="Inventory Updates" subtitle="Add or modify bulk products quickly" />
       </div>
@@ -174,9 +177,6 @@ export default function WholesaleProductWorkspace() {
       <div className="mt-2 lg:mt-6 w-full mx-1 sm:mx-2 md:mx-0 pr-2 sm:pr-4 md:pr-0 mb-3">
         <div className="bg-white border border-slate-300/50 rounded-[16px] lg:rounded-[5px] shadow-sm overflow-hidden flex flex-col">
           
-          {/* ========================================================= */}
-          {/* DESKTOP TABLE HEADER (Hidden on Mobile/Tablet)            */}
-          {/* ========================================================= */}
           <div className="hidden lg:grid grid-cols-[2.5fr_1.2fr_1.2fr_1fr_1.8fr_1fr_60px] bg-slate-100 border-b border-slate-200 text-[11px] font-sora font-bold uppercase tracking-widest text-slate-500">
             <div className="py-3.5 px-5">Product Search</div>
             <div className="py-3.5 px-4 border-l border-slate-200">Brand</div>
@@ -187,9 +187,6 @@ export default function WholesaleProductWorkspace() {
             <div className="py-3.5 px-0 border-l border-slate-200 text-center">Act</div>
           </div>
 
-          {/* ========================================================= */}
-          {/* ROWS CONTAINER                                            */}
-          {/* ========================================================= */}
           <div className="divide-y divide-slate-100 bg-white">
             {products.map((row, index) => (
               <div 
@@ -197,7 +194,6 @@ export default function WholesaleProductWorkspace() {
                 className="relative grid grid-cols-2 gap-3 lg:grid-cols-[2.5fr_1.2fr_1.2fr_1fr_1.8fr_1fr_60px] lg:gap-0 p-4 pt-10 lg:p-0 transition-colors hover:bg-slate-50/40 group"
               >
                 
-                {/* Mobile Row Indicator & Trash */}
                 <div className="absolute top-3 left-4 lg:hidden text-[11px] font-sora font-bold text-slate-400 tracking-widest uppercase">
                   Product Details
                 </div>
@@ -211,7 +207,6 @@ export default function WholesaleProductWorkspace() {
                   <Trash2 className="w-4 h-4" strokeWidth={2.5} />
                 </button>
 
-                {/* 1. Product Search */}
                 <div className="col-span-2 lg:col-span-1 lg:border-r lg:border-slate-100 relative flex flex-col justify-center">
                   <label className="text-[10px] font-sora font-bold text-slate-500 uppercase mb-1.5 lg:hidden">Product Name</label>
                   <div className={`relative h-[42px] lg:h-[52px] bg-slate-50 lg:bg-transparent rounded-[10px] lg:rounded-none border lg:border-none focus-within:ring-2 focus-within:ring-inset focus-within:bg-white transition-all ${errors[`${row.id}-productName`] ? "border-rose-300 ring-1 ring-rose-100 bg-rose-50/30" : "border-slate-200 focus-within:ring-pink-200 focus-within:border-pink-300"}`}>
@@ -224,7 +219,6 @@ export default function WholesaleProductWorkspace() {
                       className="w-full h-full pl-9 lg:pl-11 pr-3 text-[13px] lg:text-[14px] font-medium text-slate-900 bg-transparent outline-none placeholder:text-slate-400"
                     />
                   </div>
-                  {/* Dropdown */}
                   {activeSearchRow === row.id && suggestions.length > 0 && (
                     <div className="absolute top-[calc(100%+4px)] lg:top-[48px] left-0 right-0 bg-white border border-slate-200 rounded-[12px] shadow-[0_12px_30px_rgba(0,0,0,0.12)] z-50 max-h-48 overflow-y-auto overflow-hidden">
                       {suggestions.map((sug) => (
@@ -236,7 +230,6 @@ export default function WholesaleProductWorkspace() {
                   )}
                 </div>
 
-                {/* 2. Brand */}
                 <div className="col-span-1 lg:border-r lg:border-slate-100 flex flex-col justify-center">
                   <label className="text-[10px] font-sora font-bold text-slate-500 uppercase mb-1.5 lg:hidden">Brand</label>
                   <div className={`relative h-[42px] lg:h-[52px] bg-slate-50 lg:bg-transparent rounded-[10px] lg:rounded-none border lg:border-none focus-within:ring-2 focus-within:ring-inset focus-within:bg-white transition-all ${errors[`${row.id}-brand`] ? "border-rose-300 ring-1 ring-rose-100 bg-rose-50/30" : "border-slate-200 focus-within:ring-pink-200 focus-within:border-pink-300"}`}>
@@ -250,7 +243,6 @@ export default function WholesaleProductWorkspace() {
                   </div>
                 </div>
 
-                {/* 3. Min & Unit */}
                 <div className="col-span-1 lg:border-r lg:border-slate-100 flex flex-col justify-center">
                   <label className="text-[10px] font-sora font-bold text-slate-500 uppercase mb-1.5 lg:hidden">Min Qty</label>
                   <div className={`flex items-center h-[42px] lg:h-[52px] bg-slate-50 lg:bg-transparent rounded-[10px] lg:rounded-none border lg:border-none focus-within:ring-2 focus-within:ring-inset focus-within:bg-white transition-all overflow-hidden ${errors[`${row.id}-minQty`] ? "border-rose-300 ring-1 ring-rose-100 bg-rose-50/30" : "border-slate-200 focus-within:ring-pink-200 focus-within:border-pink-300"}`}>
@@ -274,7 +266,6 @@ export default function WholesaleProductWorkspace() {
                   </div>
                 </div>
 
-                {/* 4. Base Rate */}
                 <div className="col-span-1 lg:border-r lg:border-slate-100 flex flex-col justify-center">
                   <label className="text-[10px] font-sora font-bold text-slate-500 uppercase mb-1.5 lg:hidden">Base Price</label>
                   <div className={`relative h-[42px] lg:h-[52px] bg-slate-50 lg:bg-transparent rounded-[10px] lg:rounded-none border lg:border-none focus-within:ring-2 focus-within:ring-inset focus-within:bg-white transition-all ${errors[`${row.id}-price`] ? "border-rose-300 ring-1 ring-rose-100 bg-rose-50/30" : "border-slate-200 focus-within:ring-pink-200 focus-within:border-pink-300"}`}>
@@ -289,7 +280,6 @@ export default function WholesaleProductWorkspace() {
                   </div>
                 </div>
 
-                {/* 5. Bulk Deal */}
                 <div className="col-span-2 lg:col-span-1 lg:border-r lg:border-slate-100 flex flex-col justify-center">
                   <label className="text-[10px] font-sora font-bold text-slate-500 uppercase mb-1.5 lg:hidden">Bulk Trigger & Deal</label>
                   <div className={`flex items-center h-[42px] lg:h-[52px] bg-slate-50 lg:bg-transparent rounded-[10px] lg:rounded-none border lg:border-none focus-within:ring-2 focus-within:ring-inset focus-within:bg-white transition-all overflow-hidden ${errors[`${row.id}-bulkQty`] || errors[`${row.id}-bulkPrice`] ? "border-rose-300 ring-1 ring-rose-100 bg-rose-50/30" : "border-slate-200 focus-within:ring-pink-200 focus-within:border-pink-300"}`}>
@@ -316,7 +306,6 @@ export default function WholesaleProductWorkspace() {
                   </div>
                 </div>
 
-                {/* 6. Stock */}
                 <div className="col-span-1 lg:border-r lg:border-slate-100 flex flex-col justify-center">
                   <label className="text-[10px] font-sora font-bold text-slate-500 uppercase mb-1.5 lg:hidden">Available Stock</label>
                   <div className={`relative h-[42px] lg:h-[52px] bg-slate-50 lg:bg-transparent rounded-[10px] lg:rounded-none border lg:border-none focus-within:ring-2 focus-within:ring-inset focus-within:bg-white transition-all ${errors[`${row.id}-stock`] ? "border-rose-300 ring-1 ring-rose-100 bg-rose-50/30" : "border-slate-200 focus-within:ring-pink-200 focus-within:border-pink-300"}`}>
@@ -330,7 +319,6 @@ export default function WholesaleProductWorkspace() {
                   </div>
                 </div>
 
-                {/* 7. Action (Desktop Only) */}
                 <div className="hidden lg:flex items-center justify-center relative">
                   <button
                     tabIndex="-1"
@@ -347,20 +335,13 @@ export default function WholesaleProductWorkspace() {
             ))}
           </div>
 
-          {/* ========================================================= */}
-          {/* FOOTER ACTIONS (Compact buttons, single row)              */}
-          {/* ========================================================= */}
           <div className="bg-slate-50/80 border-t border-slate-200 p-3 sm:p-4 flex flex-row items-center justify-between">
-            
-            {/* HIDDEN ON MOBILE/TABLET (< lg): Enforces "one container" rule */}
             <button
               onClick={handleAdd}
               className="hidden lg:flex items-center justify-center gap-1.5 px-4 py-2.5 text-[12px] sm:text-[13px] font-sora font-bold text-slate-700 bg-white border border-slate-200 rounded-[8px] hover:border-pink-300 hover:text-pink-600 hover:bg-pink-50 transition-all active:scale-[0.98] shadow-sm"
             >
               <Plus className="w-4 h-4" strokeWidth={2.5} /> Add New Row
             </button>
-            
-            {/* Empty div spacer on mobile to push the Save button to the right */}
             <div className="lg:hidden"></div>
 
             <button 
@@ -374,9 +355,6 @@ export default function WholesaleProductWorkspace() {
 
         </div>
 
-        {/* ========================================================= */}
-        {/* PRO TIP (Inside the main wrapper, BELOW the container for Mobile/Tablet) */}
-        {/* ========================================================= */}
         <div className="lg:hidden mt-3 mx-1 bg-slate-900 rounded-[12px] p-3 flex items-start gap-2.5 shadow-sm border border-slate-800">
           <Info className="w-4 h-4 text-pink-400 shrink-0 mt-0.5" />
           <p className="text-[11px] sm:text-[12px] text-slate-300 leading-relaxed font-medium">

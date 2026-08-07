@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WifiOff, RefreshCw } from 'lucide-react';
 import MainLayout from '../../Layout/MainLayout';
@@ -107,12 +107,13 @@ const GlobalNetworkState = () => {
 // ============================================================================
 
 export default function StockLinkerHomepage() {
-  // --- ADDED GLOBAL FETCH ERROR STATE ---
-  const [hasGlobalError, setHasGlobalError] = useState(false);
+  // --- ✅ FIXED: STORE THE EXACT ERROR OBJECT INSTEAD OF A BOOLEAN ---
+  const [globalError, setGlobalError] = useState(null);
 
-  const handleFetchFailure = () => {
-    setHasGlobalError(true);
-  };
+  const handleFetchFailure = useCallback((err) => {
+    // Save the error object if provided, otherwise fallback to true to trigger UI
+    setGlobalError(err || true);
+  }, []);
 
   return (
     <>
@@ -126,16 +127,25 @@ export default function StockLinkerHomepage() {
           *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
       `}</style>
-   
+    
       <MainLayout 
         activeNav="home"
         maxWidth={1400}
         contentPadding="px-3 py-3.5"
       >
         <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-          {/* --- IF FETCH FAILS, SHOW FULL PAGE ERROR --- */}
-          {hasGlobalError ? (
-            <DataFetchError onRetry={() => window.location.reload()} />
+          
+          {/* --- ✅ PERFECTLY EXTRACTS SPRING BOOT MESSAGES IF AVAILABLE --- */}
+          {globalError ? (
+            <DataFetchError 
+              errorTitle="Dashboard Sync Failed"
+              errorMessage={
+                globalError?.response?.data?.message || 
+                globalError?.message || 
+                "An unexpected error occurred while loading dashboard modules."
+              }
+              onRetry={() => window.location.reload()} 
+            />
           ) : (
             <>
               <Hero />

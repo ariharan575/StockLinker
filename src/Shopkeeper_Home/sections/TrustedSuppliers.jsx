@@ -1,36 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare, ShieldCheck, Users, ExternalLink } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query'; // --- ADDED TANSTACK QUERY ---
 import { SectionHead } from '../../Layout/common';
 import { networkApi } from '../Services/api';
 import { fadeUp } from '../../Layout/common/constants';
 
+// ============================================================
+// ✅ PREMIUM SKELETON LOADER
+// ============================================================
+const TrustedSkeleton = () => (
+  <div className="w-[260px] xs:w-[280px] sm:w-[300px] lg:w-[340px] shrink-0 bg-white rounded-[16px] sm:rounded-[20px] p-4 sm:p-5 border border-slate-100 shadow-sm animate-pulse space-y-4">
+    <div className="flex items-center gap-3">
+      <div className="w-12 h-12 bg-slate-200/80 rounded-[12px]" />
+      <div className="space-y-2 flex-1"><div className="h-4 bg-slate-200/80 rounded w-3/4" /><div className="h-3 bg-slate-100 rounded w-1/2" /></div>
+    </div>
+    <div className="h-6 bg-slate-100 rounded-full w-1/3" />
+    <div className="flex gap-2"><div className="h-9 bg-slate-200/80 rounded-[10px] flex-1" /><div className="h-9 bg-slate-200/80 rounded-[10px] flex-1" /></div>
+  </div>
+);
+
 export default function TrustedSuppliers({ onError }) {
   const navigate = useNavigate();
-  const [connectedSuppliers, setConnectedSuppliers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  // ✅ TANSTACK QUERY INTEGRATION
+  const { 
+    data: connectedSuppliers = [], 
+    isLoading, 
+    isError 
+  } = useQuery({
+    queryKey: ['homeConnectedSuppliers'],
+    queryFn: async () => {
+      return await networkApi.getConnectedSuppliers();
+    },
+    staleTime: 5 * 60 * 1000, 
+  });
 
   useEffect(() => {
-    let isMounted = true;
-    const fetchConnected = async () => {
-      try {
-        setIsLoading(true);
-        const data = await networkApi.getConnectedSuppliers();
-        if (isMounted) setConnectedSuppliers(data);
-      } catch (err) {
-        if (isMounted && onError) onError(); // Trigger Full Page Error
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-    fetchConnected();
-    return () => { isMounted = false; };
-  }, [onError]);
+    if (isError && onError) {
+      onError();
+    }
+  }, [isError, onError]);
 
-    const handleMessageClick = () => {
+  const handleMessageClick = (supplier) => {
     navigate('/message', {
-      state: { partnerToMessage: { id: connectedSuppliers.userId || connectedSuppliers.id, name: connectedSuppliers.name, businessName: connectedSuppliers.category, profileImage: null } }
+      state: { partnerToMessage: { id: supplier.userId || supplier.id, name: supplier.name, businessName: supplier.category, profileImage: null } }
     });
   };
 
@@ -41,7 +56,6 @@ export default function TrustedSuppliers({ onError }) {
         <SectionHead 
           title="Trusted & Connected Suppliers" 
           sub="Your personal verified partner network" 
-          action="Browse Network" 
         />
       </div>
 
@@ -55,40 +69,30 @@ export default function TrustedSuppliers({ onError }) {
             exit={{ opacity: 0 }} 
             className="flex flex-row overflow-x-auto no-scrollbar gap-3 sm:gap-4 px-1 sm:px-2 md:px-3 pb-5 pt-1"
           >
-            {[...Array(4)].map((_, i) => (
-              <div 
-                key={i} 
-                className="w-[260px] xs:w-[280px] sm:w-[300px] lg:w-[340px] shrink-0 bg-white rounded-[16px] sm:rounded-[20px] p-4 sm:p-5 border border-slate-100 shadow-sm animate-pulse space-y-4"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-slate-200 rounded-[12px]" />
-                  <div className="space-y-2 flex-1"><div className="h-4 bg-slate-200 rounded w-3/4" /><div className="h-3 bg-slate-200 rounded w-1/2" /></div>
-                </div>
-                <div className="h-6 bg-slate-100 rounded-full w-1/3" />
-                <div className="flex gap-2"><div className="h-9 bg-slate-200 rounded-[10px] flex-1" /><div className="h-9 bg-slate-200 rounded-[10px] flex-1" /></div>
-              </div>
-            ))}
+            {[...Array(4)].map((_, i) => <TrustedSkeleton key={i} />)}
           </motion.div>
         )}
 
-        {/* EMPTY STATE */}
-        {!isLoading && connectedSuppliers.length === 0 && (
+        {/* ✅ WORLD-CLASS SAAS EMPTY STATE */}
+        {!isLoading && connectedSuppliers.length === 0 && !isError && (
           <motion.div
             key="empty"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mx-1 sm:mx-2 md:mx-3 my-2 bg-white rounded-[16px] sm:rounded-[24px] p-8 sm:p-12 text-center border-2 border-dashed border-slate-200 shadow-sm flex flex-col items-center"
+            className="mx-1 sm:mx-2 md:mx-3 my-2 bg-gradient-to-b from-white to-slate-50 rounded-[16px] sm:rounded-[24px] p-8 sm:p-12 text-center border border-slate-200 shadow-sm flex flex-col items-center relative overflow-hidden"
           >
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[16px] bg-slate-50 flex items-center justify-center mb-3 sm:mb-4 border border-slate-100">
-              <Users className="w-6 h-6 sm:w-7 sm:h-7 text-slate-400" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 opacity-20" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[20px] bg-white flex items-center justify-center mb-4 sm:mb-5 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative">
+              <div className="absolute inset-0 bg-slate-100/50 rounded-[20px] animate-pulse" />
+              <Users className="w-8 h-8 sm:w-10 sm:h-10 text-slate-300 relative z-10" />
             </div>
-            <h3 className="text-[15px] sm:text-[17px] font-sora font-bold text-slate-900 mb-1.5">No Connected Suppliers Yet</h3>
-            <p className="text-[12px] sm:text-[13px] font-inter text-slate-500 mb-5 sm:mb-6 max-w-sm mx-auto leading-relaxed">
+            <h3 className="text-[16px] sm:text-[20px] font-sora font-extrabold text-slate-800 mb-2 tracking-tight">No Connected Suppliers Yet</h3>
+            <p className="text-[13px] sm:text-[14px] font-inter text-slate-500 mb-6 sm:mb-8 max-w-md mx-auto leading-relaxed">
               Connect with trusted wholesalers in your district to build your secure supply chain and unlock exclusive merchant pricing deals.
             </p>
             <button 
               onClick={() => navigate('/nearby')} 
-              className="px-6 sm:px-8 py-2.5 sm:py-3 text-[12px] sm:text-[13px] font-sora font-bold text-white bg-slate-900 hover:bg-black rounded-[10px] sm:rounded-[12px] transition-all shadow-md active:scale-95"
+              className="px-8 sm:px-10 py-3 sm:py-3.5 text-[13px] sm:text-[14px] font-sora font-bold text-white bg-black hover:bg-slate-800 rounded-[12px] sm:rounded-[14px] transition-all shadow-md active:scale-95 flex items-center gap-2"
             >
               Find & Connect Suppliers
             </button>
@@ -147,7 +151,7 @@ export default function TrustedSuppliers({ onError }) {
                     <ExternalLink size={13} /> View Profile
                   </button>
                   <button 
-                    onClick={handleMessageClick} 
+                    onClick={() => handleMessageClick(s)} 
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 sm:py-2.5 text-[11px] sm:text-[12px] font-sora font-bold rounded-[8px] sm:rounded-[10px] text-white bg-slate-900 hover:bg-black transition-colors shadow-sm active:scale-95"
                   >
                     <MessageSquare size={13} /> Chat

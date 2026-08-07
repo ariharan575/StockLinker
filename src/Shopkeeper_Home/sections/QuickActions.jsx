@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { SectionHead } from '../../Layout/common';
-import { QUICK_ACTIONS } from '../data';
+import { getQuickActions } from '../../Layout/data/index';
 import { fadeUp } from '../../Layout/common/constants';
 
 const getPremiumIconStyle = (index) => {
@@ -20,18 +20,23 @@ const getPremiumIconStyle = (index) => {
 export default function QuickActions() {
   const navigate = useNavigate();
 
+  // FIX 1: If getQuickActions is a function, call it here. If it's an array, remove the ().
+  const actions = typeof getQuickActions === 'function' ? getQuickActions() : getQuickActions;
+
   return (
-    <section className="mb- sm:mb-8 md:mb-10 w-full">
-      <div className=" sm:px-2 md:px-3">
+    // FIX 2: Fixed the broken 'mb-' Tailwind class
+    <section className="mb-6 sm:mb-8 md:mb-10 w-full">
+      <div className="sm:px-2 md:px-3">
         <SectionHead title="Quick Actions" sub="Jump right into what you need" />
       </div>
 
       <div className="flex flex-row w-full justify-between items-stretch gap-1 xs:gap-2 sm:gap-3 md:gap-4 px-1 sm:px-2 md:px-3 pb-2 pt-1">
-        {QUICK_ACTIONS.map((a, i) => (
+        {actions.map((a, i) => (
           <motion.button
             key={a.id}
             onClick={() => navigate(a.path)}
-            {...fadeUp(i * 0.05)}
+            // Ensure your fadeUp function returns { initial, animate, transition }
+            {...fadeUp(i * 0.05)} 
             whileHover={{ y: -3 }}
             whileTap={{ scale: 0.96 }}
             className="group relative flex flex-1 min-w-0 flex-col items-center xl:items-start justify-center xl:justify-start bg-white rounded-[12px] md:rounded-[20px] p-1 pt-1.5 sm:p-3 md:p-4 border border-slate-200 shadow-sm hover:shadow-[0_12px_24px_-8px_rgba(0,0,0,0.08)] hover:border-slate-300 transition-all duration-300 focus:outline-none"

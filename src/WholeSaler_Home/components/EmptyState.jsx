@@ -5,40 +5,38 @@ export default function EmptyState({
   title = "No active records", 
   description = "New data will appear here once available. Get started by creating your first entry.", 
   icon,
-  actionLabel = "Create New Record",
+  actionLabel,
   onAction
 }) {
   return (
-    <div className="group relative w-full overflow-hidden rounded-3xl border border-gray-100 bg-white p-10 sm:p-16 shadow-[0_8px_40px_rgb(0,0,0,0.03)] transition-all hover:shadow-[0_16px_60px_rgb(0,0,0,0.06)]">
+    <div className="flex flex-col items-center justify-center py-16 px-6 text-center rounded-[24px] bg-gradient-to-b from-white to-slate-50 border border-slate-200 shadow-sm relative overflow-hidden w-full h-full min-h-[300px]">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 opacity-20" />
       
-      {/* Subtle Premium Background Mesh matching the Pink/Gray theme */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-pink-50/50 via-white to-white opacity-80"></div>
-      
-      {/* Decorative background grid to match the dashboard aesthetic */}
-      <div className="pointer-events-none absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiNlNWE3ZWIiLz48L3N2Zz4=')] [mask-image:radial-gradient(ellipse_at_center,black,transparent_80%)] opacity-30"></div>
-
-      <div className="relative z-10 flex flex-col items-center text-center">
-        
-        {/* High-Contrast Icon Treatment (Black & Pink) */}
-        <div className="relative mb-8">
-          {/* Animated Pink Glow Behind Icon */}
-          <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-pink-500 to-gray-800 opacity-20 blur-xl transition duration-700 group-hover:opacity-40 group-hover:duration-200"></div>
-          
-          {/* Dark Icon Container (Ties into your dark sidebar) */}
-          <div className="relative flex h-20 w-20 items-center justify-center rounded-[1.25rem] bg-gray-900 shadow-2xl ring-1 ring-white/10 sm:h-24 sm:w-24">
-            {icon || <Inbox className="h-10 w-10 text-pink-400 drop-shadow-[0_0_15px_rgba(244,114,182,0.4)] transition-transform duration-500 ease-out group-hover:scale-110" strokeWidth={1.5} />}
-          </div>
-        </div>
-
-        {/* Crisp Typography */}
-        <h3 className="font-sora mb-3 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl">
-          {title}
-        </h3>
-        
-        <p className="max-w-md text-sm leading-relaxed text-gray-500 sm:text-base">
-          {description}
-        </p>
+      <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-6 relative">
+        <div className="absolute inset-0 bg-slate-100/50 rounded-2xl animate-pulse" />
+        {icon ? (
+           React.cloneElement(icon, { className: "w-10 h-10 text-slate-300 relative z-10", strokeWidth: 1.5 })
+        ) : (
+           <Inbox className="w-10 h-10 text-slate-300 relative z-10" strokeWidth={1.5} />
+        )}
       </div>
+      
+      <h3 className="font-sora text-[20px] sm:text-[22px] font-extrabold tracking-tight text-slate-900 mb-2">
+        {title}
+      </h3>
+      
+      <p className="text-[14px] text-slate-500 max-w-md mb-8 leading-relaxed font-inter">
+        {description}
+      </p>
+      
+      {actionLabel && onAction && (
+        <button
+          onClick={onAction}
+          className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-black text-white text-[14px] font-bold font-inter rounded-xl transition-all shadow-md active:scale-95"
+        >
+          <Plus size={18} strokeWidth={2.5} /> {actionLabel}
+        </button>
+      )}
     </div>
   );
 }

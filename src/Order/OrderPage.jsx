@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query'; 
 import { 
   Search, MapPin, CheckCircle2, Truck, ShoppingCart, Loader2, 
   ShieldCheck, X, AlertCircle, Download, Clock, Play, Map, ChevronUp, ChevronDown 
@@ -10,7 +11,6 @@ import { useAuth } from '../Authentication/context/AuthContext';
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
 
-// --- ADDED PREMIUM COMPONENTS IMPORTS ---
 import { PremiumToast } from "../components/PremiumToast";
 import { DataFetchError } from "../components/DataFetchError";
 
@@ -33,32 +33,98 @@ const STATUS_STYLES = {
 
 const formatINR = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
+// ============================================================
+// ✅ PREMIUM SKELETON LOADERS
+// ============================================================
+const OrderCardSkeleton = () => (
+  <div className="rounded-[20px] bg-white border border-slate-100 p-5 sm:p-6 shadow-sm animate-pulse">
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-50 pb-4 sm:pb-5 sm:mb-5">
+      <div className="w-full md:w-1/2">
+        <div className="h-6 bg-slate-200 rounded-lg w-1/2 mb-3" />
+        <div className="h-4 bg-slate-100 rounded w-1/3 mb-2" />
+        <div className="h-4 bg-slate-100 rounded w-1/4" />
+      </div>
+      <div className="w-full md:w-1/4 flex flex-col md:items-end">
+        <div className="h-3 bg-slate-100 rounded w-1/2 mb-2" />
+        <div className="h-8 bg-slate-200 rounded-lg w-3/4" />
+      </div>
+    </div>
+    <div className="flex flex-wrap items-center justify-between gap-4 mt-4">
+      <div className="h-5 bg-slate-100 rounded w-1/3" />
+      <div className="flex gap-3 w-full md:w-auto">
+        <div className="h-10 bg-slate-200 rounded-xl w-full md:w-28" />
+        <div className="h-10 bg-slate-200 rounded-xl w-full md:w-32" />
+      </div>
+    </div>
+  </div>
+);
+
+const TrackerSkeleton = () => (
+  <div className="relative pl-4 space-y-6 flex-1 overflow-y-auto no-scrollbar pb-6 animate-pulse mt-4">
+    <div className="absolute left-[23px] top-2 bottom-2 w-0.5 bg-slate-100" />
+    {[1, 2, 3, 4].map((i) => (
+      <div key={i} className="relative z-10 flex items-start gap-4">
+        <div className="w-7 h-7 rounded-full bg-slate-200 border-2 border-white shrink-0 mt-0.5" />
+        <div className="flex flex-col pt-0.5 w-full pr-4">
+          <div className="h-4 bg-slate-200 rounded w-3/4 mb-2" />
+          <div className="h-3 bg-slate-100 rounded w-1/2" />
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+// ============================================================
+// ✅ WORLD-CLASS SAAS EMPTY STATE
+// ============================================================
+function PremiumEmptyState({ role, onExplore }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-b from-white to-slate-50 border border-slate-200 rounded-[24px] shadow-sm p-6 text-center mt-2 relative overflow-hidden h-[450px]">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 opacity-20" />
+      <div className="relative w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 z-10">
+        <div className="absolute inset-0 bg-pink-500/5 rounded-2xl animate-pulse" />
+        <ShoppingCart className="w-8 h-8 text-slate-300 relative z-10" strokeWidth={2} />
+      </div>
+      <h3 className="font-sora text-[20px] font-extrabold text-slate-800 mb-2 tracking-tight">
+        No orders found
+      </h3>
+      <p className="text-[14px] text-slate-500 font-medium max-w-md mb-8 leading-relaxed">
+        {role === 'WHOLESALER' 
+          ? 'You have no orders matching this status right now. Check back later for incoming requests.' 
+          : "You haven't placed any wholesale orders matching this status. Discover suppliers to start buying."}
+      </p>
+      {role !== 'WHOLESALER' && (
+        <button onClick={onExplore} className="bg-black text-white px-8 py-3 rounded-xl font-bold text-[13px] hover:bg-slate-800 transition-all shadow-md active:scale-95 flex items-center gap-2">
+          <MapPin size={16} /> Explore Nearby Sellers
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// MAIN PAGE COMPONENT
+// ============================================================
 export default function OrdersPage() {
   const navigate = useNavigate();
-  
+  const queryClient = useQueryClient();
   const { user } = useAuth(); 
   
   const [pageRole, setPageRole] = useState(null); 
   const [activeTab, setActiveTab] = useState("all");
-  const [orders, setOrders] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // --- ADDED STATE FOR DATA FETCH ERROR & NOTIFICATION ---
-  const [fetchError, setFetchError] = useState(false);
   const [notification, setNotification] = useState(null);
 
   // Live Tracking State
   const [activeRouteOrderId, setActiveRouteOrderId] = useState(null);
-  const [liveRoute, setLiveRoute] = useState([]);
-  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
   
   // Modal States
   const [modalOrder, setModalOrder] = useState(null); 
   const [acceptModalOrder, setAcceptModalOrder] = useState(null);
   const [rejectModalOrder, setRejectModalOrder] = useState(null);
   const [routeBuilderModalOpen, setRouteBuilderModalOpen] = useState(false);
-  const [isTrackerModalOpen, setIsTrackerModalOpen] = useState(false); // Mobile Tracker Modal
+  const [isTrackerModalOpen, setIsTrackerModalOpen] = useState(false);
   
   // Action Form States
   const [scheduledDate, setScheduledDate] = useState("");
@@ -71,38 +137,58 @@ export default function OrdersPage() {
     setNotification({ type, msg });
   };
 
-  // 1. Fetch Orders Engine
-  const fetchOrders = useCallback(async () => {
-    setIsLoading(true);
-    setFetchError(false); // Reset error state before fetch
-    try {
+  // ✅ 1. Fetch Orders via TanStack Query
+  const { 
+    data: ordersData, 
+    isLoading: isOrdersLoading, 
+    isError: isOrdersError,
+    error: ordersError, // Extracting the precise error object here
+    refetch: refetchOrders 
+  } = useQuery({
+    queryKey: ['ordersList', activeTab],
+    queryFn: async () => {
       const response = await orderApi.getOrders(activeTab);
-      
-      const fetchedOrders = response.data.orders || [];
-      const fetchedRole = response.data.userRole || 'SHOPKEEPER';
-      
-      setOrders(fetchedOrders);
-      setPageRole(fetchedRole);
-      
-      // Auto-select the first processing/out-for-delivery order for the tracker
-      if (!activeRouteOrderId && fetchedOrders.length > 0) {
-        const active = fetchedOrders.find(o => ['PROCESSING', 'OUT_FOR_DELIVERY'].includes(o.status));
+      return {
+        orders: response.data.orders || [],
+        userRole: response.data.userRole || 'SHOPKEEPER'
+      };
+    },
+    staleTime: 60 * 1000, // Data remains fresh for 60 seconds
+  });
+
+  const orders = ordersData?.orders || [];
+
+  // ✅ Automatically assign role and initial tracker state based on fetched data
+  useEffect(() => {
+    if (ordersData) {
+      setPageRole(ordersData.userRole);
+      if (!activeRouteOrderId && ordersData.orders.length > 0) {
+        const active = ordersData.orders.find(o => ['PROCESSING', 'OUT_FOR_DELIVERY'].includes(o.status));
         if (active) setActiveRouteOrderId(active.id);
       }
-    } catch (err) {
-      console.error("Failed to fetch orders", err);
-      setFetchError(true); // --- TRIGGER ERROR COMPONENT ON FAIL ---
-      setOrders([]);
-    } finally {
-      setIsLoading(false);
     }
-  }, [activeTab, activeRouteOrderId]);
+  }, [ordersData, activeRouteOrderId]);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+  // ✅ 2. Fetch Live Route via TanStack Query
+  const { data: liveRoute = [], isLoading: isLoadingRoute } = useQuery({
+    queryKey: ['liveRoute', activeRouteOrderId],
+    queryFn: async () => {
+      const response = await orderApi.getDeliveryRoute(activeRouteOrderId); 
+      return (response.data || []).map(stop => ({
+        id: stop.orderId,
+        companyName: stop.buyerName,
+        status: stop.status,
+        time: stop.time,
+        isPast: stop.status === 'DELIVERED',
+        isActive: stop.status === 'OUT_FOR_DELIVERY',
+        isPending: stop.status === 'PROCESSING'
+      }));
+    },
+    enabled: !!activeRouteOrderId, // Only fetch when an order is selected
+    staleTime: 30 * 1000, 
+  });
 
-  // 2. STOMP WebSocket Live Connection
+  // ✅ 3. STOMP WebSocket Live Connection
   useEffect(() => {
     if (!user?.id) return;
     const socket = new SockJS('http://localhost:8080/ws'); 
@@ -112,7 +198,11 @@ export default function OrdersPage() {
     stompClient.connect({}, () => {
       stompClient.subscribe(`/topic/orders/${user.id}`, (message) => {
         if (message.body) {
-          fetchOrders(); 
+          // Trigger a silent background refetch when WebSocket ping arrives
+          queryClient.invalidateQueries({ queryKey: ['ordersList'] });
+          if (activeRouteOrderId) {
+            queryClient.invalidateQueries({ queryKey: ['liveRoute', activeRouteOrderId] });
+          }
         }
       });
     });
@@ -120,36 +210,7 @@ export default function OrdersPage() {
     return () => {
       if (stompClient.connected) stompClient.disconnect();
     };
-  }, [user?.id, fetchOrders]);
-
-  // 3. Live Route Hydration
-  useEffect(() => {
-    const fetchLiveRoute = async () => {
-      if (!activeRouteOrderId) {
-        setLiveRoute([]);
-        return;
-      }
-      setIsLoadingRoute(true);
-      try {
-        const response = await orderApi.getDeliveryRoute(activeRouteOrderId); 
-        const formattedRoute = (response.data || []).map(stop => ({
-          id: stop.orderId,
-          companyName: stop.buyerName,
-          status: stop.status,
-          time: stop.time,
-          isPast: stop.status === 'DELIVERED',
-          isActive: stop.status === 'OUT_FOR_DELIVERY',
-          isPending: stop.status === 'PROCESSING'
-        }));
-        setLiveRoute(formattedRoute);
-      } catch (error) {
-        console.error("Failed to load live route", error);
-      } finally {
-        setIsLoadingRoute(false);
-      }
-    };
-    fetchLiveRoute();
-  }, [activeRouteOrderId, orders]);
+  }, [user?.id, queryClient, activeRouteOrderId]);
 
   // --- CONTROLLER ACTIONS ---
 
@@ -163,8 +224,9 @@ export default function OrdersPage() {
       setAcceptModalOrder(null);
       setRouteBuilderModalOpen(true);
       showNotification("success", "Order accepted successfully!");
+      refetchOrders();
     } catch (error) {
-      showNotification("error", "Failed to accept order");
+      showNotification("error", error.response?.data?.message || "Failed to accept order");
     }
   };
 
@@ -175,9 +237,9 @@ export default function OrdersPage() {
       setRejectModalOrder(null);
       setRejectionReason("");
       showNotification("success", "Order rejected successfully.");
-      fetchOrders();
+      refetchOrders();
     } catch (error) {
-      showNotification("error", "Failed to reject order");
+      showNotification("error", error.response?.data?.message || "Failed to reject order");
     }
   };
 
@@ -195,22 +257,20 @@ export default function OrdersPage() {
       await orderApi.updateRouteSequence(scheduledDate, orderedIds);
       setRouteBuilderModalOpen(false);
       showNotification("success", "Route sequence saved!");
-      fetchOrders();
+      refetchOrders();
     } catch (error) {
-      showNotification("error", "Failed to save route sequence");
+      showNotification("error", error.response?.data?.message || "Failed to save route sequence");
     } finally {
       setIsSavingRoute(false);
     }
   };
 
-const handleStartDeliveryRoute = async (date) => {
-    // 1. Safety Check: Ensure the date actually exists before making the API call
+  const handleStartDeliveryRoute = async (date) => {
     if (!date) {
       showNotification("error", "Cannot start route: No delivery date assigned to this order.");
       return;
     }
 
-    // 2. Format check (Optional but safe: Ensures date is a string if your backend sends arrays)
     const formattedDate = Array.isArray(date) ? date.join('-') : date;
 
     if(!window.confirm(`Start delivery route for ${formattedDate}? All scheduled orders for this date will be marked 'Out for Delivery'.`)) return;
@@ -218,10 +278,10 @@ const handleStartDeliveryRoute = async (date) => {
     try {
       await orderApi.startRouteForDate(formattedDate);
       showNotification("success", "Delivery route started successfully!");
-      fetchOrders();
+      refetchOrders();
     } catch (error) {
       console.error(error);
-      showNotification("error", "Failed to start route.");
+      showNotification("error", error.response?.data?.message || "Failed to start route.");
     }
   };
 
@@ -229,9 +289,9 @@ const handleStartDeliveryRoute = async (date) => {
     try {
       await orderApi.markDelivered(orderId);
       showNotification("success", "Order marked as delivered!");
-      fetchOrders();
+      refetchOrders();
     } catch (error) {
-      showNotification("error", "Failed to update status to DELIVERED");
+      showNotification("error", error.response?.data?.message || "Failed to update status to DELIVERED");
     }
   };
 
@@ -255,7 +315,7 @@ const handleStartDeliveryRoute = async (date) => {
       </div>
 
       {isLoadingRoute ? (
-        <div className="py-12 flex justify-center"><Loader2 size={24} className="animate-spin text-black"/></div>
+        <TrackerSkeleton />
       ) : !activeRouteOrderId || liveRoute.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center h-full my-auto py-12">
           <Truck size={32} className="text-slate-200 mb-4" />
@@ -300,7 +360,6 @@ const handleStartDeliveryRoute = async (date) => {
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
       `}} />
 
-      {/* --- PREMIUM TOAST COMPONENT --- */}
       <PremiumToast 
         isVisible={!!notification} 
         type={notification?.type || 'info'} 
@@ -309,9 +368,13 @@ const handleStartDeliveryRoute = async (date) => {
       />
 
       <div className="bg-[#FAFAFA] font-['Inter',_sans-serif] text-[#0F1626] p-4 md:p-5 pb-24 min-h-screen">
-        {/* --- ADDED CHECK TO RENDER ERROR COMPONENT AS FULL PAGE REPLACEMENT --- */}
-        {fetchError ? (
-          <DataFetchError onRetry={fetchOrders} />
+        {/* ✅ ERROR COMPONENT RENDERING */}
+        {isOrdersError ? (
+          <DataFetchError 
+            errorTitle="Connection Failed"
+            errorMessage={ordersError?.response?.data?.message || ordersError?.message || "An unexpected error occurred."} 
+            onRetry={refetchOrders} 
+          />
         ) : (
           <div className="max-w-[1440px] mx-auto flex flex-col gap-6 sm:gap-8">
             
@@ -354,25 +417,18 @@ const handleStartDeliveryRoute = async (date) => {
               
               {/* LEFT COLUMN: Order List */}
               <div className="space-y-4">
-                {isLoading ? (
-                  <div className="flex items-center justify-center min-h-[400px] sm:min-h-[450px] bg-white border border-slate-200 rounded-[24px] shadow-sm">
-                    <Loader2 className="w-8 h-8 animate-spin text-black" />
-                  </div>
+                {isOrdersLoading ? (
+                  <>
+                    <OrderCardSkeleton />
+                    <OrderCardSkeleton />
+                    <OrderCardSkeleton />
+                  </>
                 ) : displayOrders.length === 0 ? (
-                  <div className="bg-white border border-slate-200 rounded-[24px] min-h-[400px] sm:min-h-[450px] flex flex-col items-center justify-center text-center shadow-sm p-6 sm:p-8">
-                    <div className="w-16 h-16 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center mb-6">
-                      <ShoppingCart size={24} className="text-slate-300" />
-                    </div>
-                    <h3 className="font-['Manrope',_sans-serif] text-[20px] font-extrabold text-black mb-2">No orders found</h3>
-                    <p className="font-['Inter',_sans-serif] text-[13px] sm:text-[14px] font-medium text-slate-500 max-w-[320px] mb-8">
-                      {pageRole === 'WHOLESALER' ? 'You have no orders matching this status right now.' : "You haven't placed any wholesale orders yet."}
-                    </p>
-                    {pageRole !== 'WHOLESALER' && (
-                      <button onClick={() => navigate('/nearby')} className="bg-black text-white px-8 py-3 rounded-xl font-bold text-[14px] hover:bg-slate-800 transition-all shadow-md active:scale-95">
-                        Explore Nearby Sellers
-                      </button>
-                    )}
-                  </div>
+                  // ✅ WORLD-CLASS EMPTY STATE
+                  <PremiumEmptyState 
+                    role={pageRole} 
+                    onExplore={() => navigate('/nearby')} 
+                  />
                 ) : (
                   displayOrders.map((order) => (
                     <div 
@@ -425,7 +481,7 @@ const handleStartDeliveryRoute = async (date) => {
                             </button>
                           )}
 
-                          {/* MOBILE LIVE TRACKER BUTTON (Visible only on < xl screens if order is active) */}
+                          {/* MOBILE LIVE TRACKER BUTTON */}
                           {['PROCESSING', 'OUT_FOR_DELIVERY'].includes(order.status) && (
                              <button 
                                onClick={(e) => { e.stopPropagation(); setActiveRouteOrderId(order.id); setIsTrackerModalOpen(true); }} 
@@ -458,8 +514,8 @@ const handleStartDeliveryRoute = async (date) => {
 
       {/* --- OVERLAY MODALS --- */}
 
-      {/* MOBILE LIVE TRACKER MODAL (Sliding up from bottom) */}
-      {!fetchError && isTrackerModalOpen && (
+      {/* MOBILE LIVE TRACKER MODAL */}
+      {!isOrdersError && isTrackerModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
            <div className="bg-white rounded-t-[24px] sm:rounded-[24px] w-full max-w-md h-[80vh] sm:h-auto sm:max-h-[85vh] shadow-2xl flex flex-col overflow-hidden animate-[slideUp_0.3s_ease-out]">
               <div className="flex justify-end p-4 pb-0">
@@ -474,8 +530,8 @@ const handleStartDeliveryRoute = async (date) => {
         </div>
       )}
 
-      {/* 1. ORDER DETAILS MANIFEST MODAL (EXACT SCREENSHOT MATCH) */}
-      {!fetchError && modalOrder && (
+      {/* 1. ORDER DETAILS MANIFEST MODAL */}
+      {!isOrdersError && modalOrder && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
           <div className="bg-white rounded-[24px] max-w-4xl w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
             
@@ -497,7 +553,7 @@ const handleStartDeliveryRoute = async (date) => {
             
             <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-6 no-scrollbar">
               
-              {/* Top Section (2 Columns) */}
+              {/* Top Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 
                 {/* Left: Delivery & Invoice */}
@@ -543,7 +599,7 @@ const handleStartDeliveryRoute = async (date) => {
                 </div>
               </div>
 
-              {/* Product Details Table (Scrollable on Mobile) */}
+              {/* Product Details Table */}
               <div>
                 <h4 className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 sm:mb-3">Product Details ({modalOrder.totalItems} Items)</h4>
                 <div className="border border-slate-200 rounded-xl overflow-hidden overflow-x-auto no-scrollbar">
@@ -570,7 +626,7 @@ const handleStartDeliveryRoute = async (date) => {
                 </div>
               </div>
 
-              {/* Bottom Section: Timeline & Bill Summary */}
+              {/* Bottom Section */}
               <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-4 sm:gap-6">
                 
                 {/* Left: Delivery Timeline */}
@@ -632,7 +688,7 @@ const handleStartDeliveryRoute = async (date) => {
       )}
 
       {/* 2. WHolesaler ACCEPT & SCHEDULE MODAL */}
-      {!fetchError && acceptModalOrder && (
+      {!isOrdersError && acceptModalOrder && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
           <div className="bg-white rounded-[24px] max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6">
             <div>
@@ -656,7 +712,7 @@ const handleStartDeliveryRoute = async (date) => {
       )}
 
       {/* 3. WHOLESALER ROUTE SEQUENCING MODAL */}
-      {!fetchError && routeBuilderModalOpen && (
+      {!isOrdersError && routeBuilderModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]">
           <div className="bg-white rounded-[24px] max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6">
             <div>
@@ -690,7 +746,7 @@ const handleStartDeliveryRoute = async (date) => {
       )}
 
       {/* 4. WHOLESALER REJECT MODAL */}
-      {!fetchError && rejectModalOrder && (
+      {!isOrdersError && rejectModalOrder && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
           <div className="bg-white rounded-[24px] max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 sm:space-y-6">
             <div className="flex items-center gap-3">

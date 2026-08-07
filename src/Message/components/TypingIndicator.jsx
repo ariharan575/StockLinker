@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Avatar } from "./Messenger"; // Or wherever Avatar is imported from in your setup
 
 export function TypingIndicator({ conv }) {
   return (

@@ -1,53 +1,41 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchMessages,
   sendMessage as apiSendMessage,
   markConversationRead,
   markMessageDelivered,
+  editMessage as apiEditMessage,
+  deleteMessage as apiDeleteMessage
 } from "../api/chatApi";
 import { mapMessagePage, mapMessage } from "../utils/chatMappers";
 import { useConversationSocket } from "./useConversationSocket";
 
 export function useMessages(conversationId, counterpartId, { onSent } = {}) {
-  const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const requestIdRef = useRef(0);
+  const queryClient = useQueryClient();
+  const queryKey = useMemo(() => ['messages', conversationId], [conversationId]);
+
+  const { 
+    data: messages = [], 
+    isLoading: loading, 
+    error, 
+    refetch 
+  } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      if (!conversationId) return [];
+      const data = await fetchMessages(conversationId);
+      return mapMessagePage(data);
+    },
+    enabled: !!conversationId, 
+    staleTime: 5 * 60 * 1000,
+  });
   
-  // 🛡️ RATE LIMITER STATE
   const [isSending, setIsSending] = useState(false);
-
-  const load = useCallback(() => {
-    if (!conversationId) {
-      setMessages([]);
-      return Promise.resolve();
-    }
-    const requestId = ++requestIdRef.current;
-    setLoading(true);
-    setError(null);
-
-    return fetchMessages(conversationId)
-      .then((data) => {
-        if (requestId !== requestIdRef.current) return;
-        setMessages(mapMessagePage(data));
-      })
-      .catch((err) => {
-        if (requestId !== requestIdRef.current) return;
-        setError(err);
-      })
-      .finally(() => {
-        if (requestId !== requestIdRef.current) return;
-        setLoading(false);
-      });
-  }, [conversationId]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
 
   const sendMessage = useCallback(
     async (text) => {
-      if (!conversationId || isSending) return; // Drop spam clicks
+      if (!conversationId || isSending) return; 
       const trimmed = text.trim();
       if (!trimmed) return;
 
@@ -64,31 +52,58 @@ export function useMessages(conversationId, counterpartId, { onSent } = {}) {
         _pending: true,
       };
 
-      setMessages((prev) => [...prev, optimisticMsg]);
+      queryClient.setQueryData(queryKey, (prev = []) => [...prev, optimisticMsg]);
       onSent?.({ lastMsg: trimmed, time: optimisticMsg.time });
 
       try {
         const dto = await apiSendMessage({ conversationId, message: trimmed });
         const confirmed = mapMessage(dto);
-        setMessages((prev) => prev.map((m) => (m.id === tempId ? confirmed : m)));
+        queryClient.setQueryData(queryKey, (prev = []) => 
+          prev.map((m) => (m.id === tempId ? confirmed : m))
+        );
       } catch (err) {
-        setMessages((prev) =>
+        queryClient.setQueryData(queryKey, (prev = []) =>
           prev.map((m) => (m.id === tempId ? { ...m, _pending: false, _failed: true } : m))
         );
-        setError(err);
       } finally {
-        setIsSending(false); // Release Rate Limit Lock
+        setIsSending(false); 
       }
     },
-    [conversationId, onSent, isSending]
+    [conversationId, isSending, onSent, queryClient, queryKey]
   );
+
+  const editMsg = useCallback(async (messageId, newText) => {
+    try {
+      // Optimistic update
+      queryClient.setQueryData(queryKey, (prev = []) =>
+        prev.map((m) => m.id === messageId ? { ...m, text: newText, _edited: true } : m)
+      );
+      await apiEditMessage(messageId, newText);
+    } catch (err) {
+      refetch(); // Rollback if failed
+      throw err;
+    }
+  }, [queryClient, queryKey, refetch]);
+
+  const deleteMsg = useCallback(async (messageId) => {
+    try {
+      // Optimistic update
+      queryClient.setQueryData(queryKey, (prev = []) =>
+        prev.map((m) => m.id === messageId ? { ...m, _deleted: true, text: "This message was deleted" } : m)
+      );
+      await apiDeleteMessage(messageId);
+    } catch (err) {
+      refetch(); // Rollback if failed
+      throw err;
+    }
+  }, [queryClient, queryKey, refetch]);
 
   const retrySend = useCallback(
     (failedMessage) => {
-      setMessages((prev) => prev.filter((m) => m.id !== failedMessage.id));
+      queryClient.setQueryData(queryKey, (prev = []) => prev.filter((m) => m.id !== failedMessage.id));
       sendMessage(failedMessage.text);
     },
-    [sendMessage]
+    [sendMessage, queryClient, queryKey]
   );
 
   const markRead = useCallback(() => {
@@ -102,16 +117,16 @@ export function useMessages(conversationId, counterpartId, { onSent } = {}) {
     const mapped = mapMessage(dto);
     mapped.from = "them"; 
     
-    setMessages((prev) => {
+    queryClient.setQueryData(queryKey, (prev = []) => {
       if (prev.some((m) => m.id === mapped.id)) {
         return prev.map((m) => (m.id === mapped.id ? mapped : m));
       }
       return [...prev, mapped]; 
     });
-  }, [counterpartId]);
+  }, [counterpartId, queryClient, queryKey]);
 
   const handleStatus = useCallback((event) => {
-    setMessages((prev) =>
+    queryClient.setQueryData(queryKey, (prev = []) =>
       prev.map((m) => {
         if (m.from !== "me") return m;
         if (event.status === "READ") return { ...m, read: true, _status: "READ" };
@@ -119,7 +134,7 @@ export function useMessages(conversationId, counterpartId, { onSent } = {}) {
         return m;
       })
     );
-  }, []);
+  }, [queryClient, queryKey]);
 
   useConversationSocket(conversationId, { onMessage: handleIncoming, onStatus: handleStatus });
 
@@ -131,5 +146,5 @@ export function useMessages(conversationId, counterpartId, { onSent } = {}) {
       });
   }, [messages]);
 
-  return { messages, loading, error, sendMessage, retrySend, markRead, refresh: load, isSending };
+  return { messages, loading, error, sendMessage, editMsg, deleteMsg, retrySend, markRead, refresh: refetch, isSending };
 }
