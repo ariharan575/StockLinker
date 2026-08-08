@@ -154,6 +154,7 @@ export default function SaaSAuthUI() {
       const loginResult = await login(authApi.phoneLogin(idToken));
 
       if (loginResult.success) {
+        
         if (loginResult.needsRole) navigate("/role-selection");
         else if (loginResult.needsOnboarding) navigate("/onboarding");
         else navigate("/dashboard");
@@ -239,10 +240,18 @@ export default function SaaSAuthUI() {
     setErrorMessage("");
     try {
       const loginResult = await login(authApi.guestLogin());
-      if (loginResult.success) navigate("/dashboard");
-      else {
+
+      if (loginResult.success) {
+
+        if (loginResult.needsRole) navigate("/role-selection");
+        else if (loginResult.needsOnboarding) navigate("/onboarding");
+        else navigate("/dashboard");
+        
+      } else {
         setError(true);
-        setErrorMessage(loginResult.error || "Guest login failed");
+        setErrorMessage(loginResult.error || "Login failed");
+        setOtp(Array(6).fill(""));
+        inputsRef.current[0]?.focus();
       }
     } catch (err) {
       setError(true);
