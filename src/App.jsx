@@ -13,7 +13,8 @@ import Documentation from './documentation/Documentation'
 import Login from './Authentication/pages/Loginx';
 import OAuthSuccess from './Authentication/pages/OAuthSuccess';
 import RoleSelectionPage from './Authentication/pages/RoleSelection';
-import StockLinkerEnterpriseOnboarding from './onboarding/StockLinkerEnterpriseOnboarding';
+import StockLinkerEnterpriseOnboarding from './Onboarding/StockLinkerEnterpriseOnboarding';
+
 
 // --- Public/Landing Pages ---
 import { LandingPage } from './Landing/Pages/LandingPage';
