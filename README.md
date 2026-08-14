@@ -1,15 +1,15 @@
 # StockLinker Frontend
 
-<p align="center">
+<p>
   <strong>StockLinker</strong><br/>
   <em>Intelligent B2B Wholesale Commerce Experience</em>
 </p>
 
-<p align="center">
+<p >
   Modern Retail • Wholesale Intelligence • Supplier Discovery • Procurement
 </p>
 
-<p align="center">
+<p >
 
 ![React](https://img.shields.io/badge/React-18%2B-000000?style=for-the-badge\&logo=react\&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-000000?style=for-the-badge\&logo=javascript\&logoColor=white)
