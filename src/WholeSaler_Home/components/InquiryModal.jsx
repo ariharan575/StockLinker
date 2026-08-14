@@ -7,7 +7,6 @@ export default function InquiryModal({ enquiry, isOpen, onClose, onAccept }) {
   const navigate = useNavigate();
 
   if (!isOpen || !enquiry) return null;
-  const totalValue = (enquiry.targetPrice * enquiry.requestedQuantity).toLocaleString("en-IN");
 
   const handleViewProfile = () => {
     if (enquiry.buyerProfileId) navigate(`/storefront/${enquiry.buyerProfileId}`);
@@ -57,10 +56,11 @@ export default function InquiryModal({ enquiry, isOpen, onClose, onAccept }) {
                 <p className="font-sora text-[15px] font-semibold text-gray-900 truncate">{enquiry.title}</p>
                 <p className="text-[13px] text-gray-600 mt-1">{enquiry.requestedQuantity} Units required</p>
               </div>
+              
               <div className="text-left sm:text-right">
                 <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Proposed Value</p>
-                <p className="font-sora text-[15px] font-semibold text-gray-900">₹{enquiry.targetPrice.toLocaleString("en-IN")} / unit</p>
-                <p className="text-[13px] font-semibold text-gray-900 mt-1">Total: ₹{totalValue}</p>
+                <p className="font-sora text-[15px] font-semibold text-gray-900">₹{enquiry.targetPrice.toLocaleString("en-IN")}</p>
+                <p className="text-[13px] font-semibold text-gray-500 mt-1">Total Price</p>
               </div>
             </div>
 
@@ -80,7 +80,7 @@ export default function InquiryModal({ enquiry, isOpen, onClose, onAccept }) {
               <Store size={16} /> Profile
             </button>
             <button 
-              onClick={() => onAccept(enquiry.id)} 
+              onClick={onAccept} 
               className="flex-1 flex items-center justify-center py-2.5 rounded-xl bg-black text-white text-[13px] font-semibold hover:bg-gray-800 active:scale-[0.98] transition-all"
             >
               Accept Order

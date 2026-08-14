@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { SearchCode, Search, ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query'; // --- ADDED TANSTACK QUERY ---
 import { typographyStyles, fadeUp } from '../config/constants';
-import { compareApi } from '../Services/api';
+import { compareApi } from '../../Services/api';
 
 import { Toast, ErrorPopup } from '../components/SharedComponents';
 import ProductSearchModal from '../components/ProductSearchModal';

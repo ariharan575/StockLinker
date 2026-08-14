@@ -74,26 +74,24 @@ export function useMessages(conversationId, counterpartId, { onSent } = {}) {
 
   const editMsg = useCallback(async (messageId, newText) => {
     try {
-      // Optimistic update
       queryClient.setQueryData(queryKey, (prev = []) =>
         prev.map((m) => m.id === messageId ? { ...m, text: newText, _edited: true } : m)
       );
       await apiEditMessage(messageId, newText);
     } catch (err) {
-      refetch(); // Rollback if failed
+      refetch(); 
       throw err;
     }
   }, [queryClient, queryKey, refetch]);
 
   const deleteMsg = useCallback(async (messageId) => {
     try {
-      // Optimistic update
       queryClient.setQueryData(queryKey, (prev = []) =>
         prev.map((m) => m.id === messageId ? { ...m, _deleted: true, text: "This message was deleted" } : m)
       );
       await apiDeleteMessage(messageId);
     } catch (err) {
-      refetch(); // Rollback if failed
+      refetch();
       throw err;
     }
   }, [queryClient, queryKey, refetch]);
@@ -123,7 +121,10 @@ export function useMessages(conversationId, counterpartId, { onSent } = {}) {
       }
       return [...prev, mapped]; 
     });
-  }, [counterpartId, queryClient, queryKey]);
+
+    // INSTANT READ RECEIPT: We are on the message page, mark it as read immediately!
+    markRead();
+  }, [counterpartId, queryClient, queryKey, markRead]);
 
   const handleStatus = useCallback((event) => {
     queryClient.setQueryData(queryKey, (prev = []) =>

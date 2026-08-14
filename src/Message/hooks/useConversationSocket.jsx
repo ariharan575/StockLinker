@@ -1,15 +1,16 @@
 import { useEffect, useRef } from "react";
 import { connectSocket, releaseSocket } from "../api/socketClient";
 
-/**
- * Subscribes to /topic/conversation/{id} for the currently open conversation.
- * Two payload shapes arrive on the same topic:
- *  - full MessageResponse (new message, edit, delete) -> onMessage
- *  - MessageStatusEvent (delivered/read ticks)          -> onStatus
- * Distinguished by the presence of a "message" field, which only MessageResponse has.
- */
 export function useConversationSocket(conversationId, { onMessage, onStatus } = {}) {
   const subRef = useRef(null);
+  
+  // 🚀 THE FIX: Store callbacks in refs to avoid dependency cycle re-renders 
+  // that were constantly disconnecting and dropping messages.
+  const callbacksRef = useRef({ onMessage, onStatus });
+
+  useEffect(() => {
+    callbacksRef.current = { onMessage, onStatus };
+  }, [onMessage, onStatus]);
 
   useEffect(() => {
     if (!conversationId) return;
@@ -17,12 +18,14 @@ export function useConversationSocket(conversationId, { onMessage, onStatus } = 
     const client = connectSocket();
 
     const subscribe = () => {
+      if (subRef.current) return; // Prevent duplicate overlapping subscriptions
+      
       subRef.current = client.subscribe(`/topic/conversation/${conversationId}`, (frame) => {
         const payload = JSON.parse(frame.body);
         if (payload.message !== undefined) {
-          onMessage?.(payload);
+          callbacksRef.current.onMessage?.(payload);
         } else {
-          onStatus?.(payload);
+          callbacksRef.current.onStatus?.(payload);
         }
       });
     };
@@ -30,13 +33,20 @@ export function useConversationSocket(conversationId, { onMessage, onStatus } = 
     if (client.connected) {
       subscribe();
     } else {
-      client.onConnect = subscribe;
+      // 🚀 THE FIX: Safely chain callbacks without overwriting the global listener!
+      const originalOnConnect = client.onConnect;
+      client.onConnect = (frame) => {
+        if (originalOnConnect) originalOnConnect(frame);
+        subscribe();
+      };
     }
 
     return () => {
-      subRef.current?.unsubscribe();
+      if (subRef.current) {
+        subRef.current.unsubscribe();
+        subRef.current = null;
+      }
       releaseSocket();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);
 }

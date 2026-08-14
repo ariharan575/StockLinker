@@ -1,11 +1,41 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MapPin, ShieldCheck, Star, MessageCircle, Phone } from 'lucide-react';
 import { inr } from '../config/constants';
 import { ScoreRing } from './SharedComponents';
 
 export default function SupplierModal({ supplier, onClose }) {
+  const navigate = useNavigate();
+
+  const handleMessageClick = (e) => {
+    e.stopPropagation();
+    if (!supplier) return;
+    navigate('/message', {
+      state: {
+        partnerToMessage: {
+          id: supplier.userId || supplier.id,
+          name: supplier.name || supplier.businessName || "Unnamed Business",
+          businessName: supplier.category || supplier.businessName || "General Business",
+          profileImage: null
+        }
+      }
+    });
+  };
+
+  const handleViewProfile = (e) => {
+    e.stopPropagation();
+    if (!supplier) return;
+    const profileId = supplier.businessProfileId || supplier.id;
+    if (profileId) {
+      navigate(`/storefront/${profileId}`);
+    } else {
+      console.error("Missing business profile reference.");
+    }
+  };
+
   if (!supplier) return null;
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
@@ -57,9 +87,9 @@ export default function SupplierModal({ supplier, onClose }) {
           </div>
           
           <div className="p-6 border-t border-slate-100 bg-slate-50 grid grid-cols-2 gap-3 rounded-b-[24px]">
-            <button className="col-span-1 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-[13px] flex justify-center items-center gap-2 hover:bg-slate-100 shadow-sm transition-colors"><MessageCircle size={16}/> Message</button>
+            <button onClick={handleMessageClick} className="col-span-1 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-[13px] flex justify-center items-center gap-2 hover:bg-slate-100 shadow-sm transition-colors"><MessageCircle size={16}/> Message</button>
             <button className="col-span-1 py-3 rounded-xl bg-slate-900 text-white font-semibold text-[13px] flex justify-center items-center gap-2 hover:bg-slate-800 shadow-md transition-colors"><Phone size={16}/> Call</button>
-            <button className="col-span-2 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-[13px] flex justify-center items-center hover:bg-slate-100 shadow-sm transition-colors">View Full Profile</button>
+            <button onClick={handleViewProfile} className="col-span-2 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-[13px] flex justify-center items-center hover:bg-slate-100 shadow-sm transition-colors">View Full Profile</button>
           </div>
         </motion.div>
       </div>

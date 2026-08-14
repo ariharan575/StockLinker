@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, Loader2, ArrowRight, Package, Wallet, MessageSquare } from 'lucide-react';
 import { inr } from '../config/constants';
-import { compareApi } from '../Services/api';
+import { compareApi } from '../../Services/api';
 import { FloatingSurface, GradientButton } from './SharedComponents';
 
 export default function NegotiationCRM({ qty, metrics, masterProductId, onShowToast }) {

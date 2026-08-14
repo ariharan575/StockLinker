@@ -36,28 +36,37 @@ export default function NearbySellers({ onError }) {
   const { 
     data: sellers = [], 
     isLoading, 
-    isError 
+    isError,
+    error // ✅ Extracted the error object for proper global handling
   } = useQuery({
     queryKey: ['homeNearbySellers'],
     queryFn: async () => {
-      const response = await networkApi.getNearbySellers();
+      // 🚀 FIXED: networkApi already extracts response.data.data
+      // So 'payload' here is actually your Array or Spring Boot Page object directly!
+      const payload = await networkApi.getNearbySellers();
       
-      // FIXED: Safely extract the array from the new Paginated Spring Boot response
-      const responseData = response.data?.data;
-      const sellersArray = Array.isArray(responseData) 
-          ? responseData 
-          : (responseData?.content || []);
+      let sellersArray = [];
+      
+      // Safely check what kind of data structure the backend returned
+      if (Array.isArray(payload)) {
+        sellersArray = payload;
+      } else if (payload?.content && Array.isArray(payload.content)) {
+        sellersArray = payload.content; // If it's a Spring Boot Page<>
+      } else if (payload?.data && Array.isArray(payload.data)) {
+        sellersArray = payload.data; // Safety fallback
+      }
           
-      return sellersArray.slice(0, 5);
+      return sellersArray.slice(0, 5); // Return top 5 for the dashboard widget
     },
     staleTime: 5 * 60 * 1000, 
   });
 
+  // ✅ Pass exact error to global handler
   useEffect(() => {
     if (isError && onError) {
-      onError();
+      onError(error);
     }
-  }, [isError, onError]);
+  }, [isError, error, onError]);
 
   const handleConnect = async (partnerId) => {
     try {

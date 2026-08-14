@@ -18,9 +18,13 @@ export const enquiryApi = {
       throw error;
     }
   },
-  acceptEnquiry: async (enquiryId) => {
+  
+  // ✅ FIX: Added deliveryDate as a parameter and passed it in the request body
+  acceptEnquiry: async (enquiryId, deliveryDate) => {
     try {
-      const response = await axiosInstance.post(`/v1/enquiries/${enquiryId}/accept`);
+      const response = await axiosInstance.post(`/v1/enquiries/${enquiryId}/accept`, { 
+        deliveryDate 
+      });
       return response.data;
     } catch (error) {
       console.error("Error accepting enquiry:", error);

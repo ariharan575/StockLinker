@@ -4,6 +4,9 @@ import {
   Store, Search, Layers, CheckCircle, Package, Map, ArrowRight, 
   TrendingUp, Truck, Box, Check
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+
 
 // Premium Apple-style Easing Curve
 const easePremium = [0.16, 1, 0.3, 1];
@@ -229,6 +232,10 @@ const WorkflowLine = ({ steps, theme }) => {
 };
 
 export default function RoleExperienceSection() {
+
+  const navigate = useNavigate();
+
+
   const shopkeeperFeatures = [
     "Search products across nearby wholesalers",
     "Compare wholesale prices instantly",
@@ -322,6 +329,7 @@ export default function RoleExperienceSection() {
                 <WorkflowLine steps={shopkeeperSteps} theme="blue" />
 
                 <motion.button 
+                  onClick={() => navigate('/documentation?section=shopkeeper-dashboard')}
                   className="group/btn relative flex items-center justify-center gap-3 w-full py-4 sm:py-5 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white text-[15px] sm:text-[16px] font-semibold shadow-lg shadow-blue-500/20 transition-all overflow-hidden hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98] transform-gpu"
                   whileHover={{ scale: 1.01 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
@@ -371,6 +379,7 @@ export default function RoleExperienceSection() {
                 <WorkflowLine steps={supplierSteps} theme="purple" />
 
                 <motion.button 
+                  onClick={() => navigate('/documentation?section=wholesaler-dashboard')}
                   className="group/btn relative flex items-center justify-center gap-3 w-full py-4 sm:py-5 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 text-white text-[15px] sm:text-[16px] font-semibold shadow-lg shadow-purple-500/20 transition-all overflow-hidden hover:shadow-xl hover:shadow-purple-500/30 active:scale-[0.98] transform-gpu"
                   whileHover={{ scale: 1.01 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}

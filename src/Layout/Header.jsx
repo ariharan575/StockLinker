@@ -214,10 +214,10 @@ export default function Header({ open, setOpen }) {
   
   const [toast, setToast] = useState(null);
 
-  const notifRef = useRef(null);
+  const notifRefDesktop = useRef(null);
+  const notifRefMobile = useRef(null);
   const profRef = useRef(null);
 
-  // ✅ TANSTACK QUERY: FETCH NOTIFICATIONS
   const { data: notifData = { notifications: [], unreadCount: 0 }, refetch: refetchNotifs } = useQuery({
     queryKey: ['userNotifications'],
     queryFn: async () => {
@@ -260,11 +260,29 @@ export default function Header({ open, setOpen }) {
     return () => client.deactivate();
   }, [isAuthenticated, queryClient]);
 
-  // Handlers
+  // Handlers - Improved State Management for no overlap/lag
+  const handleNotifToggle = () => {
+    setNotifOpen(!notifOpen);
+    setProfOpen(false);
+    if (setOpen && !notifOpen) setOpen(false); 
+  };
+
+  const handleProfToggle = () => {
+    setProfOpen(!profOpen);
+    setNotifOpen(false);
+    if (setOpen && !profOpen) setOpen(false);
+  };
+
+  const handleMenuToggle = () => {
+    setOpen(!open);
+    setNotifOpen(false);
+    setProfOpen(false);
+  };
+
   const handleNotificationClick = async (notif) => {
     setNotifOpen(false); 
     if (!notif.read && !notif.isRead) {
-      // Optimistic Update
+
       queryClient.setQueryData(['userNotifications'], (old) => {
          if(!old) return old;
          return {
@@ -277,14 +295,40 @@ export default function Header({ open, setOpen }) {
         await notificationApi.markAsRead(notif.id);
       } catch (e) {
         setToast({ type: 'error', msg: e.response?.data?.message || 'Failed to update notification status' });
-        refetchNotifs(); // Rollback if failed
+        refetchNotifs(); 
       }
     }
 
-    if (notif.type === 'ORDER') navigate('/orders');
-    else if (notif.type === 'CONNECTION') navigate('/network');
-    else if (notif.type === 'MESSAGE') navigate('/message');
-    else if (notif.type === 'ENQUIRY') navigate('/compare');
+    // --- SMART COMPONENT REFRESH & ROUTING ---
+    const type = notif.type ? String(notif.type).toUpperCase() : ''; 
+
+    if (type === 'ORDER') {
+      queryClient.invalidateQueries({ queryKey: ['ordersList'] });
+      navigate('/orders');
+    } 
+    else if (type === 'CONNECTION' || type === 'NEW_REQUEST' || type.includes('CONNECT')) {
+      queryClient.invalidateQueries({ queryKey: ['connectedNetworkData'] });
+      navigate('/saved', { state: { openRequests: true } });
+    } 
+    else if (type === 'MESSAGE') {
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      navigate('/message', {
+        state: {
+          openChatWithReference: notif.referenceId
+        }
+      });
+    } 
+    else if (type === 'ENQUIRY') {
+      // Role-based routing for enquiries
+      if (profileData?.role?.toUpperCase() === 'WHOLESALER') {
+        queryClient.invalidateQueries({ queryKey: ['dashboardEnquiries'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboardWelcomeKpis'] });
+        navigate('/dashboard');
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['ordersList'] });
+        navigate('/orders');
+      }
+    }
   };
 
   const handleMarkAllRead = async () => {
@@ -301,7 +345,7 @@ export default function Header({ open, setOpen }) {
       await notificationApi.markAllAsRead();
     } catch (e) {
       setToast({ type: 'error', msg: e.response?.data?.message || 'Failed to clear notifications' });
-      refetchNotifs(); // Rollback if failed
+      refetchNotifs(); 
     }
   };
 
@@ -318,7 +362,13 @@ export default function Header({ open, setOpen }) {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
+      // Check both mobile and desktop refs for notification clicks
+      if (
+        (notifRefDesktop.current && !notifRefDesktop.current.contains(e.target)) &&
+        (notifRefMobile.current && !notifRefMobile.current.contains(e.target))
+      ) {
+        setNotifOpen(false);
+      }
       if (profRef.current && !profRef.current.contains(e.target)) setProfOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -326,7 +376,8 @@ export default function Header({ open, setOpen }) {
   }, []);
 
   const getNotifIcon = (type) => {
-    switch(type) {
+    const t = type ? String(type).toUpperCase() : '';
+    switch(t) {
       case 'ORDER': return <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0"><Truck size={14}/></div>;
       case 'CONNECTION': return <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><Users size={14}/></div>;
       case 'MESSAGE': return <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0"><MessageSquare size={14}/></div>;
@@ -343,6 +394,68 @@ export default function Header({ open, setOpen }) {
     if (hours < 24) return `${hours}h ago`;
     return `${Math.floor(hours / 24)}d ago`;
   };
+
+  // Fallback title generator just in case backend doesn't send a title
+  const getDisplayTitle = (n) => {
+    if (n.title) return n.title;
+    const t = n.type ? String(n.type).toUpperCase() : '';
+    if (t === 'ORDER') return 'Order Update';
+    if (t === 'CONNECTION') return 'Connection Request';
+    if (t === 'MESSAGE') return 'New Message';
+    if (t === 'ENQUIRY') return 'Enquiry Update';
+    return 'New Notification';
+  };
+
+  // Reusable Notification Dropdown Component for both Desktop and Mobile
+  const renderNotificationDropdown = (isMobileView = false) => (
+    <motion.div 
+      initial={{ opacity: 0, y: 8, scale: 0.96 }} 
+      animate={{ opacity: 1, y: 0, scale: 1 }} 
+      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+      transition={{ type: "spring", stiffness: 350, damping: 25 }}
+      className={`absolute top-[calc(100%+12px)] bg-white/95 backdrop-blur-2xl rounded-2xl border border-slate-200/80 shadow-[0_24px_48px_-12px_rgba(15,23,42,0.15)] overflow-hidden z-[100] ${
+        isMobileView 
+          // Fix: Positions dropdown perfectly inside the mobile header constraints without overflowing left.
+          ? "right-[-48px] w-[calc(100vw-24px)] md:right-0 md:w-[380px]" 
+          : "right-0 w-[380px]"
+      }`}
+      style={{ transformOrigin: "top right" }}
+    >
+      <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <span className="text-[14px] font-[700] text-slate-900 tracking-tight">Notifications</span>
+        {unreadCount > 0 && (
+          <button onClick={handleMarkAllRead} className="text-[12px] font-[600] text-sky-500 hover:text-sky-600 transition-colors flex items-center gap-1">
+            <Check size={14} /> Mark all read
+          </button>
+        )}
+      </div>
+      
+      <div className="flex flex-col max-h-[360px] overflow-y-auto overscroll-contain no-scrollbar">
+        {notifications.length === 0 ? (
+          <div className="p-6 text-center text-slate-500 text-[13px] font-medium">You're all caught up!</div>
+        ) : (
+          notifications.map((notif) => (
+            <div 
+              key={notif.id} 
+              onClick={() => handleNotificationClick(notif)}
+              className={`px-5 py-3.5 flex gap-3.5 hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-50 last:border-0 group ${(!notif.read && !notif.isRead) ? 'bg-sky-50/30' : ''}`}
+            >
+              {getNotifIcon(notif.type)}
+              <div className="flex-1 min-w-0 pt-0.5">
+                <p className="text-[13px] text-slate-800 font-bold leading-tight truncate">{getDisplayTitle(notif)}</p>
+                <p className="text-[12px] text-slate-500 mt-1 line-clamp-2 leading-snug">{notif.message}</p>
+                <div className="flex items-center gap-1.5 mt-2 text-slate-400">
+                  <Clock size={10} />
+                  <p className="text-[10px] font-medium">{calculateTimeAgo(notif.createdAt)}</p>
+                </div>
+              </div>
+              {(!notif.read && !notif.isRead) && <div className="w-2 h-2 rounded-full bg-pink-500 mt-1.5 shrink-0 shadow-sm" />}
+            </div>
+          ))
+        )}
+      </div>
+    </motion.div>
+  );
 
   return (
     <>
@@ -361,52 +474,13 @@ export default function Header({ open, setOpen }) {
         <div className="ml-auto flex items-center gap-3 px-6 shrink-0">
           
           {/* NOTIFICATION BELL */}
-          <div className="relative" ref={notifRef}>
-            <PremiumIconButton badge={unreadCount} active={notifOpen} onClick={() => { setNotifOpen(!notifOpen); setProfOpen(false); }}>
+          <div className="relative" ref={notifRefDesktop}>
+            <PremiumIconButton badge={unreadCount} active={notifOpen} onClick={handleNotifToggle}>
               <Bell size={18} strokeWidth={2} className={notifOpen ? 'fill-slate-900/10 text-slate-900' : ''} />
             </PremiumIconButton>
             
             <AnimatePresence>
-              {notifOpen && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                  className="absolute right-0 top-[calc(100%+12px)] w-[380px] bg-white/95 backdrop-blur-2xl rounded-2xl border border-slate-200/80 shadow-[0_24px_48px_-12px_rgba(15,23,42,0.15)] overflow-hidden"
-                >
-                  <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <span className="text-[14px] font-[700] text-slate-900 tracking-tight">Notifications</span>
-                    {unreadCount > 0 && (
-                      <button onClick={handleMarkAllRead} className="text-[12px] font-[600] text-sky-500 hover:text-sky-600 transition-colors flex items-center gap-1">
-                        <Check size={14} /> Mark all read
-                      </button>
-                    )}
-                  </div>
-                  
-                  <div className="flex flex-col max-h-[360px] overflow-y-auto overscroll-contain no-scrollbar">
-                    {notifications.length === 0 ? (
-                      <div className="p-6 text-center text-slate-500 text-[13px] font-medium">You're all caught up!</div>
-                    ) : (
-                      notifications.map((notif) => (
-                        <div 
-                          key={notif.id} 
-                          onClick={() => handleNotificationClick(notif)}
-                          className={`px-5 py-3.5 flex gap-3.5 hover:bg-slate-50 transition-colors cursor-pointer border-b border-slate-50 last:border-0 group ${(!notif.read && !notif.isRead) ? 'bg-sky-50/30' : ''}`}
-                        >
-                          {getNotifIcon(notif.type)}
-                          <div className="flex-1 min-w-0 pt-0.5">
-                            <p className="text-[13px] text-slate-800 font-bold leading-tight truncate">{notif.title}</p>
-                            <p className="text-[12px] text-slate-500 mt-1 line-clamp-2 leading-snug">{notif.message}</p>
-                            <div className="flex items-center gap-1.5 mt-2 text-slate-400">
-                              <Clock size={10} />
-                              <p className="text-[10px] font-medium">{calculateTimeAgo(notif.createdAt)}</p>
-                            </div>
-                          </div>
-                          {(!notif.read && !notif.isRead) && <div className="w-2 h-2 rounded-full bg-pink-500 mt-1.5 shrink-0 shadow-sm" />}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </motion.div>
-              )}
+              {notifOpen && renderNotificationDropdown(false)}
             </AnimatePresence>
           </div>
 
@@ -416,7 +490,7 @@ export default function Header({ open, setOpen }) {
           {/* DYNAMIC PROFILE DROPDOWN */}
           <div className="relative" ref={profRef}>
             <button 
-              onClick={() => { setProfOpen(!profOpen); setNotifOpen(false); }} 
+              onClick={handleProfToggle} 
               className={`flex items-center gap-3 p-1.5 pr-3 rounded-2xl border transition-all focus:outline-none
                 ${profOpen ? 'bg-slate-50 border-slate-200 shadow-sm' : 'bg-transparent border-transparent hover:border-slate-200 hover:bg-slate-50'}
               `}
@@ -435,7 +509,7 @@ export default function Header({ open, setOpen }) {
               {profOpen && (
                 <motion.div 
                   initial={{ opacity: 0, y: 8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 24 }}
+                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
                   className="absolute right-0 top-[calc(100%+12px)] w-64 bg-white/95 backdrop-blur-2xl rounded-2xl border border-slate-200/80 shadow-[0_20px_40px_-10px_rgba(15,23,42,0.1)] overflow-hidden"
                 >
                   <div className="px-4 py-4 bg-slate-50 border-b border-slate-100 flex items-center gap-3">
@@ -452,7 +526,7 @@ export default function Header({ open, setOpen }) {
                     <button 
                       onClick={() => {
                         if(profileData?.businessProfileId) {
-                          handleMenuAction(() => navigate(`/storefront/${profileData.businessProfileId}`));
+                          handleMenuAction(() => navigate(`/storefront/${profileData.businessProfileId}`, { state: { isOwner: true } }));
                         }
                       }} 
                       className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-[13px] font-[600] rounded-xl hover:bg-slate-50 text-slate-700 hover:text-slate-900 transition-colors group"
@@ -481,8 +555,10 @@ export default function Header({ open, setOpen }) {
           className="fixed flex items-center justify-between px-3 md:px-5 shadow-[0_8px_32px_rgba(15,23,42,0.06)]"
           initial={false}
           animate={{
-            top: 12, left: 12, right: 12, height: isScrolled ? 60 : (window.innerWidth >= 768 ? 72 : 68),
-            borderRadius: isScrolled ? 20 : 24, backgroundColor: isScrolled ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.85)',
+            top: 12, left: 12, right: 12, 
+            height: isScrolled ? (window.innerWidth >= 768 ? 60 : 52) : (window.innerWidth >= 768 ? 72 : 58),
+            borderRadius: isScrolled ? 20 : 24, 
+            backgroundColor: isScrolled ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.85)',
             backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.8)',
             boxShadow: isScrolled ? '0 12px 40px -12px rgba(15,23,42,0.12), inset 0 0 0 1px rgba(255,255,255,0.8)' : '0 8px 30px -10px rgba(15,23,42,0.08), inset 0 0 0 1px rgba(255,255,255,0.8)'
           }}
@@ -491,16 +567,34 @@ export default function Header({ open, setOpen }) {
           <div className="hidden md:block flex-1 max-w-[280px] mx-6"><SmartSearchBar isMobile={true} /></div>
           
           <div className="flex items-center gap-2">
-            <PremiumIconButton badge={unreadCount} onClick={() => { setNotifOpen(!notifOpen); setProfOpen(false); }}><Bell size={18} strokeWidth={2} /></PremiumIconButton>
+            
+            {/* MOBILE NOTIFICATION BELL */}
+            <div className="relative" ref={notifRefMobile}>
+              <PremiumIconButton badge={unreadCount} onClick={handleNotifToggle} active={notifOpen}>
+                <Bell size={18} strokeWidth={2} className={notifOpen ? 'fill-slate-900/10 text-slate-900' : ''} />
+              </PremiumIconButton>
+              
+              <AnimatePresence>
+                {notifOpen && renderNotificationDropdown(true)}
+              </AnimatePresence>
+            </div>
             
             {/* Tablet Profile Trigger */}
-            <div className="hidden md:flex relative" ref={profRef}>
-               <button onClick={() => { setProfOpen(!profOpen); setNotifOpen(false); }} className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 text-white font-bold flex items-center justify-center text-[13px] shadow-sm">
+            <div className="hidden md:flex relative">
+               <button onClick={handleProfToggle} className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 text-white font-bold flex items-center justify-center text-[13px] shadow-sm">
                  {getInitials(profileData?.ownerName)}
                </button>
             </div>
 
-            <PremiumIconButton onClick={() => setOpen(!open)} active={open}><AnimatePresence mode="wait">{open ? <motion.div key="close"><X size={20}/></motion.div> : <motion.div key="menu"><Menu size={20}/></motion.div>}</AnimatePresence></PremiumIconButton>
+            {/* MOBILE MENU TOGGLE */}
+            <PremiumIconButton onClick={handleMenuToggle} active={open}>
+              <AnimatePresence mode="wait">
+                {open 
+                  ? <motion.div key="close" initial={{ opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0, rotate: 90 }} transition={{ duration: 0.15 }}><X size={20}/></motion.div> 
+                  : <motion.div key="menu" initial={{ opacity: 0, rotate: 90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0, rotate: -90 }} transition={{ duration: 0.15 }}><Menu size={20}/></motion.div>
+                }
+              </AnimatePresence>
+            </PremiumIconButton>
           </div>
         </motion.header>
       </div>

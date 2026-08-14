@@ -17,14 +17,14 @@ const getPremiumIconStyle = (index) => {
   return styles[index % styles.length];
 };
 
-export default function QuickActions() {
+// ✅ ADDED { role } PROP TO COMPONENT PARAMETERS
+export default function QuickActions({ role }) {
   const navigate = useNavigate();
 
-  // FIX 1: If getQuickActions is a function, call it here. If it's an array, remove the ().
-  const actions = typeof getQuickActions === 'function' ? getQuickActions() : getQuickActions;
+  // ✅ PASSED THE ROLE VARIABLE DIRECTLY INTO THE FUNCTION
+  const actions = typeof getQuickActions === 'function' ? getQuickActions(role) : getQuickActions;
 
   return (
-    // FIX 2: Fixed the broken 'mb-' Tailwind class
     <section className="mb-6 sm:mb-8 md:mb-10 w-full">
       <div className="sm:px-2 md:px-3">
         <SectionHead title="Quick Actions" sub="Jump right into what you need" />
@@ -35,7 +35,6 @@ export default function QuickActions() {
           <motion.button
             key={a.id}
             onClick={() => navigate(a.path)}
-            // Ensure your fadeUp function returns { initial, animate, transition }
             {...fadeUp(i * 0.05)} 
             whileHover={{ y: -3 }}
             whileTap={{ scale: 0.96 }}

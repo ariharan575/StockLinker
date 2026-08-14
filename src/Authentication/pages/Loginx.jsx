@@ -18,7 +18,7 @@ import { auth } from "../config/firebase";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { authApi } from "../services/api"; 
+import { authApi } from "../services/api";
 
 // Premium SaaS Easing for smooth animations
 const easePremium = [0.16, 1, 0.3, 1];
@@ -39,10 +39,16 @@ export default function SaaSAuthUI() {
   const [otp, setOtp] = useState(Array(6).fill(""));
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
+  
+  // Track general loading state and WHICH specific action is loading/erroring
   const [loading, setLoading] = useState(false);
+  const [loadingType, setLoadingType] = useState(""); // "phone" | "verify" | "guest"
+  
+  const [errorMessage, setErrorMessage] = useState("");
+  const [errorType, setErrorType] = useState(""); // "phone" | "verify" | "guest"
+
   const [confirmationResult, setConfirmationResult] = useState(null);
   const [resendTimer, setResendTimer] = useState(0);
-  const [errorMessage, setErrorMessage] = useState("");
 
   const inputsRef = useRef([]);
   const { login } = useAuth();
@@ -97,6 +103,7 @@ export default function SaaSAuthUI() {
     setPhone(formatted);
     setError(false);
     setErrorMessage("");
+    setErrorType("");
   };
 
   /* =========================================
@@ -106,11 +113,14 @@ export default function SaaSAuthUI() {
     if (!phone || phone.length < 10) {
       setError(true);
       setErrorMessage("Please enter valid mobile number");
+      setErrorType("phone");
       return;
     }
+    setLoadingType("phone");
     setLoading(true);
     setError(false);
     setErrorMessage("");
+    setErrorType("");
 
     try {
       await setupRecaptcha();
@@ -134,8 +144,10 @@ export default function SaaSAuthUI() {
       console.error(error);
       setError(true);
       setErrorMessage(getAuthErrorMessage(error));
+      setErrorType("phone");
     } finally {
       setLoading(false);
+      setLoadingType("");
     }
   };
 
@@ -144,9 +156,12 @@ export default function SaaSAuthUI() {
   ========================================= */
   const handleVerify = async () => {
     if (!isOtpComplete) return;
+    setLoadingType("verify");
     setLoading(true);
     setError(false);
     setErrorMessage("");
+    setErrorType("");
+    
     try {
       const enteredOtp = otp.join("");
       const result = await confirmationResult.confirm(enteredOtp);
@@ -154,13 +169,13 @@ export default function SaaSAuthUI() {
       const loginResult = await login(authApi.phoneLogin(idToken));
 
       if (loginResult.success) {
-        
         if (loginResult.needsRole) navigate("/role-selection");
         else if (loginResult.needsOnboarding) navigate("/onboarding");
         else navigate("/dashboard");
       } else {
         setError(true);
         setErrorMessage(loginResult.error || "Login failed");
+        setErrorType("verify");
         setOtp(Array(6).fill(""));
         inputsRef.current[0]?.focus();
       }
@@ -168,10 +183,12 @@ export default function SaaSAuthUI() {
       console.error(error);
       setError(true);
       setErrorMessage(getAuthErrorMessage(error));
+      setErrorType("verify");
       setOtp(Array(6).fill(""));
       inputsRef.current[0]?.focus();
     } finally {
       setLoading(false);
+      setLoadingType("");
     }
   };
 
@@ -197,6 +214,7 @@ export default function SaaSAuthUI() {
     setOtp(newOtp);
     setError(false);
     setErrorMessage("");
+    setErrorType("");
     if (value && index < 5) {
       inputsRef.current[index + 1].focus();
     }
@@ -228,21 +246,20 @@ export default function SaaSAuthUI() {
   /* =========================================
       GOOGLE / GUEST LOGIN
   ========================================= */
-  const handleGoogleLogin = () => {
-    // ✅ DYNAMIC ENVIRONMENT VARIABLE FOR GOOGLE URI
-    const backendUri = import.meta.env.VITE_BACKEND_URI || 'http://localhost:8080';
-    window.location.href = `${backendUri}/oauth2/authorization/google`;
+const handleGoogleLogin = () => {
+    window.location.href = `/oauth2/authorization/google`;
   };
 
   const handleGuestLogin = async () => {
+    setLoadingType("guest");
     setLoading(true);
     setError(false);
     setErrorMessage("");
+    setErrorType("");
     try {
       const loginResult = await login(authApi.guestLogin());
 
       if (loginResult.success) {
-
         if (loginResult.needsRole) navigate("/role-selection");
         else if (loginResult.needsOnboarding) navigate("/onboarding");
         else navigate("/dashboard");
@@ -250,14 +267,17 @@ export default function SaaSAuthUI() {
       } else {
         setError(true);
         setErrorMessage(loginResult.error || "Login failed");
+        setErrorType("guest");
         setOtp(Array(6).fill(""));
         inputsRef.current[0]?.focus();
       }
     } catch (err) {
       setError(true);
       setErrorMessage(err.response?.data?.message || "Guest login failed");
+      setErrorType("guest");
     } finally {
       setLoading(false);
+      setLoadingType("");
     }
   };
 
@@ -271,6 +291,7 @@ export default function SaaSAuthUI() {
     setOtp(Array(6).fill(""));
     setError(false);
     setErrorMessage("");
+    setErrorType("");
     setConfirmationResult(null);
     if (window.recaptchaVerifier) {
       window.recaptchaVerifier.clear();
@@ -372,7 +393,7 @@ export default function SaaSAuthUI() {
 
                     <div
                       className={`relative w-full mt-1 mx-auto flex items-center h-[44px] sm:h-auto rounded-xl border transition-all duration-300 bg-white shadow-sm overflow-hidden sm:mt-2 ${
-                        error
+                        error && errorType === "phone"
                           ? "border-red-500 focus-within:ring-4 focus-within:ring-red-500/20"
                           : "border-slate-200 hover:border-pink-300 focus-within:border-pink-500 focus-within:ring-4 focus-within:ring-pink-500/20"
                       }`}
@@ -397,9 +418,9 @@ export default function SaaSAuthUI() {
                       />
                     </div>
 
-                    {/* ERROR */}
+                    {/* PHONE ERROR */}
                     <AnimatePresence>
-                      {errorMessage && (
+                      {errorMessage && errorType === "phone" && (
                         <motion.div
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -428,7 +449,7 @@ export default function SaaSAuthUI() {
                       }
                     `}
                   >
-                    {loading && (
+                    {loading && loadingType === "phone" && (
                       <motion.div
                         animate={{ x: ["-100%", "100%"] }}
                         transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
@@ -440,7 +461,7 @@ export default function SaaSAuthUI() {
                       <span className="absolute inset-0 w-full h-full bg-white/10 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out" />
                     )}
 
-                    {loading ? (
+                    {loading && loadingType === "phone" ? (
                       <>
                         <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                         <span>Sending Secure OTP...</span>
@@ -480,9 +501,33 @@ export default function SaaSAuthUI() {
                     disabled={loading}
                     className="flex w-full items-center justify-center gap-3 rounded-xl mx-auto h-[43px] sm:h-auto sm:py-3.5 text-[13px] sm:text-[14px] font-semibold transition-all duration-200 bg-black border border-slate-100 text-white cursor-pointer mt-3 sm:mt-4 transform-gpu"
                   >
-                    <User className="h-4 w-4" />
-                    Continue as Guest
+                    {loading && loadingType === "guest" ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Continuing as Guest...
+                      </>
+                    ) : (
+                      <>
+                        <User className="h-4 w-4" />
+                        Continue as Guest
+                      </>
+                    )}
                   </motion.button>
+
+                  {/* GUEST ERROR */}
+                  <AnimatePresence>
+                    {errorMessage && errorType === "guest" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="mt-3 flex items-center justify-center gap-2 text-red-500 text-[13px] sm:text-sm font-medium"
+                      >
+                        <XCircle size={16} />
+                        {errorMessage}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </>
               ) : (
                 <>
@@ -503,7 +548,7 @@ export default function SaaSAuthUI() {
                         disabled={loading}
                         autoFocus={index === 0}
                         className={`w-full h-[44px] sm:h-14 lg:h-16 rounded-xl text-center text-[16px] sm:text-2xl font-bold outline-none transition-all duration-300 border bg-white shadow-sm transform-gpu ${
-                          error
+                          error && errorType === "verify"
                             ? "border-red-500 focus:ring-4 focus:ring-red-500/20"
                             : "border-slate-200 text-slate-900 focus:border-pink-500 focus:ring-4 focus:ring-pink-500/20"
                         }`}
@@ -512,7 +557,7 @@ export default function SaaSAuthUI() {
                   </div>
 
                   {/* VERIFY LOADER */}
-                  {loading && (
+                  {loading && loadingType === "verify" && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -531,8 +576,8 @@ export default function SaaSAuthUI() {
                     </div>
                   )}
 
-                  {/* ERROR */}
-                  {errorMessage && !loading && (
+                  {/* VERIFY ERROR */}
+                  {errorMessage && !loading && errorType === "verify" && (
                     <div className="mt-4 sm:mt-6 flex items-center justify-center gap-2 text-red-500 text-[13px] sm:text-[14px] font-medium">
                       <XCircle size={16} />
                       {errorMessage}

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, X, Package, ArrowRight, Minus, Plus, Loader2, SearchCode, AlertTriangle } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query'; 
-import { compareApi } from '../Services/api';
+import { compareApi } from '../../Services/api';
 import { GradientButton } from './SharedComponents';
 
 export default function ProductSearchModal({ isOpen, onClose, onSearch }) {
@@ -187,7 +187,7 @@ export default function ProductSearchModal({ isOpen, onClose, onSearch }) {
               <button onClick={onClose} className="px-6 py-2.5 rounded-[12px] bg-white border border-slate-200 text-slate-600 text-[13px] font-semibold hover:bg-slate-100 transition-colors shadow-sm">Cancel</button>
               
               <GradientButton onClick={handleAnalyze} disabled={!selectedProduct || isSearching} className="px-8 py-2.5 rounded-[12px] text-[13px]">
-                {isSearching ? <Loader2 size={16} className="animate-spin mr-2"/> : "Analyze Market Prices"} 
+                {isSearching ? <Loader2 size={16} className="animate-spin mr-2"/> : "Analyze Prices"} 
                 {!isSearching && <ArrowRight size={16} className="ml-2" />}
               </GradientButton>
             </div>

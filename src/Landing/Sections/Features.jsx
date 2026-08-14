@@ -10,8 +10,10 @@ import {
   RefreshCw,
   ArrowRight
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 // Premium Color Themes added to each feature to create a vibrant SaaS feel
+// Added appropriate 'link' paths to seamlessly route to the documentation sections
 const TRUST_BAR_ITEMS = [
   {
     id: 'search',
@@ -20,7 +22,8 @@ const TRUST_BAR_ITEMS = [
     description: 'Find trusted wholesalers nearby based on product availability, location, and precise delivery range algorithms.',
     gradient: 'from-blue-500 to-cyan-400',
     glow: 'group-hover:from-blue-500/20 group-hover:to-cyan-400/20',
-    textColor: 'group-hover:text-blue-500'
+    textColor: 'group-hover:text-blue-500',
+    link: '/documentation?section=seller-discovery'
   },
   {
     id: 'price',
@@ -29,7 +32,8 @@ const TRUST_BAR_ITEMS = [
     description: 'Compare real-time pricing, dynamic stock availability, and MOQ matrices across multiple suppliers instantly.',
     gradient: 'from-purple-500 to-fuchsia-400',
     glow: 'group-hover:from-purple-500/20 group-hover:to-fuchsia-400/20',
-    textColor: 'group-hover:text-fuchsia-500'
+    textColor: 'group-hover:text-fuchsia-500',
+    link: '/documentation?section=compare-prices'
   },
   {
     id: 'orders',
@@ -38,7 +42,8 @@ const TRUST_BAR_ITEMS = [
     description: 'Create, manage, and automate recurring orders faster with intelligent, streamlined purchasing workflows.',
     gradient: 'from-blue-500 to-cyan-400',
     glow: 'group-hover:from-blue-500/20 group-hover:to-cyan-400/20',
-    textColor: 'group-hover:text-blue-500'
+    textColor: 'group-hover:text-blue-500',
+    link: '/documentation?section=creating-order'
   },
   {
     id: 'tracking',
@@ -47,7 +52,8 @@ const TRUST_BAR_ITEMS = [
     description: 'Track fleet deliveries, monitor exact driver routes, and receive predictive live order arrival updates.',
     gradient: 'from-blue-500 to-cyan-400',
     glow: 'group-hover:from-blue-500/20 group-hover:to-cyan-400/20',
-    textColor: 'group-hover:text-blue-500'
+    textColor: 'group-hover:text-blue-500',
+    link: '/documentation?section=order-tracking'
   },
   {
     id: 'insights',
@@ -56,7 +62,8 @@ const TRUST_BAR_ITEMS = [
     description: 'Analyze deep sales performance, granular supplier activity, and predictive product demand from one dashboard.',
     gradient: 'from-purple-500 to-fuchsia-400',
     glow: 'group-hover:from-purple-500/20 group-hover:to-fuchsia-400/20',
-    textColor: 'group-hover:text-fuchsia-500'
+    textColor: 'group-hover:text-fuchsia-500',
+    link: '/documentation?section=wholesaler-dashboard'
   },
   {
     id: 'chat',
@@ -65,7 +72,8 @@ const TRUST_BAR_ITEMS = [
     description: 'Communicate instantly and securely with retailers and wholesalers through robust real-time in-app messaging.',
     gradient: 'from-blue-500 to-cyan-400',
     glow: 'group-hover:from-blue-500/20 group-hover:to-cyan-400/20',
-    textColor: 'group-hover:text-blue-500'
+    textColor: 'group-hover:text-blue-500',
+    link: '/documentation?section=chat-messages'
   }
 ];
 
@@ -95,6 +103,8 @@ const itemVariants = {
 };
 
 export default function FeaturesSection() {
+  const navigate = useNavigate();
+
   return (
     <section className="relative w-full overflow-hidden z-20 bg-[#F8FAFC]">
       
@@ -141,7 +151,8 @@ export default function FeaturesSection() {
               <motion.div 
                 key={item.id} 
                 variants={itemVariants} 
-                className="group relative will-change-transform translate-z-0"
+                onClick={() => navigate(item.link)}
+                className="group relative will-change-transform translate-z-0 cursor-pointer"
               >
                 {/* White base card hover opacity */}
                 <div className="absolute inset-0 bg-gradient-to-b from-white to-slate-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[24px]" />

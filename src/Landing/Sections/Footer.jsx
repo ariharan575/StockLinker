@@ -10,34 +10,60 @@ import {
   ArrowUpRight,
   Network,
 } from "lucide-react";
-import { FaGithub, FaLinkedin , FaInstagram} from "react-icons/fa";
+import {
+  FaGithub,
+  FaLinkedin,
+  FaInstagram,
+} from "react-icons/fa";
 
+// Updated to use objects so specific routes can be assigned
 const links = {
   platform: [
-    "Product Discovery",
-    "Price Comparison",
-    "Order Management",
-    "Route Tracking",
-    "Communication",
+    { label: "Product Discovery", href: "#" },
+    { label: "Price Comparison", href: "#" },
+    { label: "Order Management", href: "#" },
+    { label: "Route Tracking", href: "#" },
+    { label: "Communication", href: "#" },
   ],
-  roles: ["Shopkeeper", "Wholesaler", "Admin", "Guest Mode"],
-  resources: ["Documentation", "FAQs", "Support", "Contact"],
-  technology: ["React", "Spring Boot", "MySQL", "Open Source"],
+  roles: [
+    { label: "Shopkeeper", href: "#" },
+    { label: "Wholesaler", href: "#" },
+    { label: "Admin", href: "#" },
+    { label: "Guest Mode", href: "#" },
+  ],
+  resources: [
+    { label: "Documentation", href: "/documentation" }, // Updated Path
+    { label: "FAQs", href: "#" },
+    { label: "Support", href: "#" },
+    { label: "Contact", href: "#" },
+  ],
+  technology: [
+    { label: "React", href: "#" },
+    { label: "Spring Boot", href: "#" },
+    { label: "MySQL", href: "#" },
+    { label: "Open Source", href: "#" },
+  ],
 };
 
 // Premium Apple-style Easing Curve
 const easePremium = [0.16, 1, 0.3, 1];
 
-function FooterLink({ children }) {
+// Added href prop for dynamic routing
+function FooterLink({ children, href }) {
   return (
     <motion.a
-      href="#"
+      href={href}
       whileHover={{ x: 8 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      transition={{
+        type: "spring",
+        stiffness: 400,
+        damping: 25,
+      }}
       className="group flex items-center gap-2 text-sm text-white/45 transition-colors hover:text-white will-change-transform translate-z-0"
     >
       <span className="relative">
         {children}
+
         <span className="absolute -bottom-1 left-0 h-px w-0 bg-white transition-all duration-300 group-hover:w-full" />
       </span>
 
@@ -49,6 +75,7 @@ function FooterLink({ children }) {
   );
 }
 
+// Updated mapping to handle the new object structure
 function FooterColumn({ title, items }) {
   return (
     <div>
@@ -58,7 +85,9 @@ function FooterColumn({ title, items }) {
 
       <div className="space-y-4">
         {items.map((item) => (
-          <FooterLink key={item}>{item}</FooterLink>
+          <FooterLink key={item.label} href={item.href}>
+            {item.label}
+          </FooterLink>
         ))}
       </div>
     </div>
@@ -75,11 +104,15 @@ export default function Footer() {
 
   // Optimized spring for scroll tracking
   const y = useSpring(
-    useTransform(scrollYProgress, [0, 1], [60, 0]), 
+    useTransform(
+      scrollYProgress,
+      [0, 1],
+      [60, 0]
+    ),
     {
       stiffness: 100,
       damping: 30,
-      restDelta: 0.001
+      restDelta: 0.001,
     }
   );
 
@@ -95,14 +128,21 @@ export default function Footer() {
           className="absolute inset-0 opacity-[0.06]"
           style={{
             backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)
-          `,
+              linear-gradient(
+                rgba(255,255,255,0.08) 1px,
+                transparent 1px
+              ),
+              linear-gradient(
+                90deg,
+                rgba(255,255,255,0.08) 1px,
+                transparent 1px
+              )
+            `,
             backgroundSize: "80px 80px",
           }}
         />
 
-        {/* Floating Particles (Reduced to 20 for mobile performance, strictly GPU handled) */}
+        {/* Floating Particles */}
         {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
@@ -123,7 +163,7 @@ export default function Footer() {
           />
         ))}
 
-        {/* Ambient background light glow (Using radial-gradient instead of heavy CSS Blur) */}
+        {/* Ambient Background Light Glow */}
         <motion.div
           animate={{
             opacity: [0.3, 0.6, 0.3],
@@ -131,11 +171,12 @@ export default function Footer() {
           transition={{
             duration: 8,
             repeat: Infinity,
-            ease: "easeInOut"
+            ease: "easeInOut",
           }}
           className="pointer-events-none absolute left-1/2 top-1/3 h-[700px] w-[700px] -translate-x-1/2 rounded-full will-change-transform translate-z-0"
           style={{
-            background: 'radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%)'
+            background:
+              "radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%)",
           }}
         />
       </div>
@@ -146,7 +187,6 @@ export default function Footer() {
         className="relative z-10 mx-auto max-w-7xl px-6 pt-16 md:px-10 will-change-transform transform-gpu"
       >
         <div className="grid gap-16 lg:grid-cols-[1.2fr_2fr]">
-          
           {/* Left Brand Column */}
           <div>
             <div className="flex items-center gap-3">
@@ -158,6 +198,7 @@ export default function Footer() {
                 <div className="text-xl font-semibold">
                   StockLinker
                 </div>
+
                 <div className="text-xs text-white/40">
                   Wholesale Commerce OS
                 </div>
@@ -170,22 +211,152 @@ export default function Footer() {
               communication, and invoicing.
             </p>
 
+            {/* Social & Contact Links */}
             <div className="mt-10 flex items-center gap-4">
-              {[FaGithub, FaLinkedin, FaInstagram, Mail].map((Icon, i) => (
-                <motion.a
-                  key={i}
-                  href="#"
+              {/* GitHub */}
+              <motion.a
+                href={import.meta.env.VITE_GITHUB_URI} // Fetched from env
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Visit GitHub profile"
+                title="GitHub"
+                whileHover={{
+                  scale: 1.1,
+                  rotate: 8,
+                  y: -3,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 20,
+                }}
+                className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] transition-all hover:bg-white/90 hover:text-black will-change-transform translate-z-0"
+              >
+                <FaGithub size={20} />
+              </motion.a>
+
+              {/* LinkedIn */}
+              <motion.a
+                href={import.meta.env.VITE_LINKEDIN_URI} // Fetched from env
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Visit LinkedIn profile"
+                title="LinkedIn"
+                whileHover={{
+                  scale: 1.1,
+                  rotate: 8,
+                  y: -3,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 20,
+                }}
+                className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] transition-all hover:bg-white/90 hover:text-black will-change-transform translate-z-0"
+              >
+                <FaLinkedin size={20} />
+              </motion.a>
+
+              {/* Instagram */}
+              <motion.a
+                href={import.meta.env.VITE_INSTA_URI} // Fetched from env
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Visit Instagram profile"
+                title="Instagram"
+                whileHover={{
+                  scale: 1.1,
+                  rotate: 8,
+                  y: -3,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 20,
+                }}
+                className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] transition-all hover:bg-white/90 hover:text-black will-change-transform translate-z-0"
+              >
+                <FaInstagram size={20} />
+              </motion.a>
+
+              {/* Email - Tooltip Only / No Navigation */}
+              <div className="group relative">
+                <motion.button
+                  type="button"
+                  aria-label="Show email address"
                   whileHover={{
                     scale: 1.1,
                     rotate: 8,
                     y: -3,
                   }}
-                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] transition-all hover:bg-white/90 hover:text-black will-change-transform translate-z-0"
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 20,
+                  }}
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white transition-all duration-200 hover:bg-white/90 hover:text-black will-change-transform translate-z-0"
                 >
-                  <Icon size={20} />
-                </motion.a>
-              ))}
+                  <Mail
+                    size={20}
+                    className="transition-colors duration-200"
+                  />
+                </motion.button>
+
+                {/* Email Tooltip */}
+                <div
+                  className="
+                    pointer-events-none
+                    absolute
+                    bottom-full
+                    left-1/2
+                    z-[100]
+                    mb-3
+                    -translate-x-1/2
+                    translate-y-2
+                    whitespace-nowrap
+                    rounded-xl
+                    border
+                    border-slate-200
+                    bg-white
+                    px-4
+                    py-2.5
+                    text-xs
+                    font-semibold
+                    text-slate-800
+                    shadow-[0_10px_30px_rgba(0,0,0,0.25)]
+                    opacity-0
+                    scale-95
+                    invisible
+                    transition-all
+                    duration-200
+                    ease-out
+                    group-hover:visible
+                    group-hover:translate-y-0
+                    group-hover:scale-100
+                    group-hover:opacity-100
+                  "
+                >
+                  {import.meta.env.VITE_EMAIL} {/* Fetched from env */}
+
+                  {/* Tooltip Arrow */}
+                  <span
+                    className="
+                      absolute
+                      left-1/2
+                      top-full
+                      h-2.5
+                      w-2.5
+                      -translate-x-1/2
+                      -translate-y-1/2
+                      rotate-45
+                      border-r
+                      border-b
+                      border-slate-200
+                      bg-white
+                    "
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

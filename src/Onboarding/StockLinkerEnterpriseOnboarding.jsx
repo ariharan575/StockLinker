@@ -149,17 +149,20 @@ export default function StockLinkerEnterpriseOnboarding() {
   return (
     <div className="relative min-h-screen overflow-x-hidden transition-all duration-500 bg-gray-200 text-slate-900">
       <motion.div style={{ scaleX }} className="fixed top-0 left-0 right-0 h-[3px] z-[100] origin-left bg-gradient-to-r from-pink-400 via-rose-300 to-sky-400" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(236,72,153,0.08),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.08),transparent_35%)]" />
-      <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] bg-[size:45px_45px]" />
       
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Hidden heavy backgrounds on mobile to improve performance */}
+      <div className="absolute inset-0 hidden sm:block bg-[radial-gradient(circle_at_top,rgba(236,72,153,0.08),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.08),transparent_35%)]" />
+      <div className="absolute inset-0 opacity-[0.04] hidden sm:block bg-[linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] bg-[size:45px_45px]" />
+      
+      <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block">
         <motion.div animate={{ x: [0, 50, 0], y: [0, -40, 0] }} transition={{ duration: 14, repeat: Infinity }} className="absolute -top-20 -left-20 w-[320px] h-[320px] rounded-full bg-pink-100/50 blur-3xl" />
         <motion.div animate={{ x: [0, -40, 0], y: [0, 30, 0] }} transition={{ duration: 12, repeat: Infinity }} className="absolute bottom-0 right-0 w-[320px] h-[320px] rounded-full bg-sky-100/50 blur-3xl" />
       </div>
 
-      <main className="relative z-10 px-3 py-4 sm:px-5 lg:pl-[110px] xl:pl-8 lg:pr-8 xl:px-8 2xl:px-12 min-h-screen flex items-center">
-        <div className="max-w-[1520px] mx-auto w-full">
-          <div className="grid lg:grid-cols-1 xl:grid-cols-[300px_1fr] gap-6 xl:gap-8 items-stretch">
+      {/* Removed padding on mobile so content fits edge-to-edge */}
+      <main className="relative z-10 p-0 sm:px-5 sm:py-4 lg:pl-[110px] xl:pl-8 lg:pr-8 xl:px-8 2xl:px-12 min-h-screen flex items-center">
+        <div className="max-w-[1520px] mx-auto w-full min-h-screen sm:min-h-0 flex sm:block">
+          <div className="grid lg:grid-cols-1 xl:grid-cols-[300px_1fr] gap-0 sm:gap-6 xl:gap-8 items-stretch w-full flex-1">
             
             <motion.aside initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }} className="hidden lg:block xl:hidden fixed left-0 top-4 z-[80] h-screen pointer-events-none">
               <motion.div initial={false} whileHover={{ width: 280 }} transition={{ type: "spring", stiffness: 150, damping: 14 }} className="group relative pointer-events-auto h-screen w-[96px] overflow-hidden rounded-r-[36px] border-r border-t border-b flex flex-col bg-gradient-to-b from-slate-800 via-slate-900 to-slate-900 border-slate-700 shadow-[0_20px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
@@ -253,7 +256,8 @@ export default function StockLinkerEnterpriseOnboarding() {
               </div>
             </motion.aside>
 
-            <motion.section layout initial={{ opacity: 0, y: 50, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.7 }} className="rounded-2xl border overflow-hidden backdrop-blur-xl w-full max-w-[1180px] h-full bg-white/80 border-slate-200 flex flex-col">
+            {/* Changed from hardcoded border/rounded to responsive variants so mobile is flat white */}
+            <motion.section layout initial={{ opacity: 0, y: 50, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.7 }} className="sm:rounded-2xl sm:border overflow-hidden backdrop-blur-xl w-full max-w-[1180px] h-full flex-1 bg-white sm:bg-white/80 border-slate-200 flex flex-col">
               {/* MOBILE / TABLET HEADER */}
               <div className="xl:hidden px-5 sm:px-7 pt-7 pb-6">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-pink-500/10 shadow-md">
@@ -277,7 +281,8 @@ export default function StockLinkerEnterpriseOnboarding() {
                           return (
                             <div key={item} className="relative flex flex-col items-center flex-1">
                               {index !== STEPS.length - 1 && <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.5 }} className={`absolute top-5 left-[55%] w-full h-[2px] origin-left ${isCompleted ? "bg-gradient-to-r from-pink-400 to-sky-400" : "bg-slate-200"}`} />}
-                              <motion.div whileTap={{ scale: 0.94 }} whileHover={{ y: -2 }} animate={{ scale: active ? [1, 1.08, 1] : 1 }} transition={{ duration: 2, repeat: Infinity }} className={`relative z-10 w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-bold border transition-all duration-300 ${isCompleted ? "bg-pink-400 border-pink-400 text-white" : active ? "bg-sky-400 border-sky-400 text-white shadow-[0_0_20px_rgba(56,189,248,0.5)]" : "bg-white border-slate-300 text-slate-600"}`}>
+                              {/* Removed heavy infinite animations for mobile steps to stop layout thrashing */}
+                              <motion.div whileTap={{ scale: 0.94 }} animate={{ scale: active ? 1.05 : 1 }} transition={{ duration: 0.3 }} className={`relative z-10 w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-bold border transition-all duration-300 ${isCompleted ? "bg-pink-400 border-pink-400 text-white" : active ? "bg-sky-400 border-sky-400 text-white shadow-[0_0_20px_rgba(56,189,248,0.5)]" : "bg-white border-slate-300 text-slate-600"}`}>
                                 {isCompleted ? <Check size={14} /> : index + 1}
                               </motion.div>
                               <span className={`mt-2 text-[11px] sm:text-xs font-semibold ${active ? "text-pink-500" : "text-slate-500"}`}>{item}</span>
@@ -292,7 +297,7 @@ export default function StockLinkerEnterpriseOnboarding() {
               </div>
 
               {/* BODY */}
-              <div className="p-5 sm:p-7 lg:p-8 xl:p-9 flex-1 flex flex-col">
+              <div className="px-5 pb-8 sm:p-7 lg:p-8 xl:p-9 flex-1 flex flex-col">
                 
                 {errorMsg && (
                   <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 p-4 rounded-xl bg-red-50 text-red-600 text-sm font-semibold border border-red-200 flex items-center gap-2">
@@ -303,7 +308,7 @@ export default function StockLinkerEnterpriseOnboarding() {
                 <div className="flex-1">
                   <AnimatePresence mode="wait">
                     {!completed ? (
-                      <motion.div key={step} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.35 }}>
+                      <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
                         {step === 0 && <BusinessStep  role={role} formData={formData} updateField={updateField} errors={errorFields} />}
                         {step === 1 && <AddressStep formData={formData} updateField={updateField} errors={errorFields} />}
                         {step === 2 && <MarketplaceStep role={role} categories={dbCategories} formData={formData} updateField={updateField} toggleCategory={toggleCategory} errors={errorFields} />}

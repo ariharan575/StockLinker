@@ -1,9 +1,5 @@
 import { axiosInstance } from "../../Authentication/api/axiosInstance";
 
-/**
- * Thin wrapper around the /api/chat/* endpoints.
- * No business logic here — mapping/derivation lives in utils/chatMappers.js and the hooks.
- */
 
 // ─── Conversations ──────────────────────────────────────────
 

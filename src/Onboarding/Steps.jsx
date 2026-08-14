@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  User2, Building2, Phone, Mail, ShieldCheck, MapPin, Check, CheckCircle2, ChevronDown, Search, Truck, MessageCircle
+  User2, Building2, Phone, Mail, ShieldCheck, MapPin, Check, CheckCircle2, ChevronDown, Search, Truck, MessageCircle, Loader2
 } from "lucide-react";
 import SectionTitle from "./SectionTitle";
 import Input from "./Input";
@@ -72,7 +72,7 @@ export function AddressStep({ formData, updateField, errors }) {
         {/* Searchable District Dropdown */}
         <div className="group relative">
           <label className="text-sm font-semibold mb-2 block text-slate-700">District {errors.includes("district") && <span className="text-red-500 ml-1">*</span>}</label>
-          <div className="relative">
+          <div className="relative z-20">
             <div className={`absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-2xl flex items-center justify-center border transition-all ${errors.includes("district") ? 'bg-red-400/10 border-red-400/50 text-red-500' : 'bg-pink-400/10 border-pink-400/20 text-pink-400'}`}>
               <MapPin size={17} />
             </div>
@@ -126,7 +126,7 @@ export function MarketplaceStep({ role, categories, formData, toggleCategory, up
               <motion.button
                 key={item.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }} whileHover={{ y: -3, scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 onClick={() => toggleCategory(item.id)}
-                className={`px-4 py-3 rounded-2xl border text-sm font-semibold transition-all duration-300 ${active ? "bg-pink-100 border-pink-300 text-pink-700 shadow-md" : "bg-slate-50 border-slate-200 hover:border-pink-300 text-slate-700"}`}
+                className={`px-4 py-3 rounded-2xl border text-sm font-semibold transition-all duration-300 ${active ? "bg-pink-100 border-pink-300 text-pink-700 shadow-md cursor-pointer" : "bg-slate-50 border-slate-200 hover:border-pink-300 text-slate-700 cursor-pointer"}`}
               >
                 {item.name}
               </motion.button>
@@ -144,9 +144,9 @@ export function MarketplaceStep({ role, categories, formData, toggleCategory, up
               <motion.button
                 key={item} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} whileHover={{ y: -5, scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onClick={() => role === "WHOLESALER" ? updateField("deliverySupport", item) : updateField("storeSize", item)}
-                className={`rounded-2xl border p-3.5 text-left transition-all duration-300 ${active ? "bg-pink-100 border-pink-300 text-pink-700 shadow-md " : "bg-slate-50 border-slate-200 hover:border-pink-300 text-slate-700"}`}
+                className={`rounded-2xl border p-3.5 text-left transition-all duration-300 cursor-pointer ${active ? "bg-pink-100 border-pink-300 text-pink-700 shadow-md " : "bg-slate-50 border-slate-200 hover:border-pink-300 text-slate-700"}`}
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pointer-events-none">
                   <h4 className="font-bold text-sm leading-tight">{item}</h4>
                   {active && <Check size={16} />}
                 </div>
@@ -161,17 +161,52 @@ export function MarketplaceStep({ role, categories, formData, toggleCategory, up
 
 export function SuccessScreen() {
   const navigate = useNavigate();
+  const [isLaunching, setIsLaunching] = useState(false);
+
+  const handleLaunch = () => {
+    setIsLaunching(true);
+    // Simulate background loading to give the user time to perceive the action
+    setTimeout(() => {
+      navigate("/dashboard");
+    }, 1200);
+  };
+
   return (
     <div className="min-h-[520px] flex flex-col items-center justify-center text-center relative overflow-hidden">
-      <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 6, repeat: Infinity }} className="absolute w-[300px] h-[300px] rounded-full bg-pink-400/10 blur-3xl" />
+      {/* Added pointer-events-none to prevent invisible overlays from blocking clicks */}
+      <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 6, repeat: Infinity }} className="absolute w-[300px] h-[300px] rounded-full bg-pink-400/10 blur-3xl hidden sm:block pointer-events-none" />
+      
       <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 120 }} className="relative z-10 w-28 h-28 rounded-full bg-green-500 flex items-center justify-center shadow-[0_0_40px_rgba(34,197,94,0.35)]">
         <CheckCircle2 className="w-14 h-14 text-white" />
       </motion.div>
-      <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-8 text-[38px] sm:text-[58px] leading-[1] font-black tracking-tight text-slate-900">
+      
+      <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="relative z-10 mt-8 text-[38px] sm:text-[58px] leading-[1] font-black tracking-tight text-slate-900">
         Marketplace<br /><span className="bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 bg-clip-text text-transparent">ready 🚀</span>
       </motion.h2>
-      <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mt-10 h-16 px-10 rounded-xl bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 text-white font-black text-lg shadow-[0_20px_60px_rgba(236,72,153,0.35)]" onClick={() => navigate("/dashboard")}>
-        <span>Launch Dashboard →</span>
+      
+      {/* Added relative, z-10, and explicit cursor classes so it cannot be blocked */}
+      <motion.button 
+        whileHover={isLaunching ? {} : { scale: 1.03 }} 
+        whileTap={isLaunching ? {} : { scale: 0.98 }} 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ delay: 0.4 }} 
+        disabled={isLaunching}
+        onClick={handleLaunch}
+        className={`relative z-10 mt-10 h-16 min-w-[240px] px-10 rounded-xl text-white font-black text-lg transition-all duration-300 flex items-center justify-center gap-3 ${
+          isLaunching 
+            ? "bg-gradient-to-r from-pink-600 via-rose-600 to-orange-600 opacity-90 cursor-not-allowed shadow-none" 
+            : "bg-gradient-to-r from-pink-500 via-rose-500 to-orange-500 shadow-[0_20px_60px_rgba(236,72,153,0.35)] cursor-pointer"
+        }`} 
+      >
+        {isLaunching ? (
+          <>
+            <Loader2 className="w-6 h-6 animate-spin text-white/90" />
+            <span>Launching...</span>
+          </>
+        ) : (
+          <span>Launch Dashboard →</span>
+        )}
       </motion.button>
     </div>
   );

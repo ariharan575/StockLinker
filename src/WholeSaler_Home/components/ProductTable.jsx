@@ -25,30 +25,55 @@ export default function WholesaleProductWorkspace() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [activeSearchRow, setActiveSearchRow] = useState(null);
+  
   const workspaceRef = useRef(null);
+  const searchTimeout = useRef(null); // Added for smooth typing debounce
   
   const [notification, setNotification] = useState(null);
   const showNotification = (type, msg) => setNotification({ type, msg });
 
-  useEffect(() => {
+   useEffect(() => {
     const handleInitialRows = () => {
-      if (window.innerWidth >= 1024) {
-        setProducts([createEmptyRow(), createEmptyRow(), createEmptyRow()]);
-      } else {
-        setProducts([createEmptyRow()]);
-      }
+      const initial = window.innerWidth >= 1024 
+        ? [createEmptyRow(), createEmptyRow(), createEmptyRow()] 
+        : [createEmptyRow()];
+      
+      setProducts(initial);
+
+      // Auto-focus the first row's product name input box on load
+      setTimeout(() => {
+        const firstInput = document.getElementById(`${initial[0].id}-productName`);
+        if (firstInput) firstInput.focus();
+      }, 150);
     };
     
     handleInitialRows();
 
+    // Store the initial window width
+    let lastWidth = window.innerWidth;
+
     const handleResize = () => {
-      if (products.every(p => !p.productName && !p.brand)) {
-        handleInitialRows();
+      const currentWidth = window.innerWidth;
+      
+      // ONLY trigger if the width changes, completely ignoring keyboard pop-ups (height changes)
+      if (currentWidth !== lastWidth) {
+        lastWidth = currentWidth;
+        
+        // Use functional state update to get the latest products without needing it in the dependency array
+        setProducts((prevProducts) => {
+          if (prevProducts.every(p => !p.productName && !p.brand)) {
+            return window.innerWidth >= 1024 
+              ? [createEmptyRow(), createEmptyRow(), createEmptyRow()] 
+              : [createEmptyRow()];
+          }
+          return prevProducts;
+        });
       }
     };
+    
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, []); 
 
   const handleKeyDown = useCallback((e) => {
     if (e.key === "Enter") {
@@ -81,24 +106,38 @@ export default function WholesaleProductWorkspace() {
   }, [products.length]);
 
   const handleAdd = useCallback(() => {
-    setProducts((prev) => [...prev, createEmptyRow()]);
+    const newRow = createEmptyRow();
+    setProducts((prev) => [...prev, newRow]);
+    
+    // Auto-focus the newly added row so you can type immediately
+    setTimeout(() => {
+      const nextInput = document.getElementById(`${newRow.id}-productName`);
+      if (nextInput) nextInput.focus();
+    }, 50);
   }, []);
 
-  const handleProductSearch = async (id, query) => {
+  const handleProductSearch = (id, query) => {
     handleChange(id, "productName", query);
     handleChange(id, "masterProductId", ""); 
+    
     if (query.trim().length < 2) {
       setSuggestions([]);
       setActiveSearchRow(null);
       return;
     }
-    try {
-      setActiveSearchRow(id);
-      const res = await productApi.searchMasterProducts(query);
-      setSuggestions(res.data);
-    } catch (err) {
-      console.error(err);
-    }
+    
+    setActiveSearchRow(id);
+    
+    // Smooth debounce applied to stop API lag from interrupting your typing
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(async () => {
+      try {
+        const res = await productApi.searchMasterProducts(query);
+        setSuggestions(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    }, 250);
   };
 
   const selectSuggestion = (rowId, suggestion) => {
@@ -106,6 +145,12 @@ export default function WholesaleProductWorkspace() {
     handleChange(rowId, "masterProductId", suggestion.id);
     setSuggestions([]);
     setActiveSearchRow(null);
+
+    // Auto-focus the Brand input box right after selecting a product
+    setTimeout(() => {
+      const brandInput = document.getElementById(`${rowId}-brand`);
+      if (brandInput) brandInput.focus();
+    }, 50);
   };
 
   useEffect(() => {
@@ -149,6 +194,12 @@ export default function WholesaleProductWorkspace() {
       } else {
         setProducts([createEmptyRow()]);
       }
+      
+      // Refocus after successful save
+      setTimeout(() => {
+        const firstInput = document.querySelector('input[placeholder="Search global catalog..."]');
+        if (firstInput) firstInput.focus();
+      }, 150);
       
       showNotification("success", "Catalog updated successfully.");
     } catch (error) {
@@ -212,9 +263,11 @@ export default function WholesaleProductWorkspace() {
                   <div className={`relative h-[42px] lg:h-[52px] bg-slate-50 lg:bg-transparent rounded-[10px] lg:rounded-none border lg:border-none focus-within:ring-2 focus-within:ring-inset focus-within:bg-white transition-all ${errors[`${row.id}-productName`] ? "border-rose-300 ring-1 ring-rose-100 bg-rose-50/30" : "border-slate-200 focus-within:ring-pink-200 focus-within:border-pink-300"}`}>
                     <Search className="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 w-4 h-4 lg:w-[18px] lg:h-[18px] text-slate-400" />
                     <input
+                      id={`${row.id}-productName`}
                       type="text"
                       value={row.productName}
                       onChange={(e) => handleProductSearch(row.id, e.target.value)}
+                      onFocus={() => { if(row.productName.length >= 2) handleProductSearch(row.id, row.productName); }}
                       placeholder="Search global catalog..."
                       className="w-full h-full pl-9 lg:pl-11 pr-3 text-[13px] lg:text-[14px] font-medium text-slate-900 bg-transparent outline-none placeholder:text-slate-400"
                     />
@@ -234,6 +287,7 @@ export default function WholesaleProductWorkspace() {
                   <label className="text-[10px] font-sora font-bold text-slate-500 uppercase mb-1.5 lg:hidden">Brand</label>
                   <div className={`relative h-[42px] lg:h-[52px] bg-slate-50 lg:bg-transparent rounded-[10px] lg:rounded-none border lg:border-none focus-within:ring-2 focus-within:ring-inset focus-within:bg-white transition-all ${errors[`${row.id}-brand`] ? "border-rose-300 ring-1 ring-rose-100 bg-rose-50/30" : "border-slate-200 focus-within:ring-pink-200 focus-within:border-pink-300"}`}>
                     <input
+                      id={`${row.id}-brand`}
                       type="text"
                       value={row.brand}
                       onChange={(e) => handleChange(row.id, "brand", e.target.value)}

@@ -9,9 +9,9 @@ import { C } from '../common/constants';
 
 
 export const getQuickActions = (role, C) => {
-  const isWholesaler = role?.toUpperCase() === 'WHOLESALER';
+  const isShopkeeper = role?.toUpperCase() === 'SHOPKEEPER';
 
-  if (isWholesaler) {
+  if (!isShopkeeper) {
     return [
       { id: 1, label: 'Find Products',   desc: 'Browse wholesale items',    Icon: Search,         path: '/category' },
       { id: 2, label: 'Inventory',       desc: 'Manage your products',      Icon: Package,        path: '/product' },
@@ -80,7 +80,8 @@ export const getNavItems = (role) => {
   return items;
 };
 
-export const getNavTabs = (role) => {
+export const getNavTabs = (role, businessProfileId = '') => {
+  
   const isWholesaler = role?.toUpperCase() === 'WHOLESALER';
   
   const tabs = [
@@ -96,7 +97,9 @@ export const getNavTabs = (role) => {
   }
 
   tabs.push({ id: 'orders', label: 'Orders', Icon: ShoppingCart, path: '/orders' });
-  tabs.push({ id: 'settings', label: 'Settings', Icon: Settings, path: '/settings/account' });
+  
+  // Replaced Settings tab with 'My Profile' mapping directly to their Storefront
+  tabs.push({ id: 'profile', label: 'My Profile', Icon: User, path: `/storefront/${businessProfileId}` });
 
   return tabs;
 };

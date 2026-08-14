@@ -198,14 +198,7 @@ export default function HeroSection() {
             </button>
 
             <button 
-              onClick={
-                () => {
-                const el = document.getElementById("features");
-                if(el) {
-                  const y = el.getBoundingClientRect().top + window.scrollY - 90;
-                  window.scrollTo({ top: y, behavior: 'smooth' });
-                }
-              }}
+              onClick={()=> navigate("/documentation")}
               className="group h-12 px-7 bg-white/60 backdrop-blur-md hover:bg-white text-sm font-semibold tracking-wide text-slate-800 rounded-xl transition-all duration-300 border border-slate-200 shadow-[0_4px_20px_rgba(15,23,42,0.03)] flex items-center justify-center gap-2.5 w-full sm:w-auto hover:scale-[1.02] hover:-translate-y-0.5 hover:border-slate-300 transform-gpu"
             >
               <Shield size={14} className="text-slate-400 group-hover:text-slate-600 transition-colors" />

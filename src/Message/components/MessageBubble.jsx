@@ -50,7 +50,7 @@ export function MessageBubble({ msg, conv, isGrouped, isLast, onRetry, onEdit, o
       <div className={`flex flex-col max-w-[75%] sm:max-w-[60%] ${isMe ? "items-end" : "items-start"}`}>
         <div className="flex items-center gap-2">
           
-          {/* Action Menu (Only visible on hover for 'me' messages that aren't deleted) */}
+          {/* Action Menu */}
           {isMe && !msg._deleted && !msg._pending && !msg._failed && !isEditing && (
             <div className="relative opacity-0 group-hover:opacity-100 transition-opacity" ref={menuRef}>
               <button 
@@ -80,13 +80,13 @@ export function MessageBubble({ msg, conv, isGrouped, isLast, onRetry, onEdit, o
             </div>
           )}
 
-          {/* The Bubble */}
+          {/* The Bubble - WhatsApp Light Gray Color Applied */}
           <div
             className={`
               relative px-4 py-2.5 text-[14px] leading-relaxed break-words transition-all duration-200
-              ${isEditing ? "w-[250px] sm:w-[300px] bg-white ring-2 ring-teal-500 rounded-2xl shadow-md" : 
+              ${isEditing ? "w-[250px] sm:w-[300px] bg-white ring-2 ring-slate-400 rounded-2xl shadow-md" : 
                 isMe
-                ? `bg-teal-600 text-white shadow-sm
+                ? `bg-[#E2E8F0] text-slate-800 shadow-sm
                    ${isGrouped ? "rounded-2xl rounded-tr-md" : "rounded-2xl rounded-tr-md"}`
                 : `bg-[#F1F5F9] text-[#111827]
                    ${isGrouped ? "rounded-2xl rounded-tl-md" : "rounded-2xl rounded-tl-md"}`
@@ -104,9 +104,9 @@ export function MessageBubble({ msg, conv, isGrouped, isLast, onRetry, onEdit, o
                   rows={2}
                   autoFocus
                 />
-                <div className="flex justify-end gap-1 border-t border-slate-100 pt-1 mt-1">
-                  <button onClick={() => setIsEditing(false)} className="p-1 hover:bg-slate-100 text-slate-400 rounded-md"><X size={14}/></button>
-                  <button onClick={handleEditSubmit} className="p-1 hover:bg-teal-50 text-teal-600 rounded-md"><Check size={14}/></button>
+                <div className="flex justify-end gap-1 border-t border-slate-300 pt-1 mt-1">
+                  <button onClick={() => setIsEditing(false)} className="p-1 hover:bg-slate-200 text-slate-500 rounded-md"><X size={14}/></button>
+                  <button onClick={handleEditSubmit} className="p-1 hover:bg-slate-300 text-slate-700 rounded-md"><Check size={14}/></button>
                 </div>
               </div>
             ) : msg._deleted ? (
@@ -116,7 +116,7 @@ export function MessageBubble({ msg, conv, isGrouped, isLast, onRetry, onEdit, o
             )}
 
             {msg._edited && !msg._deleted && !isEditing && (
-              <span className={`text-[10px] ml-1.5 ${isMe ? "text-teal-100/80" : "text-[#94A3B8]"}`}>
+              <span className={`text-[10px] ml-1.5 ${isMe ? "text-slate-500" : "text-[#94A3B8]"}`}>
                 (edited)
               </span>
             )}
@@ -126,14 +126,15 @@ export function MessageBubble({ msg, conv, isGrouped, isLast, onRetry, onEdit, o
         <div className={`flex items-center gap-1.5 mt-1 px-1 ${isMe ? "flex-row-reverse" : ""}`}>
           <span className="text-[11px] text-[#94A3B8] font-medium">{msg.time}</span>
 
+          {/* Read Receipts */}
           {isMe && isLast && !msg._failed && (
-            <span className="text-teal-600">
+            <span>
               {msg._pending ? (
                 <Check className="w-3.5 h-3.5 text-[#94A3B8]" />
               ) : msg.read ? (
-                <CheckCheck className="w-3.5 h-3.5 text-teal-600" />
+                <CheckCheck className="w-3.5 h-3.5 text-blue-500" /> /* WhatsApp Blue Tick */
               ) : (
-                <CheckCheck className="w-3.5 h-3.5 text-[#94A3B8]" />
+                <CheckCheck className="w-3.5 h-3.5 text-[#94A3B8]" /> /* Unread Gray Tick */
               )}
             </span>
           )}

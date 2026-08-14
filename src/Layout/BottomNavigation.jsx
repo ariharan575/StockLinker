@@ -1,29 +1,36 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getNavTabs } from './data/index';
-import { useAuth } from '../Authentication/context/AuthContext'; // <-- Import added
+import { useAuth } from '../Authentication/context/AuthContext';
 
-const BottomNavigation = memo(({ active, setActive }) => {
+const BottomNavigation = memo(() => {
   const navigate = useNavigate();
+  const location = useLocation(); 
   
-  // FETCH SECURE JWT ROLE
-  const { role } = useAuth();
+  const { role, profileData } = useAuth();
   
-  // GENERATE DYNAMIC TABS
-  const NAV_TABS = getNavTabs(role);
+  // GENERATE DYNAMIC TABS (Passing businessProfileId for the Profile routing)
+  const NAV_TABS = getNavTabs(role, profileData?.businessProfileId);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-4px_15px_rgba(0,0,0,0.05)] pb-safe">
       <div className="flex items-center justify-around h-16 px-2">
         {NAV_TABS.map((tab) => {
-          const isActive = active === tab.id;
+          // Robust active state: checks if current URL matches the tab path
+          // For profile, it checks if URL starts with /storefront/
+          const isActive = location.pathname === tab.path || (tab.id === 'profile' && location.pathname.startsWith('/storefront/'));
+
           return (
             <button
               key={tab.id}
               onClick={() => {
-                if (setActive) setActive(tab.id);
-                navigate(tab.path);
+                // PASS isOwner STATE IF CLICKING MY PROFILE
+                if (tab.id === 'profile') {
+                  navigate(tab.path, { state: { isOwner: true } });
+                } else {
+                  navigate(tab.path);
+                }
               }}
               className="relative flex flex-col items-center justify-center w-full h-full space-y-1 group touch-manipulation"
               aria-label={tab.label}
@@ -32,7 +39,7 @@ const BottomNavigation = memo(({ active, setActive }) => {
                 {isActive && (
                   <motion.div
                     layoutId="bottom-nav-active"
-                    className="absolute inset-0 rounded-full opacity-[0.15] bg-gradient-to-r from-[#3B82F6] via-[#7C3AED] to-[#EC4899]"
+                    className="absolute inset-0 rounded-full opacity-[0.15] "
                     transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                   />
                 )}
@@ -45,14 +52,14 @@ const BottomNavigation = memo(({ active, setActive }) => {
                     className={`w-[22px] h-[22px] transition-colors duration-200 ${
                       isActive 
                         ? 'text-[#8B5CF6] drop-shadow-sm' 
-                        : 'text-slate-400 group-hover:text-slate-600'
+                        : 'text-slate-400 group-hover:text-slate-800'
                     }`}
                   />
                 </motion.div>
               </div>
               <span 
                 className={`text-[10px] font-semibold transition-colors duration-200 ${
-                  isActive ? 'text-[#8B5CF6]' : 'text-slate-500'
+                  isActive ? 'text-[#8B5CF6]' : 'text-slate-500 group-hover:text-slate-800'
                 }`}
               >
                 {tab.label}

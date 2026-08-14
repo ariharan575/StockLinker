@@ -7,7 +7,7 @@ export default function SectionTitle({ title, subtitle }) {
       <motion.h2
         initial={{
           opacity: 0,
-          y: 20,
+          y: 10,
         }}
         animate={{
           opacity: 1,

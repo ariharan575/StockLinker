@@ -18,6 +18,9 @@ import ReorderSection from '../sections/ReorderSection';
 import TrustedSuppliers from '../sections/TrustedSuppliers';
 import WhyStockLinkers from '../sections/WhyStockLinkers';
 
+// ✅ IMPORT AUTH CONTEXT TO GET THE ROLE
+import { useAuth } from '../../Authentication/context/AuthContext';
+
 // ============================================================================
 // 🌍 WORLD-CLASS GLOBAL NETWORK ERROR STATE (PREMIUM SAAS DESIGN)
 // ============================================================================
@@ -109,6 +112,11 @@ const GlobalNetworkState = () => {
 export default function StockLinkerHomepage() {
   // --- ✅ FIXED: STORE THE EXACT ERROR OBJECT INSTEAD OF A BOOLEAN ---
   const [globalError, setGlobalError] = useState(null);
+  
+  // ✅ EXTRACT ROLE FROM AUTH CONTEXT
+  const { role } = useAuth();
+
+  console.log(role)
 
   const handleFetchFailure = useCallback((err) => {
     // Save the error object if provided, otherwise fallback to true to trigger UI
@@ -149,7 +157,8 @@ export default function StockLinkerHomepage() {
           ) : (
             <>
               <Hero />
-              <QuickActions />
+              {/* ✅ PASSED ROLE PROP TO QUICK ACTIONS */}
+              <QuickActions role={role} />
               <Categories onError={handleFetchFailure} />
               <PriceComparison onError={handleFetchFailure} />
               <FeaturedComparisons onError={handleFetchFailure} />

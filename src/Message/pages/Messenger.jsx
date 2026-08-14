@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 import { useQuery } from "@tanstack/react-query"; 
 import {
   Search, MoreVertical, Paperclip, Smile, Send, ArrowLeft, MessageSquare,
@@ -339,25 +337,15 @@ export default function Messenger() {
   const { conversations, loading: convsLoading, error: convError, clearUnread, patchConversationPreview, refresh: refreshConversations } = useConversations();
   const activeConv = conversations.find((c) => c.id === activeId) || null;
 
-  // Passing down editMsg and deleteMsg from hook
   const { messages, sendMessage, editMsg, deleteMsg, retrySend, markRead, isSending } = useMessages(activeId, activeConv?._counterpartId, { 
     onSent: ({ lastMsg, time }) => patchConversationPreview(activeId, { lastMsg, time }) 
   });
 
-  useEffect(() => {
-    const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws', null, { withCredentials: true }),
-      onConnect: () => { client.subscribe('/user/queue/chat', () => { refreshConversations(); }); }
-    });
-    client.activate();
-    return () => client.deactivate();
-  }, [refreshConversations]);
-
-  function selectConversation(id) {
+  const selectConversation = useCallback((id) => {
     setActiveId(id);
     setMobileChatOpen(true);
     clearUnread(id);
-  }
+  }, [clearUnread]);
 
   const handleSelectPartner = useCallback((partner) => {
     setIsModalOpen(false);
@@ -371,21 +359,34 @@ export default function Messenger() {
     }).catch((err) => {
       setNotification({ type: 'error', msg: err.response?.data?.message || "Failed to start conversation" });
     });
-  }, [refreshConversations]);
+  }, [refreshConversations, selectConversation]);
 
+  // ✅ SAFELY PROCESSES ROUTING FROM NOTIFICATIONS WITHOUT CREATING BOGUS CHATS
   useEffect(() => {
-    if (location.state?.partnerToMessage) {
+    if (!location.state) return;
+
+    if (location.state.openChatWithReference) {
+      if (convsLoading) return; // Wait for conversations to load
+      
+      const refId = location.state.openChatWithReference;
+      const existingConv = conversations.find(c => c.id === refId || c._counterpartId === refId);
+      
+      if (existingConv) {
+        selectConversation(existingConv.id);
+      }
+      navigate(location.pathname, { replace: true, state: {} });
+    } 
+    else if (location.state.partnerToMessage) {
       const partner = location.state.partnerToMessage;
       handleSelectPartner(partner);
       navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.state, navigate, handleSelectPartner]);
+  }, [location.state, navigate, handleSelectPartner, conversations, convsLoading, selectConversation]);
 
   useEffect(() => {
     if (activeId) markRead();
-  }, [activeId]);
+  }, [activeId, markRead]);
 
-  // Handle Edit/Delete wrappers with error catching
   const handleEditMessage = async (msgId, newText) => {
     try {
       await editMsg(msgId, newText);

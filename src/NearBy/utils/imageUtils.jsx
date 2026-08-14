@@ -1,0 +1,13 @@
+// Note: Adjust the import path based on where your assets folder is located relative to this util
+const subcategoryImages = import.meta.glob(
+  "../../../assets/subcategories/*", 
+  { eager: true, import: "default" }
+);
+
+export const getSubcategoryImageUrl = (imageName) => {
+  if (!imageName) return null;
+  if (imageName.startsWith('http') || imageName.startsWith('data:')) return imageName;
+  
+  const matchingKey = Object.keys(subcategoryImages).find(key => key.includes(imageName));
+  return matchingKey ? subcategoryImages[matchingKey] : null;
+};

@@ -1,15 +1,10 @@
 import axios from 'axios';
 
-// Create a centralized Axios instance
-// ✅ FIX: Dynamically maps to Render backend in production, or localhost in development
-const backendUri = import.meta.env.VITE_BACKEND_URI || 'http://localhost:8080';
-
 export const axiosInstance = axios.create({
-  baseURL: `${backendUri}/api`,
+  baseURL: '/api',
   withCredentials: true,
 });
 
-// Refresh state trackers to prevent race conditions and infinite loops
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -28,14 +23,13 @@ const processQueue = (error) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
-    // Guard against pure network errors (Server down / CORS) where response is undefined
+
     if (!error.response) {
       return Promise.reject(error);
     }
 
     const originalRequest = error.config;
 
-    // If 401 Unauthorized, not previously retried, and not the refresh/login endpoint itself
     if (
       error.response.status === 401 &&
       !originalRequest._retry &&
@@ -43,7 +37,7 @@ axiosInstance.interceptors.response.use(
       !originalRequest.url.includes('/auth/login')
     ) {
       if (isRefreshing) {
-        // If already refreshing, queue this request
+
         return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
         })
@@ -55,17 +49,16 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        // Attempt token refresh via HttpOnly cookies
+
         await axiosInstance.post('/auth/refresh');
         
         processQueue(null);
         
-        // Retry the original request
         return axiosInstance(originalRequest);
+
       } catch (refreshError) {
         processQueue(refreshError);
         
-        // Dispatch global event so React Context can log the user out
         window.dispatchEvent(new Event('auth:unauthorized'));
         
         return Promise.reject(refreshError);

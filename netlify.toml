@@ -1,0 +1,26 @@
+# 1. Proxy all API requests to your Render backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://stocklinker.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# 2. Proxy Google OAuth Initiation to Render
+[[redirects]]
+  from = "/oauth2/*"
+  to = "https://stocklinker.onrender.com/oauth2/:splat"
+  status = 200
+  force = true
+
+# 3. Proxy Google OAuth Callback from Google back to Render
+[[redirects]]
+  from = "/login/oauth2/*"
+  to = "https://stocklinker.onrender.com/login/oauth2/:splat"
+  status = 200
+  force = true
+
+# 4. Fallback for React Router (MUST be at the very bottom!)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

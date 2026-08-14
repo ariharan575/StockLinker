@@ -53,7 +53,7 @@ export default function ProductHeader({ qty, setQty, metrics, boundaries, onNewS
             {/* Badges container - tightly packed */}
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3">
               {/* Live Market */}
-              <span className="flex items-center gap-1.5 px-2 py-1 rounded-[6px] text-[9px] sm:text-[10px] font-sora font-bold text-emerald-700 bg-emerald-50 border border-emerald-100/70 uppercase tracking-[0.05em]">
+              <span className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-[6px] text-[9px] sm:text-[10px] font-sora font-bold text-emerald-700 bg-emerald-50 border border-emerald-100/70 uppercase tracking-[0.05em]">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Market
               </span>
               
@@ -69,7 +69,7 @@ export default function ProductHeader({ qty, setQty, metrics, boundaries, onNewS
               </span>
             </div>
             
-            <h1 className="text-[18px] sm:text-[22px] lg:text-[24px] font-sora font-bold tracking-[-0.02em] text-[#0F172A] leading-tight mb-2 sm:mb-3">
+            <h1 className="text-[20px] sm:text-[22px] lg:text-[24px] font-sora font-bold tracking-[-0.02em] text-[#0F172A] leading-tight mb-2 sm:mb-3">
               {metrics?.productName || "Loading Product..."}
             </h1>
             

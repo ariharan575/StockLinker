@@ -7,15 +7,39 @@ import { FloatingSurface, GradientButton } from './SharedComponents';
 export default function AiPurchaseIntelligence({ topSupplier, aiDeals, qty }) {
   const navigate = useNavigate();
 
+  const handleMessageClick = (partner) => {
+    if (!partner) return;
+    navigate('/message', {
+      state: {
+        partnerToMessage: {
+          id: partner.userId || partner.id,
+          name: partner.name || partner.businessName,
+          businessName: partner.category || partner.businessName,
+          profileImage: null
+        }
+      }
+    });
+  };
+
+  const handleViewProfile = (partner) => {
+    if (!partner) return;
+    const profileId = partner.businessProfileId || partner.id;
+    if (profileId) {
+      navigate(`/storefront/${profileId}`);
+    } else {
+      console.error("Missing business profile reference.");
+    }
+  };
+
   if (!topSupplier && (!aiDeals || aiDeals.length === 0)) return null;
 
   return (
-    <div className="w-full mb-8 sm:mb-10 lg:mb-12">
+    <div className="w-full mb-8 sm:mb-10 mx-2 lg:mb-12">
       <h2 className="text-[18px] sm:text-[20px] lg:text-[22px] font-sora font-bold text-[#0F172A] leading-tight tracking-[-0.02em] mb-4 sm:mb-5 px-1">
         AI Purchase Intelligence
       </h2>
       
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 w-full">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-5 w-full">
         
         {/* =========================================
             LEFT COLUMN: Top 1 Winner (1/3 Width)
@@ -65,11 +89,14 @@ export default function AiPurchaseIntelligence({ topSupplier, aiDeals, qty }) {
               </div>
 
               <div className="mt-auto flex items-center gap-2 sm:gap-3">
-                <button className="flex-[0.7] h-[38px] sm:h-[42px] bg-slate-900 text-white rounded-[10px] text-[12px] sm:text-[13px] font-inter font-semibold hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleMessageClick(topSupplier); }}
+                  className="flex-[0.7] h-[38px] sm:h-[42px] bg-slate-900 text-white rounded-[10px] text-[12px] sm:text-[13px] font-inter font-semibold hover:bg-slate-800 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                >
                   <MessageCircle size={14} /> Chat
                 </button>
                 <GradientButton 
-                  onClick={() => navigate(`/storefront/${topSupplier.businessProfileId}`)} 
+                  onClick={(e) => { e.stopPropagation(); handleViewProfile(topSupplier); }} 
                   className="flex-[1.3] h-[38px] sm:h-[42px] rounded-[10px] text-[12px] sm:text-[13px]"
                 >
                   View Profile
@@ -106,7 +133,7 @@ export default function AiPurchaseIntelligence({ topSupplier, aiDeals, qty }) {
             {aiDeals?.length > 0 ? aiDeals.map((deal) => (
               <div 
                 key={deal.rank} 
-                onClick={() => deal.businessProfileId && navigate(`/storefront/${deal.businessProfileId}`)}
+                onClick={(e) => { e.stopPropagation(); handleViewProfile(deal); }}
                 className="flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-3 p-3 sm:p-4 rounded-[12px] bg-white border border-slate-200 shadow-sm hover:border-pink-300 hover:shadow-md transition-all group cursor-pointer hover:-translate-y-[1px]"
               >
                 

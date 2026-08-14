@@ -1,13 +1,39 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Search, Mic, ChevronDown, BarChart3 } from 'lucide-react';
 import SupplierTable from './SupplierTable';
 import { FILTER_OPTS, SORT_OPTS } from '../config/mockData';
 
 export default function PriceComparisonSection({ sortBy, setSortBy, onSelect, qty }) {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState(null);
   const [sortOpen, setSortOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+
+  const handleMessageClick = (partner) => {
+    if (!partner) return;
+    navigate('/message', {
+      state: {
+        partnerToMessage: {
+          id: partner.userId || partner.id,
+          name: partner.name || partner.businessName,
+          businessName: partner.category || partner.businessName,
+          profileImage: null
+        }
+      }
+    });
+  };
+
+  const handleViewProfile = (partner) => {
+    if (!partner) return;
+    const profileId = partner.businessProfileId || partner.id;
+    if (profileId) {
+      navigate(`/storefront/${profileId}`);
+    } else {
+      console.error("Missing business profile reference.");
+    }
+  };
 
   return (
     <motion.div 
@@ -98,7 +124,12 @@ export default function PriceComparisonSection({ sortBy, setSortBy, onSelect, qt
         </div>
       </div>
 
-      <SupplierTable onSelect={onSelect} qty={qty} />
+      <SupplierTable 
+        onSelect={onSelect} 
+        qty={qty} 
+        onMessageClick={handleMessageClick} 
+        onViewProfile={handleViewProfile} 
+      />
     </motion.div>
   );
 }
