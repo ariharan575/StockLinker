@@ -2041,6 +2041,10 @@ function RoleCards({ cards }) {
    Sidebar
    --------------------------------------------------------- */
 
+/* ---------------------------------------------------------
+   Sidebar
+   --------------------------------------------------------- */
+
 function DocumentationSidebar({
   activeSection,
   onNavigate,
@@ -2074,31 +2078,41 @@ function DocumentationSidebar({
     }).filter(Boolean);
   }, [searchQuery]);
 
-  // --- NEW CODE: Automatically scroll the sidebar to the active item ---
+  // --- FIXED CODE: Safely scroll ONLY the sidebar WITHOUT jumping the main window ---
   useEffect(() => {
     if (activeSection) {
-      const activeSidebarElement = document.getElementById(`sidebar-nav-${activeSection}`);
-      if (activeSidebarElement) {
-        activeSidebarElement.scrollIntoView({
-          behavior: "smooth",
-          block: "center", // Keeps the active item in the middle of the sidebar
+      const container = document.getElementById(mobile ? "mobile-sidebar-container" : "sidebar-scroll-container");
+      const activeItem = document.getElementById(`sidebar-nav-${activeSection}`);
+      
+      if (container && activeItem) {
+        const containerRect = container.getBoundingClientRect();
+        const itemRect = activeItem.getBoundingClientRect();
+        
+        // Calculate the exact scroll position relative to the container
+        const relativeTop = itemRect.top - containerRect.top + container.scrollTop;
+        
+        // Manually scroll ONLY the sidebar div, preventing the page from fighting your scroll
+        container.scrollTo({
+          top: relativeTop - (containerRect.height / 2) + (itemRect.height / 2),
+          behavior: "smooth"
         });
       }
     }
-  }, [activeSection]);
+  }, [activeSection, mobile]);
   // ---------------------------------------------------------------------
 
   return (
     <aside
       className={`${
         mobile
-          ? "h-full w-full overflow-y-auto bg-white"
+          ? "h-full w-full bg-white"
           : "hidden lg:block lg:w-[292px] lg:shrink-0"
       }`}
     >
       <div
+        id={mobile ? "mobile-sidebar-container" : "sidebar-scroll-container"} // <-- Added unique ID here to target the exact scroll area
         className={`${
-          mobile ? "px-5 pb-8 pt-5" : "sticky top-[104px] max-h-[calc(100vh-125px)] overflow-y-auto pr-5"
+          mobile ? "h-full overflow-y-auto px-5 pb-8 pt-5" : "sticky top-[104px] max-h-[calc(100vh-125px)] overflow-y-auto pr-5"
         }`}
       >
         <div className="mb-6">
@@ -2159,7 +2173,7 @@ function DocumentationSidebar({
                       return (
                         <button
                           key={section.id}
-                          id={`sidebar-nav-${section.id}`} // <-- NEW CODE: Added ID for scrollIntoView
+                          id={`sidebar-nav-${section.id}`} // Ensures the ID is present for our new scrolling logic
                           onClick={() => onNavigate(section.id)}
                           className={`group relative flex w-full items-center rounded-lg px-3 py-2 text-left text-[12px] transition ${
                             active

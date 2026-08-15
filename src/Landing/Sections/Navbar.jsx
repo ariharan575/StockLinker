@@ -23,30 +23,30 @@ const MEGA_MENU_DATA = {
     title: "Shopkeeper Hub",
     icon: ShoppingBag,
     items: [
-      { name: "Search Products", desc: "AI-powered discovery matrix", icon: Search },
-      { name: "Price Comparison", desc: "Real-time margin optimization", icon: BarChart3 },
-      { name: "Orders", desc: "Automated replenishment pipelines", icon: Package },
-      { name: "Tracking", desc: "End-to-end logistics monitoring", icon: Truck }
+      { name: "Search Products", desc: "AI-powered discovery matrix", icon: Search, link: "/documentation?section=product-discovery" },
+      { name: "Price Comparison", desc: "Real-time margin optimization", icon: BarChart3, link: "/documentation?section=compare-prices" },
+      { name: "Orders", desc: "Automated replenishment pipelines", icon: Package, link: "/documentation?section=creating-order" },
+      { name: "Tracking", desc: "End-to-end logistics monitoring", icon: Truck, link: "/documentation?section=order-tracking" }
     ]
   },
   wholesaler: {
     title: "Wholesaler Core",
     icon: Layers,
     items: [
-      { name: "Products", desc: "Inventory catalog management", icon: Grid },
-      { name: "Orders", desc: "Bulk fulfillment stream structures", icon: FileText },
-      { name: "Routes", desc: "Dynamic distribution channels", icon: Truck },
-      { name: "Customers", desc: "Enterprise ledger architecture", icon: MessageSquare }
+      { name: "Products", desc: "Inventory catalog management", icon: Grid, link: "/documentation?section=product-management" },
+      { name: "Orders", desc: "Bulk fulfillment stream structures", icon: FileText, link: "/documentation?section=wholesaler-orders" },
+      { name: "Routes", desc: "Dynamic distribution channels", icon: Truck, link: "/documentation?section=seller-coverage" },
+      { name: "Customers", desc: "Enterprise ledger architecture", icon: MessageSquare, link: "/documentation?section=buyer-management" }
     ]
   },
   platform: {
     title: "Unified Intelligence",
     icon: Terminal,
     items: [
-      { name: "Secure Messaging", desc: "Encrypted routing negotiations", icon: MessageSquare },
-      { name: "Smart Invoices", desc: "Automated real-time ledgers", icon: FileText },
-      { name: "Event Stream", desc: "Sub-millisecond notifications", icon: Bell },
-      { name: "Spatial Routing", desc: "Predictive graph calculations", icon: Truck }
+      { name: "Secure Messaging", desc: "Encrypted routing negotiations", icon: MessageSquare, link: "/documentation?section=chat-messages" },
+      { name: "Smart Invoices", desc: "Automated real-time ledgers", icon: FileText, link: "/documentation?section=invoice" },
+      { name: "Event Stream", desc: "Sub-millisecond notifications", icon: Bell, link: "/documentation?section=order-status" },
+      { name: "Spatial Routing", desc: "Predictive graph calculations", icon: Truck, link: "/documentation?section=coverage-map" }
     ]
   }
 };
@@ -234,7 +234,15 @@ export default function Navbar() {
           {col.items.map((item) => {
             const ItemIcon = item.icon;
             return (
-              <div key={item.name} className="flex items-start gap-3 p-3 cursor-pointer rounded-xl group/item hover:bg-white hover:shadow-sm duration-[160ms] ease-out">
+              <div 
+                key={item.name} 
+                onClick={() => {
+                  setIsMegaOpen(false);
+                  setActiveTab(null);
+                  navigate(item.link);
+                }}
+                className="flex items-start gap-3 p-3 cursor-pointer rounded-xl group/item hover:bg-white hover:shadow-sm duration-[160ms] ease-out"
+              >
                 <div className="mt-0.5 text-slate-400 group-hover/item:text-slate-900 transition-colors duration-[160ms] ease-out">
                   <ItemIcon size={16} strokeWidth={2} />
                 </div>
@@ -252,7 +260,7 @@ export default function Navbar() {
         </div>
       </div>
     );
-  }), []);
+  }), [navigate]);
 
   // Optimized Mobile Animation Variants for zero lag
   const mobileContainerVariants = {
@@ -410,7 +418,14 @@ export default function Navbar() {
                       All systems operational
                     </span>
                   </div>
-                  <button className="text-[13px] font-medium text-pink-600 hover:text-pink-700 flex items-center gap-1 group duration-[160ms] ease-out">
+                  <button 
+                    onClick={() => {
+                      setIsMegaOpen(false);
+                      setActiveTab(null);
+                      navigate('/documentation');
+                    }}
+                    className="text-[13px] font-medium text-pink-600 hover:text-pink-700 flex items-center gap-1 group duration-[160ms] ease-out"
+                  >
                     View Documentation <ArrowRight size={14} className="transition-transform duration-[160ms] ease-out group-hover:translate-x-1" />
                   </button>
                 </div>
@@ -487,7 +502,10 @@ export default function Navbar() {
                                       {col.items.map((subItem) => (
                                         <button 
                                           key={subItem.name} 
-                                          onClick={() => handleItemClick(item)}
+                                          onClick={() => {
+                                            setMobileOpen(false);
+                                            navigate(subItem.link);
+                                          }}
                                           className="text-[15px] font-medium text-slate-600 active:text-slate-900 text-left"
                                         >
                                           {subItem.name}
