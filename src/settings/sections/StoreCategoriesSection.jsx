@@ -4,7 +4,7 @@ import { Pencil, Save, Loader2, PackageSearch, ChevronRight, MapPin, Grid } from
 import { SectionBox } from "../components/layout/SectionBox";
 import { EditableDetailItem } from "../components/cards/EditableDetailItem";
 
-const subcategoryImages = import.meta.glob("../../assets/subcategories/*", { eager: true, import: "default" });
+const subcategoryImages = import.meta.glob("../../assets/sub_categories/*", { eager: true, import: "default" });
 
 const getSubcategoryImageUrl = (imageName) => {
   if (!imageName) return null;

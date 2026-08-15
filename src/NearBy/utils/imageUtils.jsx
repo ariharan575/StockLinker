@@ -1,5 +1,5 @@
 const subcategoryImages = import.meta.glob(
-  "../../assets/subcategories/*", 
+  "../../assets/sub_categories/*", 
   { eager: true, import: "default" }
 );
 
