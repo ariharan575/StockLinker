@@ -224,7 +224,7 @@ export default function StockLinkerEnterpriseOnboarding() {
                 <div className="absolute inset-0 bg-gradient-to-b from-[#132238] via-[#17304d] to-[#1b1b3a] border-[#20324a]" />
                 <motion.div animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }} transition={{ duration: 7, repeat: Infinity }} className="absolute top-[-100px] right-[-100px] w-[260px] h-[260px] rounded-full bg-pink-500/20 blur-3xl" />
                 <div className="relative z-10 flex-1 flex flex-col">
-                  <motion.div initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-pink-500/20 w-fit">
+                  <motion.div initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }} className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full border border-pink-500/20 w-fit">
                     <Sparkles className="w-4 h-5 text-pink-400" /><span className="text-[11px] font-bold tracking-[0.22em] uppercase text-pink-400">StockLinker</span>
                   </motion.div>
                   <motion.h1 initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mt-7 text-[40px] leading-[0.95] tracking-[-2px] font-black text-white">

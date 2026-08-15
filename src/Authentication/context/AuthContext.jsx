@@ -18,7 +18,6 @@ export const AuthProvider = ({ children }) => {
     businessProfileId: null
   });
 
-  // Global listener to catch Axios 401s if a token expires mid-session
   useEffect(() => {
     const handleUnauthorized = () => {
       setAuthState({
@@ -32,11 +31,10 @@ export const AuthProvider = ({ children }) => {
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, []);
 
-  // fetchProfile wrapped in useCallback so we can export it safely
   const fetchProfile = useCallback(async () => {
     try {
       const res = await profileApi.getProfile();
-      // Gracefully handle nested data structures from Spring Boot ApiResponse
+
       const data = res.data?.data || res.data; 
       
       setProfileData({
@@ -46,7 +44,7 @@ export const AuthProvider = ({ children }) => {
       });
     } catch (err) {
       console.error("Failed to load global profile", err);
-      // ✅ FIX: Prevent UI from getting stuck on "Loading..." if profile fetch fails
+
       setProfileData({
         ownerName: 'User',
         role: 'Partner',
@@ -55,12 +53,11 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Triggers when auth status changes
   useEffect(() => {
     if (authState.isAuthenticated) {
       fetchProfile();
     } else {
-      // Reset profile data when logged out or unauthenticated
+
       setProfileData({
         ownerName: 'Loading...',
         role: 'Loading...',
@@ -69,7 +66,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, [authState.isAuthenticated, fetchProfile]); 
 
-  // Use useCallback to prevent unnecessary re-renders
   const verifySession = useCallback(async () => {
     try {
       const response = await authApi.refresh();

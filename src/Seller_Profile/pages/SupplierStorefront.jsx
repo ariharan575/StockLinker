@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query'; 
 
 import { storefrontApi, orderApi, profileApi, networkApi } from '../../Authentication/services/api';
+import { useAuth } from '../../Authentication/context/AuthContext';
 import { PremiumToast } from '../../components/PremiumToast';
 import { DataFetchError } from '../../components/DataFetchError';
 import { DEFAULT_FILTERS, DEFAULT_DESCRIPTION } from '../utils/constants';
@@ -21,11 +22,13 @@ import {
 } from '../components/StorefrontModals';
 
 export default function SupplierStorefront() {
-  // 1. Grab the raw ID from the URL
   const { businessProfileId: rawProfileId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
+  
+  // 1. Pull the profileData directly from your AuthContext
+  const { profileData } = useAuth();
   
   const [notification, setNotification] = useState(null);
   const showNotification = (type, msg) => setNotification({ type, msg });
@@ -37,15 +40,9 @@ export default function SupplierStorefront() {
   const [cart, setCart] = useState({});
   const [page, setPage] = useState(0);
 
-  const currentLoggedInUserId = localStorage.getItem('userId') || "user-123"; 
-
-  // =====================================================================
-  // 🚨 THE FIX: INTERCEPT "undefined" STRING FROM BAD ROUTING
-  // If the URL is /storefront/undefined, we force it to use the userId.
-  // The backend resolveProfile() method we wrote will handle the rest!
-  // =====================================================================
+  // 2. Safely resolve the ID. If URL is undefined, use AuthContext.
   const businessProfileId = (!rawProfileId || rawProfileId === 'undefined' || rawProfileId === 'null') 
-    ? currentLoggedInUserId 
+    ? profileData?.businessProfileId 
     : rawProfileId;
 
   const [isEditingDesc, setIsEditingDesc] = useState(false);
@@ -80,7 +77,7 @@ export default function SupplierStorefront() {
     setPage(0);
   }, [debouncedSearch, filters]);
 
-  // USE THE CLEANED businessProfileId HERE
+  // 3. React Query will wait politely if businessProfileId is null
   const { data: storeData, isLoading: isLoadingProfile, isError: isProfileError, error: profileError, refetch: refetchProfile } = useQuery({
     queryKey: ['storefrontProfile', businessProfileId],
     queryFn: async () => {
@@ -90,14 +87,15 @@ export default function SupplierStorefront() {
       ]);
       return { profile: profileRes.data, filterOptions: filtersRes.data };
     },
-    enabled: !!businessProfileId,
+    enabled: !!businessProfileId, // Safelock prevents backend crash
     staleTime: 5 * 60 * 1000, 
   });
 
   const profile = storeData?.profile || null;
   const filterOptions = storeData?.filterOptions || { brands: [], categories: [] };
   
-  const isOwner = location.state?.isOwner || (profile?.userId === currentLoggedInUserId);
+  // Dynamically check ownership using the AuthContext
+  const isOwner = location.state?.isOwner || (profileData?.businessProfileId === profile?.id);
   const isShopkeeper = profile?.businessType?.toLowerCase().includes('shop') || profile?.businessType?.toLowerCase().includes('retail');
 
   useEffect(() => {
@@ -107,7 +105,6 @@ export default function SupplierStorefront() {
     }
   }, [profile?.id, isShopkeeper]);
 
-  // USE THE CLEANED businessProfileId HERE
   const { data: productPageData = { content: [], totalPages: 0 }, isLoading: isLoadingProducts, isError: isProductsError, error: productsError } = useQuery({
     queryKey: ['storefrontProducts', businessProfileId, debouncedSearch, filters.category, filters.brand, filters.sortPrice, page],
     queryFn: async () => {
@@ -278,7 +275,8 @@ export default function SupplierStorefront() {
         
         <PremiumToast isVisible={!!notification} type={notification?.type || 'info'} message={notification?.msg} onClose={() => setNotification(null)} />
 
-        {isLoadingProfile ? (
+        {/* 4. Ensures the Skeleton UI shows immediately while waiting for ID */}
+        {(isLoadingProfile || !businessProfileId) ? (
           <PremiumStorefrontSkeleton />
         ) : !profile ? (
           <div className="flex items-center justify-center min-h-[50vh] font-bold text-black">Profile Not Found</div>

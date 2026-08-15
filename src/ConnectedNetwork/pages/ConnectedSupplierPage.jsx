@@ -76,7 +76,8 @@ export default function ConnectedSupplierPage() {
   const pendingRequests = networkData?.pendingRequests || [];
   const discoverSuppliers = networkData?.discoverSuppliers || [];
 
-   const wsUrl = `${window.location.origin}/ws`;
+     const backendUri = import.meta.env.VITE_BACKEND_URI || 'http://localhost:8080';
+    const wsUrl = `${backendUri}/ws`;
 
   useEffect(() => {
     const client = new Client({

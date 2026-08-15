@@ -6,8 +6,9 @@ let connectCallbacks = []; // 🚀 Stores all our component listeners safely
 
 export function connectSocket() {
   if (!client) {
-    // 🚀 FIX 1: Force it through the proxy so HttpOnly cookies attach perfectly!
-    const wsUrl = `${window.location.origin}/ws`;
+
+    const backendUri = import.meta.env.VITE_BACKEND_URI || 'http://localhost:8080';
+    const wsUrl = `${backendUri}/ws`;
     
     client = new Client({
       webSocketFactory: () =>
