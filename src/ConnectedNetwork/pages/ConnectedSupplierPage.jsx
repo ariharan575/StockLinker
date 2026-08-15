@@ -76,7 +76,7 @@ export default function ConnectedSupplierPage() {
   const pendingRequests = networkData?.pendingRequests || [];
   const discoverSuppliers = networkData?.discoverSuppliers || [];
 
-  const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws';
+   const wsUrl = `${window.location.origin}/ws`;
 
   useEffect(() => {
     const client = new Client({

@@ -234,12 +234,13 @@ export default function Header({ open, setOpen }) {
   const notifications = notifData.notifications;
   const unreadCount = notifData.unreadCount;
 
-  // ✅ STOMP WebSocket Live Connection
+  const wsUrl = `${window.location.origin}/ws`;
+
   useEffect(() => {
     if (!isAuthenticated) return;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws', null, { withCredentials: true }),
+      webSocketFactory: () => new SockJS(wsUrl, null, { withCredentials: true }),
       onConnect: () => {
         client.subscribe('/user/queue/notifications', (message) => {
           const newNotif = JSON.parse(message.body);
@@ -586,14 +587,34 @@ export default function Header({ open, setOpen }) {
                </button>
             </div>
 
-            {/* MOBILE MENU TOGGLE */}
+            {/* MOBILE MENU TOGGLE - FIXED ANIMATION */}
             <PremiumIconButton onClick={handleMenuToggle} active={open}>
-              <AnimatePresence mode="wait">
-                {open 
-                  ? <motion.div key="close" initial={{ opacity: 0, rotate: -90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0, rotate: 90 }} transition={{ duration: 0.15 }}><X size={20}/></motion.div> 
-                  : <motion.div key="menu" initial={{ opacity: 0, rotate: 90 }} animate={{ opacity: 1, rotate: 0 }} exit={{ opacity: 0, rotate: -90 }} transition={{ duration: 0.15 }}><Menu size={20}/></motion.div>
-                }
-              </AnimatePresence>
+              <div className="relative w-5 h-5 flex items-center justify-center">
+                <motion.div 
+                  initial={false}
+                  animate={{ 
+                    opacity: open ? 1 : 0, 
+                    rotate: open ? 0 : -90, 
+                    scale: open ? 1 : 0.5 
+                  }} 
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="absolute flex items-center justify-center"
+                >
+                  <X size={20}/>
+                </motion.div> 
+                <motion.div 
+                  initial={false}
+                  animate={{ 
+                    opacity: open ? 0 : 1, 
+                    rotate: open ? 90 : 0, 
+                    scale: open ? 0.5 : 1 
+                  }} 
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="absolute flex items-center justify-center"
+                >
+                  <Menu size={20}/>
+                </motion.div>
+              </div>
             </PremiumIconButton>
           </div>
         </motion.header>

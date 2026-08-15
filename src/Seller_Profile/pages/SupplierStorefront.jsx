@@ -21,7 +21,8 @@ import {
 } from '../components/StorefrontModals';
 
 export default function SupplierStorefront() {
-  const { businessProfileId } = useParams();
+  // 1. Grab the raw ID from the URL
+  const { businessProfileId: rawProfileId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -37,6 +38,15 @@ export default function SupplierStorefront() {
   const [page, setPage] = useState(0);
 
   const currentLoggedInUserId = localStorage.getItem('userId') || "user-123"; 
+
+  // =====================================================================
+  // 🚨 THE FIX: INTERCEPT "undefined" STRING FROM BAD ROUTING
+  // If the URL is /storefront/undefined, we force it to use the userId.
+  // The backend resolveProfile() method we wrote will handle the rest!
+  // =====================================================================
+  const businessProfileId = (!rawProfileId || rawProfileId === 'undefined' || rawProfileId === 'null') 
+    ? currentLoggedInUserId 
+    : rawProfileId;
 
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [descValue, setDescValue] = useState("");
@@ -70,6 +80,7 @@ export default function SupplierStorefront() {
     setPage(0);
   }, [debouncedSearch, filters]);
 
+  // USE THE CLEANED businessProfileId HERE
   const { data: storeData, isLoading: isLoadingProfile, isError: isProfileError, error: profileError, refetch: refetchProfile } = useQuery({
     queryKey: ['storefrontProfile', businessProfileId],
     queryFn: async () => {
@@ -96,6 +107,7 @@ export default function SupplierStorefront() {
     }
   }, [profile?.id, isShopkeeper]);
 
+  // USE THE CLEANED businessProfileId HERE
   const { data: productPageData = { content: [], totalPages: 0 }, isLoading: isLoadingProducts, isError: isProductsError, error: productsError } = useQuery({
     queryKey: ['storefrontProducts', businessProfileId, debouncedSearch, filters.category, filters.brand, filters.sortPrice, page],
     queryFn: async () => {

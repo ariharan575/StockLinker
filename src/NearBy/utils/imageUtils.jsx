@@ -1,6 +1,5 @@
-// Note: Adjust the import path based on where your assets folder is located relative to this util
 const subcategoryImages = import.meta.glob(
-  "../../../assets/subcategories/*", 
+  "../../assets/subcategories/*", 
   { eager: true, import: "default" }
 );
 

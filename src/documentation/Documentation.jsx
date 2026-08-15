@@ -2281,19 +2281,13 @@ function DocumentationHeader({ onOpenMobile, searchQuery, onSearchChange }) {
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/90 backdrop-blur-xl shadow-sm">
       <div className="mx-auto flex h-[72px] max-w-[1500px] items-center gap-4 px-4 sm:px-6 lg:px-8">
-        <button
-          onClick={onOpenMobile}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-200 bg-white shadow-sm text-zinc-700 lg:hidden hover:border-zinc-300 transition"
-          aria-label="Open documentation navigation"
-        >
-          <Menu size={18} />
-        </button>
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-zinc-950 text-white shadow-md">
+
+        <div className="flex min-w-0 items-center gap-1">
+          <div className="flex h-7 w-8 shrink-0 items-center justify-center rounded-xl bg-zinc-950 text-white shadow-md">
             <Layers3 size={17} />
           </div>
           <div className="min-w-0">
-            <div className="truncate text-sm font-bold tracking-tight text-zinc-950">
+            <div className="truncate text-lg font-bold tracking-tight text-zinc-950">
               StockLinker
             </div>
             <div className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-400 sm:block">
@@ -2318,7 +2312,16 @@ function DocumentationHeader({ onOpenMobile, searchQuery, onSearchChange }) {
             </div>
           </div>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+
+         <button
+          onClick={onOpenMobile}
+          className="flex ms-auto h-10 w-10 items-center justify-center rounded-xl border border-zinc-200 bg-white shadow-sm text-zinc-700 lg:hidden hover:border-zinc-300 transition"
+          aria-label="Open documentation navigation"
+        >
+          <Menu size={18} />
+        </button>
+
+        <div className="hidden sm:block ml-auto flex items-center gap-2">
           <Pill>Product Docs</Pill>
         </div>
       </div>
@@ -2628,27 +2631,6 @@ export default function Documentation() {
         onSearchChange={setSearchQuery}
       />
 
-      {/* Mobile quick navigation */}
-      <div className="border-b border-zinc-200 bg-white lg:hidden shadow-sm z-40 sticky top-[72px]">
-        <div className="mx-auto flex max-w-[1500px] items-center gap-3 overflow-x-auto px-5 py-3 no-scrollbar">
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[12px] font-bold text-zinc-700 shadow-sm transition hover:border-zinc-300"
-          >
-            <PanelLeft size={14} />
-            Sections
-          </button>
-          <span className="h-5 w-px shrink-0 bg-zinc-200" />
-          <span className="shrink-0 text-[12px] font-bold text-zinc-500">
-            {selectedCategory.title}
-          </span>
-          <ChevronRight size={14} className="shrink-0 text-zinc-300" />
-          <span className="shrink-0 text-[12px] font-extrabold text-zinc-900">
-            {selectedSection.title}
-          </span>
-        </div>
-      </div>
-
       <div className="mx-auto flex max-w-[1500px] gap-0 px-5 sm:px-6 lg:px-8">
         {/* Desktop sidebar */}
         <DocumentationSidebar
@@ -2663,7 +2645,7 @@ export default function Documentation() {
           <div className="mx-auto max-w-[1050px]">
             <div className="flex gap-12">
               <div className="min-w-0 flex-1">
-                <div className="py-10 sm:py-12">
+                <div className="py-5 sm:py-8">
                   <Breadcrumb category={selectedCategory} section={selectedSection} />
                   <CategoryHeader category={selectedCategory} />
                   <div className="mt-8">

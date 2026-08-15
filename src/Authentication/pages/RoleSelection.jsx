@@ -61,7 +61,7 @@ export default function RoleSelectionPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [loading, selectedRole]);
 
-  const handleRoleSubmit = async (e) => {
+const handleRoleSubmit = async (e) => {
     if (e) e.preventDefault();
     if (loading) return;
 
@@ -71,11 +71,12 @@ export default function RoleSelectionPage() {
     const formattedRole = selectedRole.toUpperCase(); 
     const result = await selectRole(formattedRole);
 
-    console.log(result)
+    console.log(result);
     
-      if (result) {
-          navigate("/onboarding");
-      } else {
+    // FIX: Check for result.success, not just result
+    if (result.success) {
+      navigate("/onboarding");
+    } else {
       setError(result.error);
       setLoading(false);
     }

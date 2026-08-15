@@ -15,51 +15,63 @@ import {
   FaLinkedin,
   FaInstagram,
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
-// Updated to use objects so specific routes can be assigned
+// Updated to use specific section routes matching the documentation
 const links = {
   platform: [
-    { label: "Product Discovery", href: "#" },
-    { label: "Price Comparison", href: "#" },
-    { label: "Order Management", href: "#" },
-    { label: "Route Tracking", href: "#" },
-    { label: "Communication", href: "#" },
+    { label: "Product Discovery", href: "/documentation?section=product-discovery" },
+    { label: "Price Comparison", href: "/documentation?section=compare-prices" },
+    { label: "Order Management", href: "/documentation?section=creating-order" },
+    { label: "Route Tracking", href: "/documentation?section=order-tracking" },
+    { label: "Communication", href: "/documentation?section=buyer-supplier-communication" },
   ],
   roles: [
-    { label: "Shopkeeper", href: "#" },
-    { label: "Wholesaler", href: "#" },
-    { label: "Admin", href: "#" },
-    { label: "Guest Mode", href: "#" },
+    { label: "Shopkeeper", href: "/documentation?section=shopkeeper-dashboard" },
+    { label: "Wholesaler", href: "/documentation?section=wholesaler-dashboard" },
+    { label: "Admin", href: "/documentation?section=rbac" },
+    { label: "Guest Mode", href: "/documentation?section=guest-access" },
   ],
   resources: [
-    { label: "Documentation", href: "/documentation" }, // Updated Path
-    { label: "FAQs", href: "#" },
-    { label: "Support", href: "#" },
+    { label: "Documentation", href: "/documentation" },
+    { label: "FAQs", href: "/documentation?section=getting-started" },
+    { label: "Support", href: "/documentation?section=enquiries" },
     { label: "Contact", href: "#" },
   ],
   technology: [
-    { label: "React", href: "#" },
-    { label: "Spring Boot", href: "#" },
-    { label: "MySQL", href: "#" },
-    { label: "Open Source", href: "#" },
+    { label: "React", href: "/documentation?section=frontend" },
+    { label: "Spring Boot", href: "/documentation?section=backend" },
+    { label: "PostgreSQL", href: "/documentation?section=database" },
+    { label: "Platform Architecture", href: "/documentation?section=architecture" },
   ],
 };
 
 // Premium Apple-style Easing Curve
 const easePremium = [0.16, 1, 0.3, 1];
 
-// Added href prop for dynamic routing
+// Added SPA navigation using useNavigate to prevent hard reloads
 function FooterLink({ children, href }) {
+  const navigate = useNavigate();
+
+  const handleClick = (e) => {
+    // Intercept internal routing to use React Router
+    if (href && href.startsWith("/")) {
+      e.preventDefault();
+      navigate(href);
+    }
+  };
+
   return (
     <motion.a
       href={href}
+      onClick={handleClick}
       whileHover={{ x: 8 }}
       transition={{
         type: "spring",
         stiffness: 400,
         damping: 25,
       }}
-      className="group flex items-center gap-2 text-sm text-white/45 transition-colors hover:text-white will-change-transform translate-z-0"
+      className="group flex items-center gap-2 text-sm text-white/45 transition-colors hover:text-white cursor-pointer will-change-transform translate-z-0"
     >
       <span className="relative">
         {children}
@@ -75,7 +87,7 @@ function FooterLink({ children, href }) {
   );
 }
 
-// Updated mapping to handle the new object structure
+// Updated mapping to handle the object structure
 function FooterColumn({ title, items }) {
   return (
     <div>

@@ -103,7 +103,7 @@ export default function NearbySellerDiscoveryPage() {
   const suppliers = sellersPage.content || [];
   const totalPages = sellersPage.totalPages || 0;
 
-  const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws';
+  const wsUrl = `${window.location.origin}/ws`;
 
 
   useEffect(() => {

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../Authentication/context/AuthContext'; 
-import { connectSocket, disconnectSocket } from '../api/socketClient'; 
+import { connectSocket, disconnectSocket, onSocketConnect } from '../api/socketClient'; 
 
 export default function GlobalChatListener() {
   const { isAuthenticated } = useAuth();
@@ -17,6 +17,8 @@ export default function GlobalChatListener() {
     let subscription = null;
 
     const subscribeToQueue = () => {
+      if (subscription) return;
+      
       subscription = client.subscribe('/user/queue/chat', (message) => {
         try {
           const payload = JSON.parse(message.body);
@@ -44,9 +46,7 @@ export default function GlobalChatListener() {
               return next;
             });
 
-            // 2. 🚀 INJECT MESSAGE DIRECTLY INTO THE OPEN CHAT WINDOW
             queryClient.setQueryData(['messages', payload.conversationId], (prevMessages) => {
-              // If the chat window isn't loaded in the cache, ignore it
               if (!prevMessages) return prevMessages;
 
               const mappedMsg = {
@@ -82,18 +82,14 @@ export default function GlobalChatListener() {
       });
     };
 
-    if (client.connected) {
-      subscribeToQueue();
-    } else {
-      const originalOnConnect = client.onConnect;
-      client.onConnect = (frame) => {
-        if (originalOnConnect) originalOnConnect(frame);
-        subscribeToQueue();
-      };
-    }
+    const unsubscribeConnect = onSocketConnect(subscribeToQueue);
 
     return () => {
-      if (subscription) subscription.unsubscribe();
+      unsubscribeConnect();
+      if (subscription) {
+        subscription.unsubscribe();
+        subscription = null;
+      }
     };
   }, [isAuthenticated, queryClient]);
 

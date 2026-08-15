@@ -1,11 +1,10 @@
 import { useEffect, useRef } from "react";
-import { connectSocket, releaseSocket } from "../api/socketClient";
+import { connectSocket, releaseSocket, onSocketConnect } from "../api/socketClient";
 
 export function useConversationSocket(conversationId, { onMessage, onStatus } = {}) {
   const subRef = useRef(null);
   
-  // 🚀 THE FIX: Store callbacks in refs to avoid dependency cycle re-renders 
-  // that were constantly disconnecting and dropping messages.
+  // Store callbacks in refs to avoid dependency cycle re-renders
   const callbacksRef = useRef({ onMessage, onStatus });
 
   useEffect(() => {
@@ -30,18 +29,11 @@ export function useConversationSocket(conversationId, { onMessage, onStatus } = 
       });
     };
 
-    if (client.connected) {
-      subscribe();
-    } else {
-      // 🚀 THE FIX: Safely chain callbacks without overwriting the global listener!
-      const originalOnConnect = client.onConnect;
-      client.onConnect = (frame) => {
-        if (originalOnConnect) originalOnConnect(frame);
-        subscribe();
-      };
-    }
+    // 🚀 THE FIX: Subscribe using the new safe connection bus
+    const unsubscribeConnect = onSocketConnect(subscribe);
 
     return () => {
+      unsubscribeConnect(); // Remove listener when unmounting
       if (subRef.current) {
         subRef.current.unsubscribe();
         subRef.current = null;
