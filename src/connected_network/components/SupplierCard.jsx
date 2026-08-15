@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 // Adjust this import path depending on where your api file lives
-import { networkApi } from '../../Authentication/services/api'; 
+import { networkApi } from '../../auth/services/api'; 
 import { CTA_GRAD, fadeUp } from '../utils/animationUtils';
 import { getSubcategoryImageUrl } from '../utils/imageUtils';
 

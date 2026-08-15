@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Loader2, Package, LayoutGrid, Store, ChevronRight, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { C, EASE } from '../../Layout/common/constants';
+import { C, EASE } from '../../layout/common/constants';
 import HeroImges from '../../assets/Store.png';
 import { dashboardApi } from '../Services/api';
 // ADDED: Import AuthContext
-import { useAuth } from '../../Authentication/context/AuthContext';
+import { useAuth } from '../../auth/context/AuthContext';
 
 export default function Hero({ onError }) {
   const navigate = useNavigate();

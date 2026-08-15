@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useQueryClient } from "@tanstack/react-query"; // --- ADDED TANSTACK QUERY ---
-import { useAuth } from "../Authentication/context/AuthContext";
+import { useAuth } from "../auth/context/AuthContext";
 
 import { AccountSection } from "./sections/AccountSection";
 import { BusinessSection } from "./sections/BusinessSection";
 import { StoreCategoriesSection } from "./sections/StoreCategoriesSection";
 import { DeliveryInsightsSection } from "./sections/DeliveryInsightsSection";
-import { profileApi } from "../Authentication/services/api";
+import { profileApi } from "../auth/services/api";
 
 // --- ADDED PREMIUM COMPONENTS IMPORTS ---
 import { PremiumToast } from "../components/PremiumToast"; 

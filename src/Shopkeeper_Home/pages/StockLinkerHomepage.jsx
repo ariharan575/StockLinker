@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WifiOff, RefreshCw } from 'lucide-react';
-import MainLayout from '../../Layout/MainLayout';
-import Footer from '../../Layout/Footer';
+import MainLayout from '../../layout/MainLayout';
+import Footer from '../../layout/Footer';
 
 // --- PREMIUM COMPONENTS ---
 import { DataFetchError } from '../../components/DataFetchError';
@@ -19,7 +19,7 @@ import TrustedSuppliers from '../sections/TrustedSuppliers';
 import WhyStockLinkers from '../sections/WhyStockLinkers';
 
 // ✅ IMPORT AUTH CONTEXT TO GET THE ROLE
-import { useAuth } from '../../Authentication/context/AuthContext';
+import { useAuth } from '../../auth/context/AuthContext';
 
 // ============================================================================
 // 🌍 WORLD-CLASS GLOBAL NETWORK ERROR STATE (PREMIUM SAAS DESIGN)

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '../../Authentication/context/AuthContext'; 
+import { useAuth } from '../../auth/context/AuthContext'; 
 import { connectSocket, disconnectSocket } from '../api/socketClient'; 
 
 export default function GlobalOrderListener({ onOrderEvent }) {

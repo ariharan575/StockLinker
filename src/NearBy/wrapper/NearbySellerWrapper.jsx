@@ -1,5 +1,5 @@
 import React from "react";
-import MainLayout from "../../Layout/MainLayout";
+import MainLayout from "../../layout/MainLayout";
 import NearbySellerPage from "../pages/NearbySellerDiscoveryPage"; // Points to the file above
 
 export default function NearbySellerWrapper() {

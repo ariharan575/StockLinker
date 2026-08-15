@@ -3,9 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Star, Navigation, Clock, CheckCircle, MapPin, UserPlus, MessageSquare } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query'; 
-import { SectionHead } from '../../Layout/common';
+import { SectionHead } from '../../layout/common';
 import { networkApi } from '../Services/api';
-import { fadeUp, CTA_GRAD } from '../../Layout/common/constants';
+import { fadeUp, CTA_GRAD } from '../../layout/common/constants';
 import { PremiumToast } from '../../components/PremiumToast';
 
 // ============================================================

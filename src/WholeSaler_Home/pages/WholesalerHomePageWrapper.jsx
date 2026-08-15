@@ -1,5 +1,5 @@
 import React from "react";
-import MainLayout from "../../Layout/MainLayout";
+import MainLayout from "../../layout/MainLayout";
 import DashboardHome from "./DashboardHome";
 
 export default function ProductCategoryWrapper() {

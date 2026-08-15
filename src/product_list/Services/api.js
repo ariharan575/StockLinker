@@ -1,4 +1,4 @@
-import { axiosInstance } from '../../Authentication/api/axiosInstance';
+import { axiosInstance } from '../../auth/api/axiosInstance';
 
 export const inventoryApi = {
   getProducts: (params) => axiosInstance.get('/v1/inventory', { params }),

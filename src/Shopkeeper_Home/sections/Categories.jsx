@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { LayoutGrid, PackageSearch } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query'; 
-import { SectionHead } from '../../Layout/common';
+import { SectionHead } from '../../layout/common';
 import { categoryApi } from '../Services/api';
 
 const localImages = import.meta.glob(

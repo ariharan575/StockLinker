@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 
 // Import C from constants (named export)
-import { C } from '../../Layout/common/constants';
+import { C } from '../../layout/common/constants';
 
 // ─── WHY FEATURES ────────────────────────────────────────────────────
 export const WHY_FEATURES = [

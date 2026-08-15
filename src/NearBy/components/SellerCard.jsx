@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Clock, MapPin, Star, ShieldCheck, Award, Package, Truck, Building2, LayoutGrid } from 'lucide-react';
-import { networkApi } from '../../Authentication/services/api'; 
+import { networkApi } from '../../auth/services/api'; 
 import { getSubcategoryImageUrl } from '../utils/imageUtils';
 import { CTA_GRAD, fadeUp } from '../utils/constants';
 

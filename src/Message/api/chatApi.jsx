@@ -1,4 +1,4 @@
-import { axiosInstance } from "../../Authentication/api/axiosInstance";
+import { axiosInstance } from "../../auth/api/axiosInstance";
 
 
 // ─── Conversations ──────────────────────────────────────────

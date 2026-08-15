@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, X, Package, ArrowRight, Minus, Plus, Loader2, SearchCode, AlertTriangle } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query'; 
-import { compareApi } from '../../Services/api';
+import { compareApi } from '../../services/api';
 import { GradientButton } from './SharedComponents';
 
 export default function ProductSearchModal({ isOpen, onClose, onSearch }) {

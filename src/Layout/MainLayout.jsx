@@ -4,7 +4,7 @@ import Header from "./Header";
 import Sidebar from "./Sidebar";
 import BottomNavigation from "./BottomNavigation";
 import { C, FONT_BODY } from "./common";
-import Navbar from '../Landing/Sections/Navbar'
+import Navbar from '../landing/Sections/Navbar'
 
 export default function MainLayout({ 
   children, 

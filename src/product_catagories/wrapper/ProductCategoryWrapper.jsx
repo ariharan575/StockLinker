@@ -1,6 +1,6 @@
 // ProductCategoryWrapper.js
 import React from "react";
-import MainLayout from "../../Layout/MainLayout";
+import MainLayout from "../../layout/MainLayout";
 import ProductCategories from "../pages/ProductCategoriesPage";
 
 export default function ProductCategoryWrapper() {

@@ -3,8 +3,8 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query'; 
 
-import { storefrontApi, orderApi, profileApi, networkApi } from '../../Authentication/services/api';
-import { useAuth } from '../../Authentication/context/AuthContext';
+import { storefrontApi, orderApi, profileApi, networkApi } from '../../auth/services/api';
+import { useAuth } from '../../auth/context/AuthContext';
 import { PremiumToast } from '../../components/PremiumToast';
 import { DataFetchError } from '../../components/DataFetchError';
 import { DEFAULT_FILTERS, DEFAULT_DESCRIPTION } from '../utils/constants';

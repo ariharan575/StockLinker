@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { TrendingUp } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query'; 
-import { SectionHead } from '../../Layout/common';
+import { SectionHead } from '../../layout/common';
 import { compareApi } from '../Services/api';
 import Surf from '../../assets/SurfExcel.jpg';
 

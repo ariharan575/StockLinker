@@ -3,9 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare, ShieldCheck, Users, ExternalLink } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query'; // --- ADDED TANSTACK QUERY ---
-import { SectionHead } from '../../Layout/common';
+import { SectionHead } from '../../layout/common';
 import { networkApi } from '../Services/api';
-import { fadeUp } from '../../Layout/common/constants';
+import { fadeUp } from '../../layout/common/constants';
 
 // ============================================================
 // ✅ PREMIUM SKELETON LOADER

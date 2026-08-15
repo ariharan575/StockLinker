@@ -1,7 +1,7 @@
 import React from "react";
-import MainLayout from "../../Layout/MainLayout";
+import MainLayout from "../../layout/MainLayout";
 import ComparePrice from "../pages/ComparePrice";
-import { C } from "../../Layout/common/constants"; 
+import { C } from "../../layout/common/constants"; 
 
 export default function ComparePageWrapper() {
 

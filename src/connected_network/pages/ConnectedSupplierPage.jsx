@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Search, Bell, Users, Compass, Navigation, Sparkles, ArrowRight } from 'lucide-react';
 
 // External imports - Adjust paths based on your setup
-import { networkApi } from '../../Authentication/services/api'; 
+import { networkApi } from '../../auth/services/api'; 
 import { PremiumToast } from "../../components/PremiumToast";
 import { DataFetchError } from "../../components/DataFetchError";
 

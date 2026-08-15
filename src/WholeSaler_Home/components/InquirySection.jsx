@@ -5,7 +5,7 @@ import InquiryCard from "./InquiryCard";
 import InquiryModal from "./InquiryModal";
 import EmptyState from "./EmptyState";
 import { enquiryApi } from "../services/api";
-import {orderApi} from '../../Authentication/services/api'
+import {orderApi} from '../../auth/services/api'
 import { X, Loader2, GripVertical, ChevronUp, ChevronDown, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 const InquirySkeleton = () => (

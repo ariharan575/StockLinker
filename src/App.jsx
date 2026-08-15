@@ -4,36 +4,36 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 // --- Global UI States ---
 import GlobalNetworkState from './components/GlobalNetworkState'
 // --- Context & Route Guards ---
-import { AuthProvider, useAuth } from './Authentication/context/AuthContext';
-import PrivateRoute from './Authentication/components/PrivateRoute'; 
-import PublicRoute from './Authentication/components/PublicRoute'; 
+import { AuthProvider, useAuth } from './auth/context/AuthContext';
+import PrivateRoute from './auth/components/PrivateRoute'; 
+import PublicRoute from './auth/components/PublicRoute'; 
 import Documentation from './documentation/Documentation'
 
 // --- Auth Pages ---
-import Login from './Authentication/pages/Loginx';
-import OAuthSuccess from './Authentication/pages/OAuthSuccess';
-import RoleSelectionPage from './Authentication/pages/RoleSelection';
-import StockLinkerEnterpriseOnboarding from './Onboarding/StockLinkerEnterpriseOnboarding';
+import Login from './auth/pages/Loginx';
+import OAuthSuccess from './auth/pages/OAuthSuccess';
+import RoleSelectionPage from './auth/pages/RoleSelection';
+import StockLinkerEnterpriseOnboarding from './onboarding/StockLinkerEnterpriseOnboarding';
 
 
 // --- Public/Landing Pages ---
-import { LandingPage } from './Landing/Pages/LandingPage';
+import { LandingPage } from './landing/Pages/LandingPage';
 
 // --- Application Pages ---
-import StockLinkerHomepage from './Shopkeeper_Home/pages/StockLinkerHomepage';
-import ConnectedSupplierWrapper from './ConnectedNetwork/wrapper/ConnectedSupplierWrapper';
-import ProductCategoryWrapper from './ProductCatagories/wrapper/ProductCategoryWrapper';
-import OrdersWrapper from './Order/wrapper/OrdersWrapper';
-import MessagePageWrapper from './Message/wrapper/MessagePageWrapper';
-import NearbySellerWrapper from './NearBy/wrapper/NearbySellerWrapper';
-import WholesalerHomePageWrapper from './WholeSaler_Home/pages/WholesalerHomePageWrapper';
-import ProductListWrapper from './ProductList/wrapper/ProductListWrapper';
-import ComparePageWrapper from './Compare_Price/wrapper/ComparePageWrapper';
+import StockLinkerHomepage from './shopkeeper_home/pages/StockLinkerHomepage';
+import ConnectedSupplierWrapper from './connected_network/wrapper/ConnectedSupplierWrapper';
+import ProductCategoryWrapper from './product_catagories/wrapper/ProductCategoryWrapper';
+import OrdersWrapper from './order/wrapper/OrdersWrapper';
+import MessagePageWrapper from './message/wrapper/MessagePageWrapper';
+import NearbySellerWrapper from './nearBy/wrapper/NearbySellerWrapper';
+import WholesalerHomePageWrapper from './wholeSaler_home/pages/WholesalerHomePageWrapper';
+import ProductListWrapper from './product_list/wrapper/ProductListWrapper';
+import ComparePageWrapper from './compare_price/wrapper/ComparePageWrapper';
 import SettingsRouter from './settings/SettingsRouter';
-import SellerProfileWrapper from './Seller_Profile/wrapper/SellerProfileWrapper';
+import SellerProfileWrapper from './profile/wrapper/SellerProfileWrapper';
 
-import GlobalChatListener from './Message/components/GlobalChatListener'; 
-import GlobalOrderListener from './Order/components/GlobalOrderListener'; // Import the new file
+import GlobalChatListener from './message/components/GlobalChatListener'; 
+import GlobalOrderListener from './order/components/GlobalOrderListener'; // Import the new file
 
 // =========================================================
 // ✅ DYNAMIC DASHBOARD ROUTER

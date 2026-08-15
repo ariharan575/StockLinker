@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { FiSearch, FiMenu } from "react-icons/fi";
 
 // External API and Shared Components
-import { categoryApi } from "../../Shopkeeper_Home/Services/api";
+import { categoryApi } from "../../shopkeeper_home/Services/api";
 import { PremiumToast } from "../../components/PremiumToast";
 import { DataFetchError } from "../../components/DataFetchError";
 

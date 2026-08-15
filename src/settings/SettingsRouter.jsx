@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import MainLayout from "../Layout/MainLayout";
+import MainLayout from "../layout/MainLayout";
 import SettingsPage from "./SettingsPage";
 
 export default function SettingsRouter() {

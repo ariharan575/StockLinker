@@ -1,5 +1,5 @@
 import React from "react";
-import MainLayout from "../../Layout/MainLayout";
+import MainLayout from "../../layout/MainLayout";
 import ConnectedSupplierPage from "../pages/ConnectedSupplierPage";
 
 export default function ConnectedSupplierWrapper() {

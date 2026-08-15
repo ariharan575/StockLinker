@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, LogOut, X } from 'lucide-react';
 import { getNavItems } from './data/index'; 
-import { useAuth } from '../Authentication/context/AuthContext';
+import { useAuth } from '../auth/context/AuthContext';
 
 // Helper to get 2 initials safely
 const getInitials = (name) => {

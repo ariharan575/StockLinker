@@ -9,12 +9,12 @@ import OrdersTable from "../components/OrdersTable";
 import { SkeletonCard, SkeletonRow } from "../components/Skeleton";
 import useDashboardData from "../hooks/useDashboardData";
 import NearbyBuyersSection from "../components/NearbyBuyersSection";
-import Footer from '../../Layout/Footer';
-import QuickAction from '../../Shopkeeper_Home/sections/QuickActions';
+import Footer from '../../layout/Footer';
+import QuickAction from '../../shopkeeper_home/sections/QuickActions';
 import WholesalerHero from '../components/HeroSection'; 
 
-import { dashboardApi } from '../../Shopkeeper_Home/Services/api';
-import { useAuth } from '../../Authentication/context/AuthContext';
+import { dashboardApi } from '../../shopkeeper_home/Services/api';
+import { useAuth } from '../../auth/context/AuthContext';
 import { DataFetchError } from "../../components/DataFetchError";
 import { PremiumToast } from "../../components/PremiumToast";
 

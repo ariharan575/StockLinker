@@ -6,10 +6,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Search, MapPin, SlidersHorizontal, X } from 'lucide-react';
 
 // External Imports (Adjust paths as needed for your setup)
-import { typographyStyles } from '../../Compare_Price/config/constants';
-import { networkApi } from '../../Authentication/services/api';
-import { categoryApi } from '../../Shopkeeper_Home/Services/api';
-import { useAuth } from '../../Authentication/context/AuthContext';
+import { typographyStyles } from '../../compare_price/config/constants';
+import { networkApi } from '../../auth/services/api';
+import { categoryApi } from '../../shopkeeper_home/Services/api';
+import { useAuth } from '../../auth/context/AuthContext';
 import { PremiumToast } from "../../components/PremiumToast";
 import { DataFetchError } from "../../components/DataFetchError";
 

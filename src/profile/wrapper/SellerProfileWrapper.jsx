@@ -1,7 +1,7 @@
 // ProductCategoryWrapper.js
 import React from "react";
-import MainLayout from "../../Layout/MainLayout";
-import ProductListPage from "../pages/ProductListPage";
+import MainLayout from "../../layout/MainLayout";
+import SupplierStorefront from "../pages/SupplierStorefront";
 
 export default function ProductCategoryWrapper() {
 
@@ -15,7 +15,7 @@ export default function ProductCategoryWrapper() {
       contentPadding=""
       customStyles={{ backgroundColor: "#F8FAFC" }}
     >
-      <ProductListPage/>
+      <SupplierStorefront/>
     </MainLayout>
   );
 }

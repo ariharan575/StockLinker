@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, MessageSquare, Phone, ChevronDown } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query'; // --- ADDED TANSTACK QUERY ---
-import { SectionHead } from '../../Layout/common';
+import { SectionHead } from '../../layout/common';
 import { compareApi } from '../Services/api';
 import Surf from '../../assets/SurfExcel.jpg';
 

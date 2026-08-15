@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getNavTabs } from './data/index';
-import { useAuth } from '../Authentication/context/AuthContext';
+import { useAuth } from '../auth/context/AuthContext';
 
 const BottomNavigation = memo(() => {
   const navigate = useNavigate();

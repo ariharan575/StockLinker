@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { WHY_FEATURES } from '../data';
-import { fadeUp } from '../../Layout/common/constants';
+import { fadeUp } from '../../layout/common/constants';
 
 const getPremiumIconStyle = (index) => {
   const styles = [

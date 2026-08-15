@@ -8,8 +8,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query'; 
-import { dashboardApi, notificationApi } from '../Shopkeeper_Home/Services/api';
-import { useAuth } from '../Authentication/context/AuthContext';
+import { dashboardApi, notificationApi } from '../shopkeeper_home/Services/api';
+import { useAuth } from '../auth/context/AuthContext';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 

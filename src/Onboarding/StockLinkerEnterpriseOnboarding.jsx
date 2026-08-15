@@ -5,8 +5,8 @@ import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { ArrowLeft, ArrowRight, Sparkles, Check, Loader2, AlertCircle } from "lucide-react";
 import { STEPS, fadeUp } from "./constants";
 import { BusinessStep, AddressStep, MarketplaceStep, SuccessScreen } from "./Steps";
-import { onboardingApi } from "../Authentication/services/api";
-import { useAuth } from "../Authentication/context/AuthContext";
+import { onboardingApi } from "../auth/services/api";
+import { useAuth } from "../auth/context/AuthContext";
 
 export default function StockLinkerEnterpriseOnboarding() {
   const { role, verifySession, setProfileData } = useAuth();

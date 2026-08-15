@@ -9,7 +9,7 @@ import {
 import { useConversations } from "../hooks/useConversations";
 import { useMessages } from "../hooks/useMessages";
 import { createOrGetConversation } from "../api/chatApi";
-import { networkApi } from "../../Authentication/services/api"; 
+import { networkApi } from "../../auth/services/api"; 
 import { MessageBubble } from "../components/MessageBubble";
 import { PremiumToast } from "../../components/PremiumToast";
 

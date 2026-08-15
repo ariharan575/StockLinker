@@ -1,4 +1,4 @@
-import { axiosInstance } from "../../Authentication/api/axiosInstance";
+import { axiosInstance } from "../../auth/api/axiosInstance";
 
 export const orderApi = {
   placeOrder: (data) => axiosInstance.post('/v1/orders', data),

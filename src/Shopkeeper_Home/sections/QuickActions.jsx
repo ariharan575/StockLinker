@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { SectionHead } from '../../Layout/common';
-import { getQuickActions } from '../../Layout/data/index';
-import { fadeUp } from '../../Layout/common/constants';
+import { SectionHead } from '../../layout/common';
+import { getQuickActions } from '../../layout/data/index';
+import { fadeUp } from '../../layout/common/constants';
 
 const getPremiumIconStyle = (index) => {
   const styles = [
