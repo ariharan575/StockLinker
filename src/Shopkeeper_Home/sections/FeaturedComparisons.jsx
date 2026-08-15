@@ -43,7 +43,6 @@ export default function FeaturedComparisons({ onError }) {
     staleTime: 5 * 60 * 1000, // Keep fresh for 5 minutes
   });
 
-  // ✅ Pass the exact error object to the parent to extract Spring Boot messages
   useEffect(() => {
     if (isError && onError) {
       onError(error);
