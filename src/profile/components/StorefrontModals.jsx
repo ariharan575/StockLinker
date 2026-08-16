@@ -79,8 +79,15 @@ export const CheckoutModal = ({ show, onClose, profile, cartItemsList, cartTotal
             </div>
           </div>
           <div className="flex flex-row gap-4 pt-5 border-t border-slate-100 mt-4">
-            <button onClick={() => setShowCancelConfirmModal(true)} className="flex-1 py-3.5 md:py-4 bg-white border border-slate-200 text-slate-700 font-bold text-[13px] md:text-base rounded-xl md:rounded-2xl hover:bg-slate-50 transition-all active:scale-95">Discard Draft</button>
-            <button onClick={handleConfirmOrderPlacement} disabled={isPlacingOrder} className="flex-[2] py-3.5 md:py-4 bg-pink-500 text-white font-bold text-[13px] md:text-base rounded-xl md:rounded-2xl hover:bg-pink-600 shadow-lg shadow-pink-500/20 transition-all active:scale-95">Send Order Request</button>
+            <button onClick={() => setShowCancelConfirmModal(true)} disabled={isPlacingOrder} className="flex-1 py-3.5 md:py-4 bg-white border border-slate-200 text-slate-700 font-bold text-[13px] md:text-base rounded-xl md:rounded-2xl hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50">Discard Draft</button>
+            <button 
+              onClick={handleConfirmOrderPlacement} 
+              disabled={isPlacingOrder} 
+              className="flex-[2] py-3.5 md:py-4 bg-pink-500 text-white font-bold text-[13px] md:text-base rounded-xl md:rounded-2xl hover:bg-pink-600 shadow-lg shadow-pink-500/20 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-70"
+            >
+              {isPlacingOrder && <Loader2 size={18} className="animate-spin" />}
+              {isPlacingOrder ? "Processing..." : "Send Order Request"}
+            </button>
           </div>
         </motion.div>
       </motion.div>
@@ -114,9 +121,10 @@ export const PlaceOrderConfirmModal = ({ show, onClose, onConfirm, profile, isPl
         <h4 className="font-['Manrope',_sans-serif] text-[18px] md:text-2xl font-extrabold text-slate-900">Send Request?</h4>
         <p className="text-[13px] md:text-sm text-slate-500 font-medium leading-relaxed">This will notify <b>{profile.businessName}</b> to review and schedule your delivery. You won't be charged until they confirm.</p>
         <div className="flex flex-row gap-3 pt-4">
-          <button onClick={onClose} className="flex-1 py-3 bg-white border border-slate-200 text-slate-700 font-bold text-[13px] md:text-sm rounded-xl hover:bg-slate-50 transition-all active:scale-95">Back</button>
-          <button onClick={onConfirm} disabled={isPlacingOrder} className="flex-[2] py-3 bg-emerald-500 text-white font-bold text-[13px] md:text-sm rounded-xl hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 active:scale-95">
-            {isPlacingOrder && <Loader2 size={16} className="animate-spin" />} Confirm & Send
+          <button onClick={onClose} disabled={isPlacingOrder} className="flex-1 py-3 bg-white border border-slate-200 text-slate-700 font-bold text-[13px] md:text-sm rounded-xl hover:bg-slate-50 transition-all active:scale-95 disabled:opacity-50">Back</button>
+          <button onClick={onConfirm} disabled={isPlacingOrder} className="flex-[2] py-3 bg-emerald-500 text-white font-bold text-[13px] md:text-sm rounded-xl hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-70">
+            {isPlacingOrder && <Loader2 size={16} className="animate-spin" />} 
+            {isPlacingOrder ? "Sending..." : "Confirm & Send"}
           </button>
         </div>
       </div>
@@ -124,7 +132,7 @@ export const PlaceOrderConfirmModal = ({ show, onClose, onConfirm, profile, isPl
   );
 };
 
-export const RatingConfirmModal = ({ show, onClose, onConfirm, selectedRating }) => {
+export const RatingConfirmModal = ({ show, onClose, onConfirm, selectedRating, isSubmittingRating }) => {
   if (!show) return null;
   return (
     <div className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -133,8 +141,11 @@ export const RatingConfirmModal = ({ show, onClose, onConfirm, selectedRating })
         <h4 className="font-['Manrope',_sans-serif] text-xl font-extrabold text-slate-900">Confirm Rating?</h4>
         <p className="text-[13px] text-slate-500 font-medium leading-relaxed">You are about to rate this partner <b>{selectedRating} stars</b>. This helps establish their market rank and cannot be changed later.</p>
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="flex-1 py-3 bg-white border border-slate-200 text-slate-700 font-bold text-[13px] rounded-xl hover:bg-slate-50 transition-all">Cancel</button>
-          <button onClick={onConfirm} className="flex-1 py-3 bg-slate-900 text-white font-bold text-[13px] rounded-xl hover:bg-slate-800 shadow-md transition-all">Confirm</button>
+          <button onClick={onClose} disabled={isSubmittingRating} className="flex-1 py-3 bg-white border border-slate-200 text-slate-700 font-bold text-[13px] rounded-xl hover:bg-slate-50 transition-all disabled:opacity-50">Cancel</button>
+          <button onClick={onConfirm} disabled={isSubmittingRating} className="flex-1 py-3 bg-slate-900 text-white font-bold text-[13px] rounded-xl hover:bg-slate-800 shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-70">
+            {isSubmittingRating && <Loader2 size={16} className="animate-spin" />}
+            {isSubmittingRating ? "Submitting..." : "Confirm"}
+          </button>
         </div>
       </div>
     </div>

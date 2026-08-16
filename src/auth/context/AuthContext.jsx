@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: false,
     accountStatus: null,
     role: null,
+    userId: null,
     isInitialized: false,
   });
 
@@ -73,6 +74,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: true,
         accountStatus: response.data.accountStatus,
         role: response.data.role,
+        userId: response.data.userId,
         isInitialized: true,
       });
       return true;
@@ -90,12 +92,13 @@ export const AuthProvider = ({ children }) => {
   const login = useCallback(async (apiCallPromise) => {
     try {
       const response = await apiCallPromise;
-      const { accountStatus, role } = response.data;
+      const { accountStatus, role , userId} = response.data;
       
       setAuthState({
         isAuthenticated: true,
         accountStatus,
         role,
+        userId,
         isInitialized: true,
       });
 
@@ -168,9 +171,9 @@ export const AuthProvider = ({ children }) => {
 
   const contextValue = {
     ...authState,
-    profileData,     // Export the fetched profile data
-    setProfileData,  // EXPORTED: Allows instant injection during onboarding
-    fetchProfile,    // EXPORTED: Allows manual refreshing if ever needed
+    profileData,     
+    setProfileData,  
+    fetchProfile,    
     verifySession,
     login,
     logout,

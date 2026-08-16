@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query'; 
 import { Search, Bell, Users, Compass, Navigation, Sparkles, ArrowRight } from 'lucide-react';
 
-// External imports - Adjust paths based on your setup
+import { useWebSocket } from '../../hooks/useWebSocket';
+
 import { networkApi } from '../../auth/services/api'; 
 import { PremiumToast } from "../../components/PremiumToast";
 import { DataFetchError } from "../../components/DataFetchError";
 
-// Internal modular imports
 import SupplierCard from '../components/SupplierCard';
 import SupplierCardSkeleton from '../components/SupplierCardSkeleton';
 import { fadeUp } from '../utils/animationUtils';
@@ -76,33 +74,21 @@ export default function ConnectedSupplierPage() {
   const pendingRequests = networkData?.pendingRequests || [];
   const discoverSuppliers = networkData?.discoverSuppliers || [];
 
-     const backendUri = import.meta.env.VITE_BACKEND_URI || 'http://localhost:8080';
-    const wsUrl = `${backendUri}/ws`;
-
-  useEffect(() => {
-    const client = new Client({
-      webSocketFactory: () => new SockJS(wsUrl, null, { withCredentials: true }),
-      debug: () => {}, 
-      onConnect: () => {
-        client.subscribe('/user/queue/notifications', (message) => {
-          const notif = JSON.parse(message.body);
-          const type = notif.type ? String(notif.type).toUpperCase() : '';
-          
-          let title = notif.title;
-          if (!title) {
-             title = type === 'CONNECTION' ? 'Connection Request' : 'Notification';
-          }
-          
-          if (type === 'CONNECTION') {
-             showNotification('info', `${title} - ${notif.message || 'You have a new update.'}`);
-             queryClient.invalidateQueries({ queryKey: ['connectedNetworkData'] });
-          }
-        });
+  // ✅ PERFECT ENTERPRISE WEBSOCKET INTEGRATION
+  useWebSocket([
+    {
+      topic: '/user/queue/notifications',
+      callback: (notif) => {
+        const type = notif.type ? String(notif.type).toUpperCase() : '';
+        let title = notif.title || (type === 'CONNECTION' ? 'Connection Request' : 'Notification');
+        
+        if (type === 'CONNECTION') {
+           showNotification('info', `${title} - ${notif.message || 'You have a new update.'}`);
+           queryClient.invalidateQueries({ queryKey: ['connectedNetworkData'] });
+        }
       }
-    });
-    client.activate();
-    return () => { if (client.active) client.deactivate(); };
-  }, [queryClient]);
+    }
+  ]);
 
   const handleAccept = async (connectionId) => {
     try {

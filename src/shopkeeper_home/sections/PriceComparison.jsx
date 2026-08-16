@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // ✅ ADDED useNavigate
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, MessageSquare, Phone, ChevronDown } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query'; // --- ADDED TANSTACK QUERY ---
+import { useQuery } from '@tanstack/react-query'; 
 import { SectionHead } from '../../layout/common';
 import { compareApi } from '../Services/api';
 import Surf from '../../assets/SurfExcel.jpg';
 
 // ============================================================
-// ✅ PREMIUM SKELETON LOADER
+// PREMIUM SKELETON LOADER
 // ============================================================
 const PriceComparisonSkeleton = () => (
   <div className="p-5 lg:p-6 flex flex-col xl:flex-row gap-5 lg:gap-6 animate-pulse">
@@ -25,9 +26,10 @@ const PriceComparisonSkeleton = () => (
 );
 
 export default function PriceComparison({ onError }) {
+  const navigate = useNavigate(); 
   const [showMore, setShowMore] = useState(false);
 
-  // ✅ TANSTACK QUERY INTEGRATION
+  // TANSTACK QUERY INTEGRATION
   const { 
     data: highlightData = null, 
     isLoading, 
@@ -49,6 +51,44 @@ export default function PriceComparison({ onError }) {
   const suppliers = highlightData?.suppliers || [];
   const displaySuppliers = showMore ? suppliers.slice(0, 10) : suppliers.slice(0, 5);
   const header = highlightData?.headerMetrics;
+
+  // ✅ EXACT ROUTING LOGIC FROM YOUR SUPPLIER CARD
+  const handleMessageClick = (e, s) => {
+    e.stopPropagation();
+    if (!s) return;
+    navigate('/message', {
+      state: {
+        partnerToMessage: {
+          id: s.userId || s.id,
+          name: s.name || s.businessName || "Unnamed Business",
+          businessName: s.category || s.businessName || "General Business",
+          profileImage: null
+        }
+      }
+    });
+  };
+
+  const handleViewProfile = (e, s) => {
+    e.stopPropagation();
+    if (!s) return;
+    const profileId = s.businessProfileId || s.id;
+    if (profileId) {
+      navigate(`/storefront/${profileId}`);
+    } else {
+      console.error("Missing business profile reference.");
+    }
+  };
+
+  const handleCallClick = (e, s) => {
+    e.stopPropagation();
+    if (!s) return;
+    const phone = s.mobileNumber || s.whatsappNumber || s.phone;
+    if (phone) {
+      window.location.href = `tel:${phone}`;
+    } else {
+      alert("Phone number not provided by this supplier.");
+    }
+  };
 
   return (
     <section className="hidden sm:block mb-8 md:mb-10 w-full px-1 sm:px-2 md:px-3">
@@ -154,14 +194,28 @@ export default function PriceComparison({ onError }) {
                         </div>
 
                         <div className="flex justify-end items-center gap-2 w-full sm:w-auto lg:w-[120px] mt-2 lg:mt-0 shrink-0">
-                          <button className="p-2.5 lg:p-2 rounded-[8px] border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-colors shadow-sm active:scale-95">
+                          {/* ✅ BUTTON: MESSAGE */}
+                          <button 
+                            onClick={(e) => handleMessageClick(e, s)} 
+                            className="p-2.5 lg:p-2 rounded-[8px] border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-colors shadow-sm active:scale-95"
+                          >
                             <MessageSquare className="w-4 h-4" />
                           </button>
-                          <button className="p-2.5 lg:p-2 rounded-[8px] border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-colors shadow-sm active:scale-95 hidden lg:block">
+                          
+                          {/* ✅ BUTTON: PHONE */}
+                          <button 
+                            onClick={(e) => handleCallClick(e, s)} 
+                            className="p-2.5 lg:p-2 rounded-[8px] border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-colors shadow-sm active:scale-95 hidden lg:block"
+                          >
                             <Phone className="w-4 h-4" />
                           </button>
-                          <button className="px-5 lg:px-4 py-2.5 lg:py-2 rounded-[8px] text-[12px] font-sora font-bold text-white bg-slate-900 hover:bg-black whitespace-nowrap shadow-md hover:-translate-y-[1px] active:scale-95 transition-all">
-                            Order
+
+                          {/* ✅ BUTTON: VIEW PROFILE */}
+                          <button 
+                            onClick={(e) => handleViewProfile(e, s)} 
+                            className="px-5 lg:px-4 py-2.5 lg:py-2 rounded-[8px] text-[12px] font-sora font-bold text-white bg-slate-900 hover:bg-black whitespace-nowrap shadow-md hover:-translate-y-[1px] active:scale-95 transition-all"
+                          >
+                            View
                           </button>
                         </div>
                       </motion.div>

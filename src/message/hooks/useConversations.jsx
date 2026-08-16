@@ -3,11 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchConversations } from "../api/chatApi";
 import { mapConversationList } from "../utils/chatMappers";
 
-/**
- * Owns the conversation list: instant cache, background refresh, and
- * local optimistic patching directly into the TanStack cache so the sidebar 
- * preview updates instantly on send without waiting for a full refetch.
- */
+
 export function useConversations({ keyword = "", includeArchived = false } = {}) {
   const queryClient = useQueryClient();
   const queryKey = useMemo(() => ['conversations', keyword, includeArchived], [keyword, includeArchived]);

@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query"; 
 import {
-  Search, MoreVertical, Paperclip, Smile, Send, ArrowLeft, MessageSquare,
+  Search, MoreVertical, Send, ArrowLeft, MessageSquare,
   Users, MessageCircle, X, UserPlus, Loader2, Sparkles, HelpCircle
 } from "lucide-react";
 import { useConversations } from "../hooks/useConversations";
@@ -162,20 +162,18 @@ function MessageList({ messages, conv, onRetry, onEdit, onDelete }) {
   return (
     <div className="flex-1 overflow-y-auto py-4 bg-[#FAFAFA] relative z-10 flex flex-col no-scrollbar">
       <div className="flex flex-col mt-auto">
-        <AnimatePresence initial={false}>
-          {grouped.map((msg) => (
-            <MessageBubble 
-              key={msg.id} 
-              msg={msg} 
-              conv={conv} 
-              isGrouped={msg.isGrouped} 
-              isLast={msg.isLast} 
-              onRetry={onRetry} 
-              onEdit={onEdit} 
-              onDelete={onDelete} 
-            />
-          ))}
-        </AnimatePresence>
+        {grouped.map((msg) => (
+          <MessageBubble 
+            key={msg.id} 
+            msg={msg} 
+            conv={conv} 
+            isGrouped={msg.isGrouped} 
+            isLast={msg.isLast} 
+            onRetry={onRetry} 
+            onEdit={onEdit} 
+            onDelete={onDelete} 
+          />
+        ))}
       </div>
       <div ref={scrollRef} className="h-4 shrink-0" />
     </div>
@@ -324,6 +322,46 @@ function NewChatModal({ isOpen, onClose, onSelectPartner }) {
   );
 }
 
+// ✅ WRAPPER FOR SAFE SUBSCRIPTION MOUNTING
+function ActiveChatWindow({ activeId, activeConv, setMobileChatOpen, patchConversationPreview, setNotification }) {
+  const { messages, sendMessage, editMsg, deleteMsg, retrySend, isSending } = useMessages(activeId, activeConv?._counterpartId, { 
+    onSent: ({ lastMsg, time }) => patchConversationPreview(activeId, { lastMsg, time }) 
+  });
+
+  const handleEditMessage = async (msgId, newText) => {
+    try {
+      await editMsg(msgId, newText);
+      setNotification({ type: 'success', msg: 'Message edited successfully.' });
+    } catch (err) {
+      setNotification({ type: 'error', msg: err.response?.data?.message || 'Failed to edit message.' });
+    }
+  };
+
+  const handleDeleteMessage = async (msgId) => {
+    try {
+      await deleteMsg(msgId);
+      setNotification({ type: 'success', msg: 'Message deleted successfully.' });
+    } catch (err) {
+      setNotification({ type: 'error', msg: err.response?.data?.message || 'Failed to delete message.' });
+    }
+  };
+
+  return (
+    <>
+      <ChatHeader conv={activeConv} onBack={() => setMobileChatOpen(false)} />
+      <MessageList 
+        messages={messages} 
+        conv={activeConv} 
+        onRetry={retrySend} 
+        onEdit={handleEditMessage} 
+        onDelete={handleDeleteMessage} 
+      />
+      <MessageComposer activeId={activeId} onSend={sendMessage} isSending={isSending} />
+    </>
+  );
+}
+
+// ✅ MAIN COMPONENT
 export default function Messenger() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -331,15 +369,10 @@ export default function Messenger() {
   const [activeId, setActiveId] = useState(null);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
   const [notification, setNotification] = useState(null);
 
-  const { conversations, loading: convsLoading, error: convError, clearUnread, patchConversationPreview, refresh: refreshConversations } = useConversations();
+  const { conversations, loading: convsLoading, clearUnread, patchConversationPreview, refresh: refreshConversations } = useConversations();
   const activeConv = conversations.find((c) => c.id === activeId) || null;
-
-  const { messages, sendMessage, editMsg, deleteMsg, retrySend, markRead, isSending } = useMessages(activeId, activeConv?._counterpartId, { 
-    onSent: ({ lastMsg, time }) => patchConversationPreview(activeId, { lastMsg, time }) 
-  });
 
   const selectConversation = useCallback((id) => {
     setActiveId(id);
@@ -361,12 +394,12 @@ export default function Messenger() {
     });
   }, [refreshConversations, selectConversation]);
 
-  // ✅ SAFELY PROCESSES ROUTING FROM NOTIFICATIONS WITHOUT CREATING BOGUS CHATS
+  // ✅ SAFELY PROCESSES ROUTING FROM NOTIFICATIONS
   useEffect(() => {
     if (!location.state) return;
 
     if (location.state.openChatWithReference) {
-      if (convsLoading) return; // Wait for conversations to load
+      if (convsLoading) return; 
       
       const refId = location.state.openChatWithReference;
       const existingConv = conversations.find(c => c.id === refId || c._counterpartId === refId);
@@ -382,28 +415,6 @@ export default function Messenger() {
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, navigate, handleSelectPartner, conversations, convsLoading, selectConversation]);
-
-  useEffect(() => {
-    if (activeId) markRead();
-  }, [activeId, markRead]);
-
-  const handleEditMessage = async (msgId, newText) => {
-    try {
-      await editMsg(msgId, newText);
-      setNotification({ type: 'success', msg: 'Message edited successfully.' });
-    } catch (err) {
-      setNotification({ type: 'error', msg: err.response?.data?.message || 'Failed to edit message.' });
-    }
-  };
-
-  const handleDeleteMessage = async (msgId) => {
-    try {
-      await deleteMsg(msgId);
-      setNotification({ type: 'success', msg: 'Message deleted successfully.' });
-    } catch (err) {
-      setNotification({ type: 'error', msg: err.response?.data?.message || 'Failed to delete message.' });
-    }
-  };
 
   return (
     <>
@@ -427,17 +438,14 @@ export default function Messenger() {
         
         <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden relative z-10 bg-white ${!mobileChatOpen ? "hidden lg:flex" : "flex"}`}>
           {activeConv ? (
-            <>
-              <ChatHeader conv={activeConv} onBack={() => setMobileChatOpen(false)} />
-              <MessageList 
-                messages={messages} 
-                conv={activeConv} 
-                onRetry={retrySend} 
-                onEdit={handleEditMessage} 
-                onDelete={handleDeleteMessage} 
-              />
-              <MessageComposer activeId={activeId} onSend={sendMessage} isSending={isSending} />
-            </>
+            <ActiveChatWindow 
+              key={activeId} // ✅ THE FIX: Forces hook to re-subscribe perfectly on switch
+              activeId={activeId} 
+              activeConv={activeConv} 
+              setMobileChatOpen={setMobileChatOpen} 
+              patchConversationPreview={patchConversationPreview}
+              setNotification={setNotification}
+            />
           ) : <EmptyState onOpenNewChat={() => setIsModalOpen(true)} />}
         </div>
         <NewChatModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSelectPartner={handleSelectPartner} />

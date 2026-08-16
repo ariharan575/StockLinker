@@ -3,9 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Loader2, Package, LayoutGrid, Store, ChevronRight, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { C, EASE } from '../../layout/common/constants';
-import HeroImges from '../../assets/Store.png';
+import HeroImges from '../../assets/Home.png';
 import { dashboardApi } from '../Services/api';
-// ADDED: Import AuthContext
+
 import { useAuth } from '../../auth/context/AuthContext';
 
 export default function Hero({ onError }) {

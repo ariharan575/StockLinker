@@ -33,8 +33,7 @@ import SettingsRouter from './settings/SettingsRouter';
 import SellerProfileWrapper from './profile/wrapper/SellerProfileWrapper';
 
 import GlobalChatListener from './message/components/GlobalChatListener'; 
-import GlobalOrderListener from './order/components/GlobalOrderListener'; // Import the new file
-
+import GlobalOrderListener from './order/components/GlobalOrderListener'; 
 // =========================================================
 // ✅ DYNAMIC DASHBOARD ROUTER
 // =========================================================
@@ -54,7 +53,6 @@ function App() {
       <AuthProvider>
         
         {/* ========================================================= */}
-        {/* 🌍 WORLD-CLASS GLOBAL NETWORK ERROR STATE OVERLAY */}
         {/* Sits outside the routes so it protects EVERY page globally */}
         {/* ========================================================= */}
         <GlobalNetworkState />
@@ -62,18 +60,16 @@ function App() {
         <GlobalOrderListener />
 
         <Routes>
-          {/* ✅ PUBLIC ROUTES */}
+          {/*  PUBLIC ROUTES */}
           <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
 
-          {/* ✅ TRANSITIONAL ROUTE */}
           <Route path="/oauth-success" element={<OAuthSuccess />} />
 
-          {/* ✅ PRIVATE ROUTES */}
+          {/*  PRIVATE ROUTES */}
           <Route path="/role-selection" element={<PrivateRoute><RoleSelectionPage /></PrivateRoute>} />
           <Route path="/onboarding" element={<PrivateRoute><StockLinkerEnterpriseOnboarding /></PrivateRoute>} />
 
-          {/* ✅ UNIFIED DASHBOARD ROUTE */}
           <Route path="/dashboard" element={<PrivateRoute><RoleBasedDashboard /></PrivateRoute>} />
           
           <Route path="/Compare" element={<PrivateRoute><ComparePageWrapper /></PrivateRoute>} />
@@ -88,7 +84,6 @@ function App() {
           
           <Route path="/storefront/:businessProfileId" element={<SellerProfileWrapper />} />          
           
-          {/* Settings & Profile */}
           <Route path="/settings/:section" element={<PrivateRoute><SettingsRouter /></PrivateRoute>} />
 
           {/* ✅ FALLBACK ROUTE */}

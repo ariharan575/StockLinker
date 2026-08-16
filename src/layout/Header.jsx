@@ -13,6 +13,8 @@ import { useAuth } from '../auth/context/AuthContext';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
+import {useWebSocket} from '../hooks/useWebSocket'
+
 import { PremiumToast } from "../components/PremiumToast";
 
 // Helper to get 2 initials safely
@@ -261,6 +263,16 @@ export default function Header({ open, setOpen }) {
     
     return () => client.deactivate();
   }, [isAuthenticated, queryClient]);
+
+  useWebSocket([
+    {
+      topic: '/user/queue/notifications',
+      callback: (notif) => {
+        // Update your red notification bell count here
+        setUnreadCount(prev => prev + 1);
+      }
+    }
+  ]);
 
   // Handlers - Improved State Management for no overlap/lag
   const handleNotifToggle = () => {
@@ -588,22 +600,15 @@ export default function Header({ open, setOpen }) {
                </button>
             </div>
 
-            {/* MOBILE MENU TOGGLE - SIMPLE ANIMATION */}
+            {/* MOBILE MENU TOGGLE - PERFORMANCE OPTIMIZED ENTRY ANIMATION */}
             <PremiumIconButton onClick={handleMenuToggle} active={open}>
-              <div className="relative w-5 h-5 flex items-center justify-center">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={open ? "close" : "open"}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex items-center justify-center"
-                  >
-                    {open ? <X size={20} /> : <Menu size={20} />}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
+              <motion.div
+                animate={{ rotate: open ? 90 : 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="flex items-center justify-center text-slate-700"
+              >
+                {open ? <X size={20} /> : <Menu size={20} />}
+              </motion.div>
             </PremiumIconButton>
           </div>
         </motion.header>

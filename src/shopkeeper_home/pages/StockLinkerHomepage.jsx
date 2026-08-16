@@ -18,7 +18,6 @@ import ReorderSection from '../sections/ReorderSection';
 import TrustedSuppliers from '../sections/TrustedSuppliers';
 import WhyStockLinkers from '../sections/WhyStockLinkers';
 
-// ✅ IMPORT AUTH CONTEXT TO GET THE ROLE
 import { useAuth } from '../../auth/context/AuthContext';
 
 // ============================================================================

@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
+import { useWebSocket } from '../../hooks/useWebSocket';
 import { useQuery, useQueryClient } from '@tanstack/react-query'; 
 import { Search, MapPin, SlidersHorizontal, X } from 'lucide-react';
 
-// External Imports (Adjust paths as needed for your setup)
 import { typographyStyles } from '../../compare_price/config/constants';
 import { networkApi } from '../../auth/services/api';
 import { categoryApi } from '../../shopkeeper_home/Services/api';
@@ -13,7 +11,6 @@ import { useAuth } from '../../auth/context/AuthContext';
 import { PremiumToast } from "../../components/PremiumToast";
 import { DataFetchError } from "../../components/DataFetchError";
 
-// Internal Modular Imports
 import { DISTRICT_CENTERS } from '../utils/constants';
 import { FilterDropdown } from '../components/FilterDropdown';
 import { SellerCard } from '../components/SellerCard';
@@ -36,6 +33,7 @@ export default function NearbySellerDiscoveryPage() {
   const [page, setPage] = useState(0);
   const [currentDistrict, setCurrentDistrict] = useState("Chennai");
   const [notification, setNotification] = useState(null);
+  const queryClient = useQueryClient();
 
   const showNotification = (type, msg) => setNotification({ type, msg });
   const mapCenter = useMemo(() => DISTRICT_CENTERS[currentDistrict] || DISTRICT_CENTERS["Chennai"], [currentDistrict]);
@@ -103,36 +101,27 @@ export default function NearbySellerDiscoveryPage() {
   const suppliers = sellersPage.content || [];
   const totalPages = sellersPage.totalPages || 0;
 
-  const backendUri = import.meta.env.VITE_BACKEND_URI || 'http://localhost:8080';
-  const wsUrl = `${backendUri}/ws`;
-
-
   useEffect(() => {
     if (suppliers.length > 0 && scope === "NEARBY") {
       const districtStr = suppliers[0].distance.replace("In ", "");
       if (DISTRICT_CENTERS[districtStr]) setCurrentDistrict(districtStr);
     }
   }, [suppliers, scope]);
-
-  useEffect(() => {
-    const client = new Client({
-      webSocketFactory: () => new SockJS( wsUrl , null, { withCredentials: true }),
-      debug: () => {}, 
-      onConnect: () => {
-        client.subscribe('/user/queue/notifications', (message) => {
-          const notif = JSON.parse(message.body);
+  
+  // ✅ PERFECT ENTERPRISE WEBSOCKET INTEGRATION
+  useWebSocket([
+      {
+        topic: '/user/queue/notifications',
+        callback: (notif) => {
           const title = notif.type === 'NEW_NEARBY_USER' ? 'Live Radar Update' : 'Network Update';
           showNotification('info', `${title}: ${notif.message}`);
           
           if (notif.type === 'NEW_NEARBY_USER' || notif.type === 'ACCEPTED') {
             refetchSellers(); 
           }
-        });
+        }
       }
-    });
-    client.activate();
-    return () => { if (client.active) client.deactivate(); };
-  }, [refetchSellers]);
+    ]);
 
   const categoryOptions = categories.map(cat => ({ value: cat.id, label: cat.name }));
   const radiusOptions = [

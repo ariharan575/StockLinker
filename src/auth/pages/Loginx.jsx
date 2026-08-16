@@ -42,7 +42,8 @@ export default function SaaSAuthUI() {
   
   // Track general loading state and WHICH specific action is loading/erroring
   const [loading, setLoading] = useState(false);
-  const [loadingType, setLoadingType] = useState(""); // "phone" | "verify" | "guest"
+  const [loadingType, setLoadingType] = useState(""); // "phone" | "verify" | "guest" | "google"
+  const [isWakingUp, setIsWakingUp] = useState(false); // ✅ Tracks if server is sleeping
   
   const [errorMessage, setErrorMessage] = useState("");
   const [errorType, setErrorType] = useState(""); // "phone" | "verify" | "guest"
@@ -107,7 +108,7 @@ export default function SaaSAuthUI() {
   };
 
   /* =========================================
-      SEND OTP
+      SEND OTP (Hits Firebase directly, so no sleep error)
   ========================================= */
   const sendOtp = async () => {
     if (!phone || phone.length < 10) {
@@ -152,7 +153,7 @@ export default function SaaSAuthUI() {
   };
 
   /* =========================================
-      VERIFY OTP
+      VERIFY OTP (Hits Render, Auto-Retry logic added)
   ========================================= */
   const handleVerify = async () => {
     if (!isOtpComplete) return;
@@ -161,35 +162,65 @@ export default function SaaSAuthUI() {
     setError(false);
     setErrorMessage("");
     setErrorType("");
+    setIsWakingUp(false);
     
-    try {
-      const enteredOtp = otp.join("");
-      const result = await confirmationResult.confirm(enteredOtp);
-      const idToken = await result.user.getIdToken();
-      const loginResult = await login(authApi.phoneLogin(idToken));
+    let maxRetries = 8; // 8 retries * 5s = 40s wait time max
+    let delayMs = 5000;
 
-      if (loginResult.success) {
-        if (loginResult.needsRole) navigate("/role-selection");
-        else if (loginResult.needsOnboarding) navigate("/onboarding");
-        else navigate("/dashboard");
-      } else {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        let idToken;
+        
+        // Only verify OTP with Firebase on the first attempt
+        // On retries, reuse the token to prevent "code expired" errors
+        if (i === 0) {
+          const enteredOtp = otp.join("");
+          const result = await confirmationResult.confirm(enteredOtp);
+          idToken = await result.user.getIdToken();
+        } else {
+          idToken = await auth.currentUser.getIdToken();
+          setIsWakingUp(true); // Update UI to show waking up state
+        }
+
+        const loginResult = await login(authApi.phoneLogin(idToken));
+
+        if (loginResult.success) {
+          if (loginResult.needsRole) navigate("/role-selection");
+          else if (loginResult.needsOnboarding) navigate("/onboarding");
+          else navigate("/dashboard");
+          return; // Success, exit function
+        } else {
+          setError(true);
+          setErrorMessage(loginResult.error || "Login failed");
+          setErrorType("verify");
+          setOtp(Array(6).fill(""));
+          inputsRef.current[0]?.focus();
+          break; // Normal error, exit loop
+        }
+      } catch (error) {
+        const status = error.response?.status;
+        const isSleepError = status === 503 || status === 504 || error.message === 'Network Error';
+        
+        if (isSleepError && i < maxRetries - 1) {
+          // Server sleeping, wait 5 seconds and retry
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+          continue; 
+        }
+
+        // If not a sleep error or out of retries
+        console.error(error);
         setError(true);
-        setErrorMessage(loginResult.error || "Login failed");
+        setErrorMessage(getAuthErrorMessage(error));
         setErrorType("verify");
         setOtp(Array(6).fill(""));
         inputsRef.current[0]?.focus();
+        break;
       }
-    } catch (error) {
-      console.error(error);
-      setError(true);
-      setErrorMessage(getAuthErrorMessage(error));
-      setErrorType("verify");
-      setOtp(Array(6).fill(""));
-      inputsRef.current[0]?.focus();
-    } finally {
-      setLoading(false);
-      setLoadingType("");
     }
+    
+    setLoading(false);
+    setLoadingType("");
+    setIsWakingUp(false);
   };
 
   useEffect(() => {
@@ -244,9 +275,29 @@ export default function SaaSAuthUI() {
   };
 
   /* =========================================
-      GOOGLE / GUEST LOGIN
+      GOOGLE / GUEST LOGIN (Auto-Retry added)
   ========================================= */
-const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
+    setLoadingType("google");
+    setLoading(true);
+    setIsWakingUp(false);
+
+    // Ping the backend to wake it up before redirecting the browser
+    for (let i = 0; i < 8; i++) {
+      if (i > 0) setIsWakingUp(true);
+      try {
+        const response = await fetch(`/oauth2/authorization/google`);
+        if (response.status === 503 || response.status === 504) {
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          continue;
+        }
+        break; // Server awake
+      } catch (error) {
+        // If it throws a CORS error, it means the server successfully sent the redirect. It is awake!
+        break; 
+      }
+    }
+    
     window.location.href = `/oauth2/authorization/google`;
   };
 
@@ -256,29 +307,50 @@ const handleGoogleLogin = () => {
     setError(false);
     setErrorMessage("");
     setErrorType("");
-    try {
-      const loginResult = await login(authApi.guestLogin());
+    setIsWakingUp(false);
 
-      if (loginResult.success) {
-        if (loginResult.needsRole) navigate("/role-selection");
-        else if (loginResult.needsOnboarding) navigate("/onboarding");
-        else navigate("/dashboard");
+    let maxRetries = 8; // 40 seconds total
+    let delayMs = 5000;
+
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        if (i > 0) setIsWakingUp(true);
+
+        const loginResult = await login(authApi.guestLogin());
+
+        if (loginResult.success) {
+          if (loginResult.needsRole) navigate("/role-selection");
+          else if (loginResult.needsOnboarding) navigate("/onboarding");
+          else navigate("/dashboard");
+          return; // Success, exit function
+        } else {
+          setError(true);
+          setErrorMessage(loginResult.error || "Login failed");
+          setErrorType("guest");
+          setOtp(Array(6).fill(""));
+          inputsRef.current[0]?.focus();
+          break; // Normal error
+        }
+      } catch (err) {
+        const status = err.response?.status;
+        const isSleepError = status === 503 || status === 504 || err.message === 'Network Error';
         
-      } else {
+        if (isSleepError && i < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+          continue; // Loop again
+        }
+
+        // Out of retries or standard error
         setError(true);
-        setErrorMessage(loginResult.error || "Login failed");
+        setErrorMessage(err.response?.data?.message || "Guest login failed");
         setErrorType("guest");
-        setOtp(Array(6).fill(""));
-        inputsRef.current[0]?.focus();
+        break;
       }
-    } catch (err) {
-      setError(true);
-      setErrorMessage(err.response?.data?.message || "Guest login failed");
-      setErrorType("guest");
-    } finally {
-      setLoading(false);
-      setLoadingType("");
     }
+    
+    setLoading(false);
+    setLoadingType("");
+    setIsWakingUp(false);
   };
 
   const handleResendOtp = async () => {
@@ -487,10 +559,22 @@ const handleGoogleLogin = () => {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     onClick={handleGoogleLogin}
+                    disabled={loading}
                     className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white h-[43px] cursor-pointer sm:h-auto mx-auto sm:py-3.5 text-[13px] sm:text-[14px] font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:border-pink-200 hover:bg-pink-50 hover:text-pink-700 transform-gpu"
                   >
-                    <FcGoogle size={18} className="sm:w-5 sm:h-5" />
-                    Continue with Google
+                    {loading && loadingType === "google" ? (
+                      <>
+                        <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-slate-500" />
+                        <span className="text-slate-500">
+                          {isWakingUp ? "Waking up server (~30s)..." : "Connecting..."}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <FcGoogle size={18} className="sm:w-5 sm:h-5" />
+                        Continue with Google
+                      </>
+                    )}
                   </motion.button>
 
                   {/* GUEST BUTTON */}
@@ -504,7 +588,7 @@ const handleGoogleLogin = () => {
                     {loading && loadingType === "guest" ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Continuing as Guest...
+                        {isWakingUp ? "Waking up server (~30s)..." : "Continuing as Guest..."}
                       </>
                     ) : (
                       <>
@@ -561,10 +645,10 @@ const handleGoogleLogin = () => {
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="mt-4 sm:mt-6 flex items-center justify-center gap-3 text-pink-600 font-semibold text-[13px] sm:text-[14px]"
+                      className={`mt-4 sm:mt-6 flex items-center justify-center gap-3 font-semibold text-[13px] sm:text-[14px] ${isWakingUp ? 'text-amber-500' : 'text-pink-600'}`}
                     >
                       <Loader2 className="h-4 sm:h-5 w-4 sm:w-5 animate-spin" />
-                      Verifying Secure OTP...
+                      {isWakingUp ? "Waking up server (~30s)..." : "Verifying Secure OTP..."}
                     </motion.div>
                   )}
 

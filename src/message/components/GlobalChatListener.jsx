@@ -1,28 +1,17 @@
-import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../auth/context/AuthContext'; 
-import { connectSocket, disconnectSocket, onSocketConnect } from '../api/socketClient'; 
+import { useWebSocket } from '../../hooks/useWebSocket'; // ✅ Import the new hook
 
 export default function GlobalChatListener() {
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      disconnectSocket();
-      return;
-    }
-
-    const client = connectSocket();
-    let subscription = null;
-
-    const subscribeToQueue = () => {
-      if (subscription) return;
-      
-      subscription = client.subscribe('/user/queue/chat', (message) => {
+  // ✅ ONLY run the WebSocket listener if the user is authenticated
+  useWebSocket(isAuthenticated ? [
+    {
+      topic: '/user/queue/chat',
+      callback: (payload) => {
         try {
-          const payload = JSON.parse(message.body);
-          
           if (payload && payload.message) {
             // 1. UPDATE SIDEBAR (Conversation List)
             queryClient.setQueryData(['conversations', "", false], (prev = []) => {
@@ -46,6 +35,7 @@ export default function GlobalChatListener() {
               return next;
             });
 
+            // 2. UPDATE OPEN MESSAGES IN BACKGROUND
             queryClient.setQueryData(['messages', payload.conversationId], (prevMessages) => {
               if (!prevMessages) return prevMessages;
 
@@ -61,7 +51,7 @@ export default function GlobalChatListener() {
                 _senderId: payload.senderId,
               };
 
-              // Prevent duplicate bubbles if the local socket also caught it
+              // Prevent duplicate bubbles
               if (prevMessages.some((m) => m.id === mappedMsg.id)) {
                 return prevMessages;
               }
@@ -73,25 +63,16 @@ export default function GlobalChatListener() {
             queryClient.invalidateQueries({ queryKey: ['unreadCount'] });
             
           } else {
+            // Read receipts / status updates
             queryClient.invalidateQueries({ queryKey: ['conversations'] });
             queryClient.invalidateQueries({ queryKey: ['unreadCount'] });
           }
         } catch (e) {
           queryClient.invalidateQueries({ queryKey: ['conversations'] });
         }
-      });
-    };
-
-    const unsubscribeConnect = onSocketConnect(subscribeToQueue);
-
-    return () => {
-      unsubscribeConnect();
-      if (subscription) {
-        subscription.unsubscribe();
-        subscription = null;
       }
-    };
-  }, [isAuthenticated, queryClient]);
+    }
+  ] : []);
 
   return null;
 }

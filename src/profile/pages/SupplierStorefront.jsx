@@ -27,7 +27,6 @@ export default function SupplierStorefront() {
   const location = useLocation();
   const queryClient = useQueryClient();
   
-  // 1. Pull the profileData directly from your AuthContext
   const { profileData } = useAuth();
   
   const [notification, setNotification] = useState(null);
@@ -40,9 +39,9 @@ export default function SupplierStorefront() {
   const [cart, setCart] = useState({});
   const [page, setPage] = useState(0);
 
-  // 2. Safely resolve the ID. If URL is undefined, use AuthContext.
+  // LOGIC FIX: Instantly resolves to 'own' if no ID is present in the URL
   const businessProfileId = (!rawProfileId || rawProfileId === 'undefined' || rawProfileId === 'null') 
-    ? profileData?.businessProfileId 
+    ? 'own' 
     : rawProfileId;
 
   const [isEditingDesc, setIsEditingDesc] = useState(false);
@@ -54,6 +53,7 @@ export default function SupplierStorefront() {
   const [selectedRating, setSelectedRating] = useState(0);
   const [showRatingConfirm, setShowRatingConfirm] = useState(false);
   const [hasRatedLocally, setHasRatedLocally] = useState(false);
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false); // ✅ Added state for Rating submission
   
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
@@ -77,7 +77,7 @@ export default function SupplierStorefront() {
     setPage(0);
   }, [debouncedSearch, filters]);
 
-  // 3. React Query will wait politely if businessProfileId is null
+  // React Query fires IMMEDIATELY now. No waiting!
   const { data: storeData, isLoading: isLoadingProfile, isError: isProfileError, error: profileError, refetch: refetchProfile } = useQuery({
     queryKey: ['storefrontProfile', businessProfileId],
     queryFn: async () => {
@@ -87,15 +87,15 @@ export default function SupplierStorefront() {
       ]);
       return { profile: profileRes.data, filterOptions: filtersRes.data };
     },
-    enabled: !!businessProfileId, // Safelock prevents backend crash
+    enabled: true, 
     staleTime: 5 * 60 * 1000, 
   });
 
   const profile = storeData?.profile || null;
   const filterOptions = storeData?.filterOptions || { brands: [], categories: [] };
   
-  // Dynamically check ownership using the AuthContext
-  const isOwner = location.state?.isOwner || (profileData?.businessProfileId === profile?.id);
+  // Dynamically check ownership using the fetched ID or AuthContext
+  const isOwner = location.state?.isOwner || (profileData?.businessProfileId === profile?.businessId) || businessProfileId === 'own';
   const isShopkeeper = profile?.businessType?.toLowerCase().includes('shop') || profile?.businessType?.toLowerCase().includes('retail');
 
   useEffect(() => {
@@ -103,7 +103,7 @@ export default function SupplierStorefront() {
       setActiveTab(isShopkeeper ? 'profile' : 'catalog');
       setDescValue(profile.businessDescription || "");
     }
-  }, [profile?.id, isShopkeeper]);
+  }, [profile?.businessId, isShopkeeper]);
 
   const { data: productPageData = { content: [], totalPages: 0 }, isLoading: isLoadingProducts, isError: isProductsError, error: productsError } = useQuery({
     queryKey: ['storefrontProducts', businessProfileId, debouncedSearch, filters.category, filters.brand, filters.sortPrice, page],
@@ -112,7 +112,7 @@ export default function SupplierStorefront() {
       const res = await storefrontApi.getProducts(businessProfileId, params);
       return res.data;
     },
-    enabled: !!businessProfileId && !isShopkeeper && activeTab === 'catalog',
+    enabled: !!profile && !isShopkeeper && activeTab === 'catalog',
     keepPreviousData: true,
   });
 
@@ -142,7 +142,10 @@ export default function SupplierStorefront() {
     setShowRatingConfirm(true);
   };
 
+  // ✅ PERFECTED LOGIC: Added loading states for Rating Submission
   const confirmAndSubmitRating = async () => {
+    if (isSubmittingRating) return;
+    setIsSubmittingRating(true);
     try {
       await storefrontApi.submitRating(businessProfileId, { rating: selectedRating });
       setHasRatedLocally(true);
@@ -154,11 +157,13 @@ export default function SupplierStorefront() {
     } catch (error) {
       showNotification('error', error.response?.data?.message || "Failed to submit rating.");
       setShowRatingConfirm(false);
+    } finally {
+      setIsSubmittingRating(false);
     }
   };
 
   const handleConnect = async () => {
-    if (isConnecting) return;
+    if (isConnecting || !profile) return;
     setIsConnecting(true);
     try {
       await networkApi.requestConnection(profile.businessId);
@@ -219,11 +224,12 @@ export default function SupplierStorefront() {
   }, [cartItemsList]);
 
   const handleConfirmOrderPlacement = async () => {
-    if (isPlacingOrder) return;
+    if (isPlacingOrder || !profile) return;
     setIsPlacingOrder(true);
     try {
       const orderItems = cartItemsList.map(item => ({ productId: item.id, quantity: item.orderQty }));
-      await orderApi.placeOrder({ businessProfileId: businessProfileId, items: orderItems });
+      // SAFETY FIX: Uses profile.businessId ensuring the true UUID goes to the order API, not "own"
+      await orderApi.placeOrder({ businessProfileId: profile.businessId, items: orderItems });
       setCart({});
       setShowPlaceOrderConfirmModal(false);
       setShowCheckoutModal(false);
@@ -275,11 +281,13 @@ export default function SupplierStorefront() {
         
         <PremiumToast isVisible={!!notification} type={notification?.type || 'info'} message={notification?.msg} onClose={() => setNotification(null)} />
 
-        {/* 4. Ensures the Skeleton UI shows immediately while waiting for ID */}
-        {(isLoadingProfile || !businessProfileId) ? (
+        {isLoadingProfile ? (
           <PremiumStorefrontSkeleton />
         ) : !profile ? (
-          <div className="flex items-center justify-center min-h-[50vh] font-bold text-black">Profile Not Found</div>
+          <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+            <h2 className="font-bold text-xl text-black">Profile Not Found</h2>
+            <p className="text-slate-500">It looks like this profile doesn't exist or you haven't onboarded yet.</p>
+          </div>
         ) : (
           <>
             <div className="max-w-[1440px] mx-auto flex my-2 flex-col gap-6 md:gap-8">
@@ -335,7 +343,12 @@ export default function SupplierStorefront() {
             
             <PlaceOrderConfirmModal show={showPlaceOrderConfirmModal} onClose={() => setShowPlaceOrderConfirmModal(false)} onConfirm={handleConfirmOrderPlacement} profile={profile} isPlacingOrder={isPlacingOrder} />
             
-            <RatingConfirmModal show={showRatingConfirm} onClose={() => setShowRatingConfirm(false)} onConfirm={confirmAndSubmitRating} selectedRating={selectedRating} />
+            {/* ✅ PASSED THE NEW isSubmittingRating PROP HERE */}
+            <RatingConfirmModal 
+              show={showRatingConfirm} onClose={() => setShowRatingConfirm(false)} 
+              onConfirm={confirmAndSubmitRating} selectedRating={selectedRating} 
+              isSubmittingRating={isSubmittingRating} 
+            />
           </>
         )}
       </div>

@@ -1,11 +1,9 @@
 import React from "react";
 import { motion } from "framer-motion";
-import StoreImage from "../../assets/Store.png";
+import HeroImage from "../../assets/Home.png";
 
-// Reusable EASE constant for butter-smooth premium animations
 const EASE = [0.22, 1, 0.36, 1];
 
-// Reusable StatCard Component (Strict Icon-Left, Text-Right, Ultra-Compact)
 const StatCard = ({ label, value, icon: Icon, index, isLoading }) => (
   <motion.div
     initial={{ opacity: 0, y: 15 }}
@@ -57,7 +55,7 @@ const WholesalerHero = ({ userName, kpis = [] }) => {
             initial={{ scale: 1.05, opacity: 0 }} 
             animate={{ scale: 1, opacity: 1 }} 
             transition={{ duration: 1, ease: EASE }} 
-            src={StoreImage} 
+            src={HeroImage} 
             alt="Wholesale Dashboard" 
             className="w-full h-full object-cover object-center rounded-[16px] lg:rounded-[20px] shadow-sm" 
           />

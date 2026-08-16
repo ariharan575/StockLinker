@@ -9,7 +9,7 @@ import {
   deleteMessage as apiDeleteMessage
 } from "../api/chatApi";
 import { mapMessagePage, mapMessage } from "../utils/chatMappers";
-import { useConversationSocket } from "./useConversationSocket";
+import { useWebSocket } from "../../hooks/useWebSocket"; // ✅ Import the new global hook
 
 export function useMessages(conversationId, counterpartId, { onSent } = {}) {
   const queryClient = useQueryClient();
@@ -122,7 +122,6 @@ export function useMessages(conversationId, counterpartId, { onSent } = {}) {
       return [...prev, mapped]; 
     });
 
-    // INSTANT READ RECEIPT: We are on the message page, mark it as read immediately!
     markRead();
   }, [counterpartId, queryClient, queryKey, markRead]);
 
@@ -137,7 +136,19 @@ export function useMessages(conversationId, counterpartId, { onSent } = {}) {
     );
   }, [queryClient, queryKey]);
 
-  useConversationSocket(conversationId, { onMessage: handleIncoming, onStatus: handleStatus });
+  // ✅ PERFECTED WEBSOCKET SUBSCRIPTION
+  useWebSocket(conversationId ? [
+    {
+      topic: `/topic/conversation/${conversationId}`,
+      callback: (payload) => {
+        if (payload.message !== undefined) {
+          handleIncoming(payload);
+        } else {
+          handleStatus(payload);
+        }
+      }
+    }
+  ] : []);
 
   useEffect(() => {
     messages
