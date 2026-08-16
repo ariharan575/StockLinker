@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { authApi } from '../services/api'; // Ensure this path matches your api.js location
+import { authApi } from '../auth/services/api'; // Ensure this path matches your api.js location
 
 // GLOBAL VARIABLES: Shared across all components
 let sharedClient = null;
